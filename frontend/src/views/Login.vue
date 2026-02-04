@@ -63,7 +63,7 @@ const handleLogin = async () => {
             return;
         }
 
-        // Save session token (optional – Supabase already stores session automatically)
+        // Save session token
         localStorage.setItem("supabase_token", data.session.access_token);
 
         alert("Login successful!");
