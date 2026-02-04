@@ -1,17 +1,15 @@
 <!--
 ROOT COMPONENT - This is the main wrapper for our whole app
-TODO: Import and render the Login component for now
-Later we can add router-view here for multiple pages
 -->
 
 <template>
   <div id="app">
-    <Login />
+    <router-view />
   </div>
 </template>
 
 <script setup>
-import Login from './views/Login.vue'
+// No imports needed - router-view handles everything
 </script>
 
 <style>

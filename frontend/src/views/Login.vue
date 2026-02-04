@@ -9,11 +9,11 @@ TODO: If successful, save the token to localStorage and redirect them
         <div class="login-box">
             <form @submit.prevent="handleLogin">
                 <div class="form-group">
-                    <label>Username</label>
+                    <label>Email</label>
                     <input
-                        v-model="username"
+                        v-model="email"
                         type="text"
-                        placeholder="Enter username"
+                        placeholder="Enter email"
                         required
                     />
                 </div>
@@ -43,10 +43,11 @@ TODO: If successful, save the token to localStorage and redirect them
 <script setup>
 import { ref } from "vue";
 import { supabase } from "../lib/supabase";
-
+import { useRouter } from "vue-router";
 
 // define reactive variables
-const username = ref("");
+const router = useRouter();
+const email = ref("");
 const password = ref("");
 const error = ref("");
 
@@ -55,7 +56,7 @@ const handleLogin = async () => {
 
     try {
         const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
-            email: username.value,
+            email: email.value,
             password: password.value,
         });
 
@@ -67,7 +68,7 @@ const handleLogin = async () => {
         // Save session token
         localStorage.setItem("supabase_token", data.session.access_token);
 
-        alert("Login successful!");
+        router.push("/");
 
     } catch (err) {
         error.value = "Cannot connect to Supabase";
@@ -76,10 +77,10 @@ const handleLogin = async () => {
 };
 
 //test CORS
-fetch("http://localhost:8000/test-cors")
-  .then(res => res.json())
-  .then(data => console.log("CORS test:", data))
-  .catch(err => console.error("CORS error:", err));
+// fetch("http://localhost:8000/test-cors")
+//  .then(res => res.json())
+//  .then(data => console.log("CORS test:", data))
+//  .catch(err => console.error("CORS error:", err));
 
 </script>
 
