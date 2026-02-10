@@ -1,6 +1,7 @@
 <!-- 
 SIGNUP PAGE - form users see when creating a new account 
 -->
+import { supabase } from "../lib/supabase";
 
 <template>
     <div class="signup-container">
@@ -69,6 +70,7 @@ SIGNUP PAGE - form users see when creating a new account
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { supabase } from "../lib/supabase";
 
 const router = useRouter()
 const email = ref('')
@@ -87,21 +89,33 @@ const validations = computed(() => {
   }
 })
 
-function handleSignUp() {
+async function handleSignUp() {
   if (!Object.values(validations.value).every(Boolean)) {
     error.value = 'Password does not meet the requirements.'
     return
   }
+
   error.value = ''
-  // TODO: implement actual sign-up logic
-  console.log('Signing up', { email: email.value })
+
+  const { data, error: signUpError } = await supabase.auth.signUp({
+    email: email.value,
+    password: password.value,
+  })
+
+  if (signUpError) {
+    error.value = signUpError.message
+    return
+  }
+
+  alert("Signup successful! You can now log in.")
+  router.push("/login")
 }
 
 const handleBack2Login = async () => {
   router.push("/login");
 };
-
 </script>
+
 
 <style scoped>
 .signup-container {
