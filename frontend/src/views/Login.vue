@@ -7,6 +7,7 @@ TODO: If successful, save the token to localStorage and redirect them
 <template>
     <div class="login-container">
         <div class="login-box">
+          <h2>Log Into SixDegrees</h2>
             <form @submit.prevent="handleLogin">
                 <div class="form-group">
                     <label>Email</label>
@@ -37,6 +38,7 @@ TODO: If successful, save the token to localStorage and redirect them
                 </button>
             </form>
         </div>
+        <button class="signup-btn" @click="handleSignup">Sign up</button>
     </div>
 </template>
 
@@ -50,6 +52,11 @@ const router = useRouter();
 const email = ref("");
 const password = ref("");
 const error = ref("");
+
+// redirect to signup page
+const handleSignup = async () => {
+  router.push("/signup");
+};
 
 const handleLogin = async () => {
     error.value = "";
@@ -84,14 +91,13 @@ const handleLogin = async () => {
 
 </script>
 
-
-
-
 <style scoped>
 .login-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 1rem;
   min-height: 100vh;
   background: #1a1a1a;
 }
@@ -106,6 +112,12 @@ const handleLogin = async () => {
 }
 
 h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #ffffff;
+}
+
+h2{
   text-align: center;
   margin-bottom: 2rem;
   color: #ffffff;
@@ -150,9 +162,29 @@ input:focus {
   transition: background 0.3s ease;
 }
 
+.signup-btn {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.75rem;
+  margin-top: 20px;
+  background: #08478f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
 .login-btn:hover {
   background: #0CC6C6;
 }
+
+.signup-btn:hover {
+  background: #0c5dba;
+}
+
 
 .error {
   color: #ff6b6b;
