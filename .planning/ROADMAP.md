@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Write setup_tables.sql DDL + apply in Supabase dashboard (DB-01, DB-02, DB-03, DB-04)
+- [x] 01-01-PLAN.md — Write setup_tables.sql DDL + apply in Supabase dashboard (DB-01, DB-02, DB-03, DB-04)
 - [ ] 01-02-PLAN.md — Write and run seed_db.py with 20 diverse users and interaction pairs (DB-05)
 
 ### Phase 2: Core Algorithm
@@ -88,7 +88,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Database Foundation | 1/2 | In Progress|  |
+| 1. Database Foundation | 1/2 | In Progress | - |
 | 2. Core Algorithm | 0/? | Not started | - |
 | 3. Pipeline Integration | 0/? | Not started | - |
 | 4. API and Scheduler | 0/? | Not started | - |

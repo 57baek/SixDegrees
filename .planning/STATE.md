@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 1 of 5 (Database Foundation)
-Plan: 1 of ? in current phase
-Status: In progress — awaiting human action (Task 2: apply SQL in Supabase dashboard)
-Last activity: 2026-02-22 — Plan 01-01 Task 1 complete; setup_tables.sql DDL written and committed
+Plan: 2 of 2 in current phase
+Status: In progress — Plan 01-01 complete; Plan 01-02 (seed data) is next
+Last activity: 2026-02-22 — Plan 01-01 complete; all 3 Supabase tables live
 
-Progress: [█░░░░░░░░░] 5%
+Progress: [██░░░░░░░░] 10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: ~45min
+- Total execution time: 0.75 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-database-foundation | 1 complete / 2 total | ~45min | ~45min |
 
 **Recent Trend:**
-- Last 5 plans: -
+- Last 5 plans: 01-01 (~45min, includes human checkpoint)
 - Trend: -
 
 *Updated after each plan completion*
@@ -49,19 +49,19 @@ Recent decisions affecting current work:
 - Batch precompute + store: t-SNE is expensive; precompute at 7pm, serve from DB
 - No FK from user_profiles.user_id to auth.users — seed users won't exist in auth.users, FK would block inserts
 - FK constraints on interactions wrapped in DO $$ block for idempotency (plan 01-01)
+- RLS enabled on all 3 tables; service role key used in all backend DB access (plan 01-01)
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
 - Known bug: `handleLogout()` in `Home.vue` scoped inside `loadPosts()` — crashes on logout. Out of scope this milestone but worth noting.
 - APScheduler single-worker constraint: multi-worker uvicorn causes double-firing. Must document clearly.
-- Supabase RLS: verify service role key is used for all backend DB reads (not anon key).
+- Supabase RLS: verify service role key is used for all backend DB reads (not anon key). Verified for algorithm tables; existing match routes not yet validated.
 
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Plan 01-01 Task 1 complete (1f30f89). Checkpoint: Task 2 requires human to apply backend/sql/setup_tables.sql in Supabase dashboard SQL editor.
-Resume signal: "tables created" — user confirms tables visible in Supabase Table Editor and Python verification prints OK for all 3 tables
+Stopped at: Plan 01-01 complete. Next: Plan 01-02 (seed data for algorithm testing).
