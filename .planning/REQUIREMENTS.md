@@ -15,7 +15,7 @@ Requirements for this milestone. All are backend/algorithm — no frontend UI im
 - [x] **DB-02**: `interactions` table exists in Supabase with fields: user_id_a (UUID), user_id_b (UUID), likes_count, comments_count, dm_count, last_updated; pair stored in canonical order (a < b)
 - [x] **DB-03**: `map_coordinates` table exists in Supabase with fields: id, center_user_id (UUID), other_user_id (UUID), x (float), y (float), tier (1/2/3), computed_at, is_current (boolean)
 - [x] **DB-04**: `map_coordinates` has index on (center_user_id, is_current) for fast API reads
-- [ ] **DB-05**: Seed script populates at least 15 mock users with varied profiles (diverse interests, locations, ages) and seeded interaction counts into Supabase
+- [x] **DB-05**: Seed script populates at least 15 mock users with varied profiles (diverse interests, locations, ages) and seeded interaction counts into Supabase
 
 ### Interaction Scoring Module
 

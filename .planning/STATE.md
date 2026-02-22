@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** The People Map — every user is always at (0,0), all others positioned by profile similarity + interaction intensity, updated daily
-**Current focus:** Phase 1 — Database Foundation
+**Current focus:** Phase 2 — Algorithm Pipeline
 
 ## Current Position
 
-Phase: 1 of 5 (Database Foundation)
-Plan: 2 of 2 in current phase
-Status: In progress — Plan 01-01 complete; Plan 01-02 (seed data) is next
-Last activity: 2026-02-22 — Plan 01-01 complete; all 3 Supabase tables live
+Phase: 1 of 5 (Database Foundation) — COMPLETE
+Next: Phase 2 — Algorithm Pipeline
+Status: Phase 1 complete — all 3 tables live, seed data in place
+Last activity: 2026-02-22 — Plan 01-02 complete; 20 users + 35 interactions seeded
 
-Progress: [██░░░░░░░░] 10%
+Progress: [████░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: ~45min
-- Total execution time: 0.75 hours
+- Total plans completed: 2
+- Average duration: ~24min (01-01: ~45min including checkpoint, 01-02: ~4min)
+- Total execution time: ~0.8 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-database-foundation | 1 complete / 2 total | ~45min | ~45min |
+| 01-database-foundation | 2 complete / 2 total | ~49min | ~24min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~45min, includes human checkpoint)
-- Trend: -
+- Last 5 plans: 01-01 (~45min, includes human checkpoint), 01-02 (~4min)
+- Trend: Fast execution for pure coding tasks
 
 *Updated after each plan completion*
 
@@ -50,6 +50,8 @@ Recent decisions affecting current work:
 - No FK from user_profiles.user_id to auth.users — seed users won't exist in auth.users, FK would block inserts
 - FK constraints on interactions wrapped in DO $$ block for idempotency (plan 01-01)
 - RLS enabled on all 3 tables; service role key used in all backend DB access (plan 01-01)
+- Column names in user_profiles are location_city/location_state (not city/state) — matches DDL from plan 01-01
+- Hardcoded UUIDs in seed script for idempotent upserts — same PKs on every re-run
 
 ### Pending Todos
 
@@ -60,8 +62,9 @@ None.
 - Known bug: `handleLogout()` in `Home.vue` scoped inside `loadPosts()` — crashes on logout. Out of scope this milestone but worth noting.
 - APScheduler single-worker constraint: multi-worker uvicorn causes double-firing. Must document clearly.
 - Supabase RLS: verify service role key is used for all backend DB reads (not anon key). Verified for algorithm tables; existing match routes not yet validated.
+- `psycopg2-binary` fails to build on macOS arm64 + Python 3.14. Not blocking for seed script (supabase-py uses HTTP). May need resolution before SQLAlchemy usage in later phases.
 
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Plan 01-01 complete. Next: Plan 01-02 (seed data for algorithm testing).
+Stopped at: Phase 1 complete. Plan 01-02 complete. Next: Phase 2 — Algorithm Pipeline (02-01).

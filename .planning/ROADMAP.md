@@ -12,7 +12,7 @@ This milestone delivers the backend algorithm pipeline that powers the People Ma
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Database Foundation** - Create all Supabase tables and seed 15+ mock users with interaction data
+- [x] **Phase 1: Database Foundation** - Create all Supabase tables and seed 15+ mock users with interaction data (completed 2026-02-22)
 - [ ] **Phase 2: Core Algorithm** - Build interaction scoring, combined distance matrix, t-SNE projection, and origin translation as pure computation modules
 - [ ] **Phase 3: Pipeline Integration** - Wire algorithm to real DB data (fetcher reads user_profiles/interactions, writer stores map_coordinates)
 - [ ] **Phase 4: API and Scheduler** - Expose map coordinates via GET; accept interaction events and profile writes via JWT-validated POST/PUT endpoints; schedule daily batch recomputation per timezone
@@ -88,7 +88,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Database Foundation | 1/2 | In Progress | - |
+| 1. Database Foundation | 2/2 | Complete   | 2026-02-22 |
 | 2. Core Algorithm | 0/? | Not started | - |
 | 3. Pipeline Integration | 0/? | Not started | - |
 | 4. API and Scheduler | 0/? | Not started | - |
