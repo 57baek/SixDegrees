@@ -34,7 +34,12 @@ The People Map: every user is always at (0, 0), and every other person on the pl
 - [ ] Seed script: 10-15 mock users with varied profiles + seeded interactions in Supabase
 - [ ] `test_map.py`: standalone matplotlib plot proving algorithm correctness (changing data changes plot)
 - [ ] `people_map_demo.ipynb`: interactive Jupyter notebook with per-stage explanations and inline plots
-- [ ] DB schema spec + API contract doc for frontend team
+- [ ] Backend JWT validation on all write endpoints (via `supabase.auth.get_user(token)`)
+- [ ] `POST /interactions/like` — records like event, upserts `interactions.likes_count`
+- [ ] `POST /interactions/comment` — records comment event, upserts `interactions.comments_count`
+- [ ] `POST /interactions/dm` — records DM sent event, upserts `interactions.dm_count`
+- [ ] `PUT /profile` — creates or updates authenticated user's profile in `user_profiles`
+- [ ] DB schema spec + API contract doc for frontend team (read endpoint + all write endpoints)
 
 ### Out of Scope
 
@@ -42,9 +47,9 @@ The People Map: every user is always at (0, 0), and every other person on the pl
 - Real-time map updates — architecture supports it, not building it
 - Map animation — store old+new coords for future delta, don't build animation
 - Redis / Celery — APScheduler or cron only
-- Profile creation/editing UI — define spec, don't implement
+- Profile creation/editing UI — backend endpoint exists, no frontend UI
 - Admin/moderation features — not this milestone
-- DM messaging UI — just count DMs from interactions table if seeded
+- DM messaging UI — backend records dm events, no messaging UI
 - CORS production configuration — localhost only
 - Deployment / Docker setup — local dev only
 - Full production test suite — demo scripts only
@@ -83,6 +88,7 @@ The People Map: every user is always at (0, 0), and every other person on the pl
 | Batch precompute + store vs live compute | N×N t-SNE is expensive; precompute at 7pm and serve from DB eliminates per-request latency | — Pending |
 | APScheduler over Celery/Redis | Simpler setup for this milestone; sufficient for daily batch job | — Pending |
 | Dict-driven interaction type weights | Makes adding new interaction types a config change, not a code change | — Pending |
+| Backend-mediated writes (no direct frontend → Supabase writes) | All interaction events and profile data go through FastAPI endpoints; frontend only calls Supabase directly for Auth. Enforces data integrity, centralizes validation, and ensures the algorithm always gets clean inputs | — Pending |
 
 ---
-*Last updated: 2026-02-22 after initialization*
+*Last updated: 2026-02-22 after architecture decision: backend-mediated writes*

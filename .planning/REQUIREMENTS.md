@@ -78,10 +78,20 @@ Requirements for this milestone. All are backend/algorithm — no frontend UI im
 - [ ] **DEMO-03**: Both scripts demonstrate sensitivity: increasing interaction count between two users moves them visibly closer; changing profile interests moves users relative to their interest cluster
 - [ ] **DEMO-04**: Both scripts connect to the real Supabase instance (using `.env` credentials) and work with the seeded mock data
 
+### Write API Endpoints
+
+All frontend data writes go through the backend — no direct frontend → Supabase writes for application data. Frontend only calls Supabase directly for Auth.
+
+- [ ] **AUTH-01**: Backend validates the Supabase JWT on all write endpoints using `supabase.auth.get_user(token)`; returns HTTP 401 for missing or invalid tokens
+- [ ] **WRITE-01**: `POST /interactions/like` — accepts `{ target_user_id }` in body; validates JWT to identify acting user; upserts `interactions` row (canonical pair order) incrementing `likes_count`
+- [ ] **WRITE-02**: `POST /interactions/comment` — accepts `{ target_user_id }` in body; validates JWT; upserts `interactions` row incrementing `comments_count`
+- [ ] **WRITE-03**: `POST /interactions/dm` — accepts `{ target_user_id }` in body; validates JWT; upserts `interactions` row incrementing `dm_count`
+- [ ] **WRITE-04**: `PUT /profile` — accepts profile fields in body; validates JWT; creates or updates the authenticated user's row in `user_profiles`; user can only update their own profile
+
 ### Frontend API Contract Document
 
-- [ ] **SPEC-01**: `docs/API_CONTRACT.md` documents exactly what the `GET /map/{user_id}` response looks like (field names, types, example JSON)
-- [ ] **SPEC-02**: `docs/DB_SCHEMA.md` documents exactly what data the frontend must write to each table: what a "like" writes to `interactions`, what a "comment" writes, what a "DM sent" writes, what profile setup must write to `user_profiles`
+- [ ] **SPEC-01**: `docs/API_CONTRACT.md` documents all endpoints: `GET /map/{user_id}` response format, all write endpoint request/response formats, auth header requirement, and error shapes
+- [ ] **SPEC-02**: `docs/DB_SCHEMA.md` documents the table schemas — for reference only; frontend does not write directly to any table
 
 ---
 
@@ -112,10 +122,9 @@ Deferred to future milestone.
 | Feature | Reason |
 |---------|--------|
 | Frontend People Map rendering | Frontend team's responsibility — this milestone produces the API contract |
-| Social feed UI (posts/likes as visible features) | Backend-only milestone; interactions only exist as seeded data |
-| Profile creation/editing UI | Define the DB contract, don't build the UI |
-| DM messaging UI | Seed dm_count in interactions table; don't build messaging |
-| Backend JWT auth validation | Stubs remain; not this milestone's focus |
+| Social feed UI (posts/likes as visible features) | Backend-only milestone; write endpoints exist but no feed UI |
+| Profile creation/editing UI | Backend `PUT /profile` endpoint exists; no frontend UI |
+| DM messaging UI | Backend records `dm_count` via `POST /interactions/dm`; no messaging UI |
 | Real-time map updates | Architecture supports via batch; real-time is out of scope |
 | Redis / Celery | APScheduler is sufficient; added complexity not justified |
 | Docker / deployment config | Local dev only |
@@ -163,6 +172,11 @@ Deferred to future milestone.
 | SCHED-02 | Phase 4 | API and Scheduler | Pending |
 | SCHED-03 | Phase 4 | API and Scheduler | Pending |
 | SCHED-04 | Phase 4 | API and Scheduler | Pending |
+| AUTH-01 | Phase 4 | API and Scheduler | Pending |
+| WRITE-01 | Phase 4 | API and Scheduler | Pending |
+| WRITE-02 | Phase 4 | API and Scheduler | Pending |
+| WRITE-03 | Phase 4 | API and Scheduler | Pending |
+| WRITE-04 | Phase 4 | API and Scheduler | Pending |
 | DEMO-01 | Phase 5 | Demo and Docs | Pending |
 | DEMO-02 | Phase 5 | Demo and Docs | Pending |
 | DEMO-03 | Phase 5 | Demo and Docs | Pending |
@@ -171,10 +185,10 @@ Deferred to future milestone.
 | SPEC-02 | Phase 5 | Demo and Docs | Pending |
 
 **Coverage:**
-- v1 requirements: 36 total (note: SPEC-01 and SPEC-02 added to count above, bringing total to 41 individual rows — the original 36 count reflects grouped requirements)
-- Mapped to phases: 36/36
-- Unmapped: 0
+- v1 requirements: 46 total (41 original + AUTH-01, WRITE-01–04, SPEC-01 and SPEC-02 updated)
+- Mapped to phases: 46/46
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-22 — traceability confirmed against ROADMAP.md phase structure*
+*Last updated: 2026-02-22 — added write API endpoints + JWT auth per architecture decision*

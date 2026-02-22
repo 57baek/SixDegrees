@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Database Foundation** - Create all Supabase tables and seed 15+ mock users with interaction data
 - [ ] **Phase 2: Core Algorithm** - Build interaction scoring, combined distance matrix, t-SNE projection, and origin translation as pure computation modules
 - [ ] **Phase 3: Pipeline Integration** - Wire algorithm to real DB data (fetcher reads user_profiles/interactions, writer stores map_coordinates)
-- [ ] **Phase 4: API and Scheduler** - Expose map coordinates via GET endpoint and schedule daily batch recomputation per timezone
+- [ ] **Phase 4: API and Scheduler** - Expose map coordinates via GET; accept interaction events and profile writes via JWT-validated POST/PUT endpoints; schedule daily batch recomputation per timezone
 - [ ] **Phase 5: Demo and Docs** - Validate algorithm with test_map.py + Jupyter notebook; publish API contract and DB schema docs
 
 ## Phase Details
@@ -54,14 +54,16 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 
 ### Phase 4: API and Scheduler
-**Goal**: The People Map is accessible via HTTP and recomputes automatically at 7pm per user timezone every day without manual intervention
+**Goal**: The People Map is accessible via HTTP, interaction events and profile data are written through backend endpoints with JWT validation, and daily batch recomputation runs automatically per user timezone
 **Depends on**: Phase 3
-**Requirements**: API-01, API-02, API-03, API-04, API-05, SCHED-01, SCHED-02, SCHED-03, SCHED-04
+**Requirements**: API-01, API-02, API-03, API-04, API-05, SCHED-01, SCHED-02, SCHED-03, SCHED-04, AUTH-01, WRITE-01, WRITE-02, WRITE-03, WRITE-04
 **Success Criteria** (what must be TRUE):
-  1. `GET /map/{user_id}` for a user with precomputed coordinates returns a JSON response with the correct format — including the user themselves at (0.0, 0.0) in the coordinates list
-  2. `GET /map/{user_id}` for a user with no precomputed map returns HTTP 404 with the message "Map not yet computed for this user"
-  3. `POST /map/trigger/{user_id}` triggers recomputation and the updated coordinates are immediately available via `GET /map/{user_id}`
-  4. The FastAPI app starts without errors and APScheduler registers CronTriggers matching the unique timezones in `user_profiles`
+  1. `GET /map/{user_id}` returns correct JSON with the requesting user at (0.0, 0.0) in the coordinates list
+  2. `GET /map/{user_id}` for a user with no precomputed map returns HTTP 404 with message "Map not yet computed for this user"
+  3. `POST /map/trigger/{user_id}` triggers recomputation and updated coordinates are immediately available
+  4. `POST /interactions/like` with a valid JWT increments `likes_count` in `interactions`; same request without a JWT returns HTTP 401
+  5. `PUT /profile` with a valid JWT creates or updates the user's row in `user_profiles`; attempting to update another user's profile returns HTTP 403
+  6. FastAPI starts without errors and APScheduler registers CronTriggers matching unique timezones in `user_profiles`
 **Plans**: TBD
 
 ### Phase 5: Demo and Docs
