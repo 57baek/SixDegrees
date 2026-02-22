@@ -1,0 +1,215 @@
+# Codebase Structure
+
+**Analysis Date:** 2026-02-22
+
+## Directory Layout
+
+```
+sixDegrees/
+├── backend/                      # FastAPI server for matching algorithm
+│   ├── app.py                    # Entry point; CORS config; router mounting
+│   ├── config/
+│   │   └── supabase.py           # Supabase client initialization
+│   ├── models/
+│   │   └── user.py               # Pydantic schemas: UserProfile, MatchResult
+│   ├── routes/
+│   │   ├── auth.py               # Auth endpoints (TODO: not implemented)
+│   │   └── match.py              # Matching endpoints; caching logic
+│   └── services/
+│       └── matching/
+│           ├── __init__.py       # Package marker
+│           ├── similarity.py      # Per-field similarity functions
+│           ├── scoring.py         # Weighted matrix computation
+│           ├── clustering.py      # KNN ranking and tier assignment
+│           └── visualization.py   # PCA 2D projection
+├── frontend/                     # Vue 3 + Vite SPA
+│   ├── src/
+│   │   ├── main.js               # Entry point; app mount
+│   │   ├── App.vue               # Root component wrapping router-view
+│   │   ├── lib/
+│   │   │   └── supabase.js       # Supabase client config; auth helpers
+│   │   ├── router/
+│   │   │   └── index.js          # Vue Router routes; auth guard
+│   │   ├── views/
+│   │   │   ├── Home.vue          # Feed page (mock data + post creation)
+│   │   │   ├── Login.vue         # Auth form; calls supabase.auth.signInWithPassword
+│   │   │   └── SignUp.vue        # Registration form; password validation checklist
+│   │   └── components/
+│   │       ├── CreatePost.vue    # Post composition; tier selector
+│   │       └── Post.vue          # Post display; likes/comments
+│   ├── vite.config.js            # Vite build config; dev proxy for /api → localhost:8000
+│   ├── package.json              # Dependencies: vue, vite, supabase, lucide-vue-next
+│   └── package-lock.json
+├── .planning/                    # GSD planning documents
+│   └── codebase/
+│       ├── ARCHITECTURE.md       # Layer patterns, data flow
+│       └── STRUCTURE.md          # This file
+├── .vscode/                      # VSCode settings
+├── .env                          # Environment variables (SUPABASE_URL, SUPABASE_KEY for backend)
+├── CLAUDE.md                     # Project overview and development commands
+└── README.md                     # Project root documentation
+```
+
+## Directory Purposes
+
+**`backend/`:**
+- Purpose: FastAPI server exposing matching algorithm endpoints
+- Contains: Python application code (routes, models, services)
+- Key files: `app.py` (server), `routes/match.py` (endpoints), `services/matching/` (algorithm pipeline)
+
+**`backend/config/`:**
+- Purpose: Centralize environment and external service configuration
+- Contains: Supabase client initialization, environment variable validation
+- Key files: `supabase.py` (Supabase client factory)
+
+**`backend/models/`:**
+- Purpose: Define data schemas for validation and serialization
+- Contains: Pydantic BaseModel classes
+- Key files: `user.py` (UserProfile, MatchResult)
+
+**`backend/routes/`:**
+- Purpose: HTTP endpoint implementations
+- Contains: APIRouter instances with request handlers
+- Key files: `match.py` (active endpoints), `auth.py` (stub)
+
+**`backend/services/matching/`:**
+- Purpose: Implement multi-stage matching algorithm pipeline
+- Contains: Four specialized modules for similarity, scoring, clustering, visualization
+- Key files: All four .py files are executed in sequence: `similarity.py` → `scoring.py` → `clustering.py` → `visualization.py`
+
+**`frontend/`:**
+- Purpose: Vue 3 SPA for user-facing application
+- Contains: Components, views, router, library integrations
+- Key files: `src/main.js` (app mount), `src/App.vue` (root), `src/views/` (pages)
+
+**`frontend/src/`:**
+- Purpose: Source code for Vue application
+- Contains: All Vue 3 components and modules
+- Key files: `main.js` (entry), `App.vue` (root), `router/index.js` (routing), `lib/supabase.js` (client init)
+
+**`frontend/src/lib/`:**
+- Purpose: Shared library functions and integrations
+- Contains: Supabase client and auth helpers
+- Key files: `supabase.js` (Supabase configuration and utilities)
+
+**`frontend/src/router/`:**
+- Purpose: Vue Router configuration and navigation guards
+- Contains: Route definitions, auth checks
+- Key files: `index.js` (router instance with beforeEach guard)
+
+**`frontend/src/views/`:**
+- Purpose: Full-page components (one per route)
+- Contains: Home (feed), Login, SignUp pages
+- Key files: `Home.vue` (protected route), `Login.vue`, `SignUp.vue`
+
+**`frontend/src/components/`:**
+- Purpose: Reusable UI components
+- Contains: Post creation and display components
+- Key files: `CreatePost.vue` (form), `Post.vue` (card with like/comment UI)
+
+**`.planning/codebase/`:**
+- Purpose: GSD code analysis and planning documents
+- Contains: Architecture and structure analyses
+- Generated by: `/gsd:map-codebase` command
+- Consumed by: `/gsd:plan-phase` and `/gsd:execute-phase` commands
+
+## Key File Locations
+
+**Entry Points:**
+- Backend: `backend/app.py` - FastAPI app initialized and run via `uvicorn app:app --reload`
+- Frontend: `frontend/src/main.js` - Vue app mounted and router attached; served via `npm run dev`
+
+**Configuration:**
+- Backend env: `.env` file with SUPABASE_URL, SUPABASE_KEY (service role key)
+- Frontend env: `.env` files in `frontend/` with VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+- Build: `frontend/vite.config.js` (Vite config), `backend/` uses uvicorn directly
+
+**Core Logic:**
+- Matching algorithm: `backend/services/matching/` (all 4 modules)
+- API routes: `backend/routes/match.py` (active), `backend/routes/auth.py` (stub)
+- Frontend routing: `frontend/src/router/index.js` (route defs + auth guard)
+- Supabase integration: `frontend/src/lib/supabase.js` (client factory), `backend/config/supabase.py` (admin client)
+
+**Testing:**
+- Test files: None found; no test directory or test runner configuration exists
+
+## Naming Conventions
+
+**Files:**
+- Backend Python: snake_case (e.g., `supabase.py`, `user.py`, `match.py`)
+- Frontend Vue: PascalCase for components (e.g., `Home.vue`, `CreatePost.vue`), camelCase for JS (e.g., `supabase.js`, `index.js`)
+- Config files: lowercase with dots (e.g., `vite.config.js`, `.env`)
+
+**Directories:**
+- Backend: plural nouns for collections (e.g., `routes/`, `models/`, `services/`), singular for feature areas (e.g., `matching/`)
+- Frontend: similar structure with `views/` (pages), `components/` (reusable UI), `lib/` (utilities)
+
+**Code Identifiers:**
+- Functions: camelCase in both Python and JS (e.g., `buildSimilarityMatrix()`, `getMatches()`)
+- Classes/Models: PascalCase (e.g., `UserProfile`, `MatchResult`)
+- Constants: UPPER_SNAKE_CASE (e.g., `DEFAULT_WEIGHTS`, `FIELD_OF_STUDY_CATEGORIES`)
+- Vue component methods: camelCase (e.g., `handleLogin`, `handlePost`)
+
+## Where to Add New Code
+
+**New Backend Endpoint:**
+1. Create handler function in appropriate file in `backend/routes/` (or create new route file)
+2. Define request/response models in `backend/models/` if needed
+3. Add APIRouter import and include in `backend/app.py:26`
+4. Follow REST convention for path (e.g., `/match/{resource}` for matching-related endpoints)
+
+**New Frontend View (Page):**
+1. Create `.vue` file in `frontend/src/views/`
+2. Add route entry in `frontend/src/router/index.js`
+3. Set `meta: { requiresAuth: true }` if protected route
+4. Import view component in router file (line 2-4 example)
+
+**New Frontend Component:**
+1. Create `.vue` file in `frontend/src/components/`
+2. Define props interface at top of `<script setup>`
+3. Import into parent view and use in template
+
+**New Matching Algorithm Feature:**
+1. If adding new similarity metric: add function to `backend/services/matching/similarity.py`, add category map if categorical
+2. If adding weight adjustment UI: add to frontend view, POST to new endpoint in `backend/routes/match.py`
+3. Update `DEFAULT_WEIGHTS` in `backend/services/matching/scoring.py` and `FEATURE_COLS` list
+4. Rebuild similarity matrix and re-rank matches (invalidate cache if in production)
+
+**Shared Utilities:**
+- Frontend: Add to `frontend/src/lib/` or new `frontend/src/utils/` directory
+- Backend: Add to `backend/services/` with appropriate subdirectory (e.g., `backend/services/matching/` for algorithm-related)
+
+**Database Queries:**
+- Frontend: Use `supabase` client from `frontend/src/lib/supabase.js`
+- Backend: Use `get_supabase_client()` from `backend/config/supabase.py`
+- New models/schema: Create table via Supabase web UI (no migration system exists); ensure UserProfile Pydantic model matches schema
+
+## Special Directories
+
+**`.planning/codebase/`:**
+- Purpose: Code analysis documents generated by GSD mapping commands
+- Generated: Yes, by `/gsd:map-codebase`
+- Committed: Yes, to git for team reference
+- Read by: `/gsd:plan-phase` (determines what context to load) and `/gsd:execute-phase` (follows patterns from docs)
+
+**`.vscode/`:**
+- Purpose: VSCode workspace settings and extensions
+- Generated: No, checked in manually
+- Committed: Yes
+- Usage: Provides consistent IDE configuration for team
+
+**`.env` (root directory):**
+- Purpose: Shared environment variables (currently used by backend only)
+- Generated: No, manually created from `.env.example`
+- Committed: No (in .gitignore)
+- Contents: SUPABASE_URL, SUPABASE_KEY (service role key)
+
+**`frontend/.env` (if exists):**
+- Purpose: Frontend-specific Supabase credentials
+- Format: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (public key)
+- Committed: No
+- Note: Vite exposes `import.meta.env.VITE_*` variables to client-side code
+
+---
+
+*Structure analysis: 2026-02-22*

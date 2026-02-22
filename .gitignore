@@ -36,3 +36,7 @@ Thumbs.db
 *.db
 *.sqlite
 *.sqlite3
+
+# Agent
+.claude/
+CLAUDE.md
