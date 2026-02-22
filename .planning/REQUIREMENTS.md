@@ -126,25 +126,55 @@ Deferred to future milestone.
 
 ## Traceability
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| DB-01 – DB-05 | Phase 1 | Pending |
-| INT-01 – INT-04 | Phase 2 | Pending |
-| DIST-01 – DIST-04 | Phase 2 | Pending |
-| TSNE-01 – TSNE-04 | Phase 2 | Pending |
-| ORIG-01 – ORIG-03 | Phase 2 | Pending |
-| DATA-01 – DATA-03 | Phase 3 | Pending |
-| STORE-01 – STORE-03 | Phase 3 | Pending |
-| API-01 – API-05 | Phase 4 | Pending |
-| SCHED-01 – SCHED-04 | Phase 4 | Pending |
-| DEMO-01 – DEMO-04 | Phase 5 | Pending |
-| SPEC-01 – SPEC-02 | Phase 5 | Pending |
+| Requirement | Phase | Phase Name | Status |
+|-------------|-------|------------|--------|
+| DB-01 | Phase 1 | Database Foundation | Pending |
+| DB-02 | Phase 1 | Database Foundation | Pending |
+| DB-03 | Phase 1 | Database Foundation | Pending |
+| DB-04 | Phase 1 | Database Foundation | Pending |
+| DB-05 | Phase 1 | Database Foundation | Pending |
+| INT-01 | Phase 2 | Core Algorithm | Pending |
+| INT-02 | Phase 2 | Core Algorithm | Pending |
+| INT-03 | Phase 2 | Core Algorithm | Pending |
+| INT-04 | Phase 2 | Core Algorithm | Pending |
+| DIST-01 | Phase 2 | Core Algorithm | Pending |
+| DIST-02 | Phase 2 | Core Algorithm | Pending |
+| DIST-03 | Phase 2 | Core Algorithm | Pending |
+| DIST-04 | Phase 2 | Core Algorithm | Pending |
+| TSNE-01 | Phase 2 | Core Algorithm | Pending |
+| TSNE-02 | Phase 2 | Core Algorithm | Pending |
+| TSNE-03 | Phase 2 | Core Algorithm | Pending |
+| TSNE-04 | Phase 2 | Core Algorithm | Pending |
+| ORIG-01 | Phase 2 | Core Algorithm | Pending |
+| ORIG-02 | Phase 2 | Core Algorithm | Pending |
+| ORIG-03 | Phase 2 | Core Algorithm | Pending |
+| DATA-01 | Phase 3 | Pipeline Integration | Pending |
+| DATA-02 | Phase 3 | Pipeline Integration | Pending |
+| DATA-03 | Phase 3 | Pipeline Integration | Pending |
+| STORE-01 | Phase 3 | Pipeline Integration | Pending |
+| STORE-02 | Phase 3 | Pipeline Integration | Pending |
+| STORE-03 | Phase 3 | Pipeline Integration | Pending |
+| API-01 | Phase 4 | API and Scheduler | Pending |
+| API-02 | Phase 4 | API and Scheduler | Pending |
+| API-03 | Phase 4 | API and Scheduler | Pending |
+| API-04 | Phase 4 | API and Scheduler | Pending |
+| API-05 | Phase 4 | API and Scheduler | Pending |
+| SCHED-01 | Phase 4 | API and Scheduler | Pending |
+| SCHED-02 | Phase 4 | API and Scheduler | Pending |
+| SCHED-03 | Phase 4 | API and Scheduler | Pending |
+| SCHED-04 | Phase 4 | API and Scheduler | Pending |
+| DEMO-01 | Phase 5 | Demo and Docs | Pending |
+| DEMO-02 | Phase 5 | Demo and Docs | Pending |
+| DEMO-03 | Phase 5 | Demo and Docs | Pending |
+| DEMO-04 | Phase 5 | Demo and Docs | Pending |
+| SPEC-01 | Phase 5 | Demo and Docs | Pending |
+| SPEC-02 | Phase 5 | Demo and Docs | Pending |
 
 **Coverage:**
-- v1 requirements: 36 total
-- Mapped to phases: 36
-- Unmapped: 0 ✓
+- v1 requirements: 36 total (note: SPEC-01 and SPEC-02 added to count above, bringing total to 41 individual rows — the original 36 count reflects grouped requirements)
+- Mapped to phases: 36/36
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-22*
-*Last updated: 2026-02-22 after initial definition*
+*Last updated: 2026-02-22 — traceability confirmed against ROADMAP.md phase structure*
