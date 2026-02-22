@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 1 of 5 (Database Foundation)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-02-22 — Roadmap created; 36 v1 requirements mapped to 5 phases
+Plan: 1 of ? in current phase
+Status: In progress — awaiting human action (Task 2: apply SQL in Supabase dashboard)
+Last activity: 2026-02-22 — Plan 01-01 Task 1 complete; setup_tables.sql DDL written and committed
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 5%
 
 ## Performance Metrics
 
@@ -47,6 +47,8 @@ Recent decisions affecting current work:
 - Dict-driven INTERACTION_WEIGHTS: adding new type = 1 column + 1 dict entry, zero logic changes
 - Canonical pair ordering in interactions table (user_id_a < user_id_b) — prevents duplicate rows
 - Batch precompute + store: t-SNE is expensive; precompute at 7pm, serve from DB
+- No FK from user_profiles.user_id to auth.users — seed users won't exist in auth.users, FK would block inserts
+- FK constraints on interactions wrapped in DO $$ block for idempotency (plan 01-01)
 
 ### Pending Todos
 
@@ -61,5 +63,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Roadmap created, STATE.md initialized — ready to plan Phase 1
-Resume file: None
+Stopped at: Plan 01-01 Task 1 complete (1f30f89). Checkpoint: Task 2 requires human to apply backend/sql/setup_tables.sql in Supabase dashboard SQL editor.
+Resume signal: "tables created" — user confirms tables visible in Supabase Table Editor and Python verification prints OK for all 3 tables
