@@ -45,7 +45,13 @@ Plans:
   3. The requesting user's coordinates are exactly (0.0, 0.0) after origin translation; all other users are translated consistently
   4. Passing fewer than 10 users to the t-SNE step raises a clear descriptive error (not a cryptic sklearn crash)
   5. The NxN distance matrix is symmetric, has zeros on the diagonal, and all values are in [0, 1]
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — config/algorithm.py + t-SNE projector module (Wave 1 foundation)
+- [ ] 02-02-PLAN.md — interaction scoring module with 95th-pct normalization (Wave 2, parallel with 02-03)
+- [ ] 02-03-PLAN.md — combined distance matrix + origin translator with tier assignment (Wave 2, parallel with 02-02)
+- [ ] 02-04-PLAN.md — pipeline orchestrator + end-to-end integration tests (Wave 3)
 
 ### Phase 3: Pipeline Integration
 **Goal**: The algorithm reads real profile and interaction data from Supabase and writes computed coordinates back to `map_coordinates` — the pipeline runs end-to-end against the live database
