@@ -4,8 +4,8 @@ SixDegrees Seed Script
 Inserts 20 diverse mock users into user_profiles and seeded interaction pairs
 into interactions. Designed for idempotent re-runs via upsert.
 
-Usage:
-    cd /Users/BAEK/Code/sixDegrees/backend
+Usage Example:
+    cd /Users/your-project-dir/sixDegrees/backend
     source venv/bin/activate
     python scripts/seed_db.py
 """
@@ -22,6 +22,7 @@ from config.supabase import get_supabase_client  # noqa: E402
 # ---------------------------------------------------------------------------
 # Helper
 # ---------------------------------------------------------------------------
+
 
 def canonical_pair(uid_a: str, uid_b: str) -> tuple:
     """Return (smaller_uuid, larger_uuid) for canonical pair ordering."""
@@ -306,12 +307,15 @@ USER_DATA = [
 # Seed functions
 # ---------------------------------------------------------------------------
 
+
 def seed_users(supabase) -> list:
     """Upsert all users and return list of inserted user_ids."""
     print(f"Seeding {len(USER_DATA)} users...")
-    response = supabase.table("user_profiles").upsert(
-        USER_DATA, on_conflict="user_id"
-    ).execute()
+    response = (
+        supabase.table("user_profiles")
+        .upsert(USER_DATA, on_conflict="user_id")
+        .execute()
+    )
     print(f"  Seeded {len(response.data)} user_profiles rows")
     return [u["user_id"] for u in USER_DATA]
 
@@ -322,24 +326,26 @@ def build_interactions(user_ids_by_cluster: dict) -> list:
 
     def add(uid_a, uid_b, likes, comments, dms):
         a, b = canonical_pair(uid_a, uid_b)
-        interactions.append({
-            "user_id_a": a,
-            "user_id_b": b,
-            "likes_count": likes,
-            "comments_count": comments,
-            "dm_count": dms,
-        })
+        interactions.append(
+            {
+                "user_id_a": a,
+                "user_id_b": b,
+                "likes_count": likes,
+                "comments_count": comments,
+                "dm_count": dms,
+            }
+        )
 
     # Within-cluster interactions (high counts — algorithm should pull these users close)
 
     # Outdoors cluster
     outdoors = user_ids_by_cluster["outdoors"]
-    add(outdoors[0], outdoors[1], 12, 7, 3)   # Alex <-> Sam
-    add(outdoors[0], outdoors[2], 9, 5, 1)    # Alex <-> Jordan
-    add(outdoors[0], outdoors[3], 8, 4, 2)    # Alex <-> Morgan
-    add(outdoors[1], outdoors[2], 11, 6, 2)   # Sam <-> Jordan
-    add(outdoors[1], outdoors[3], 7, 3, 1)    # Sam <-> Morgan
-    add(outdoors[2], outdoors[3], 10, 5, 1)   # Jordan <-> Morgan
+    add(outdoors[0], outdoors[1], 12, 7, 3)  # Alex <-> Sam
+    add(outdoors[0], outdoors[2], 9, 5, 1)  # Alex <-> Jordan
+    add(outdoors[0], outdoors[3], 8, 4, 2)  # Alex <-> Morgan
+    add(outdoors[1], outdoors[2], 11, 6, 2)  # Sam <-> Jordan
+    add(outdoors[1], outdoors[3], 7, 3, 1)  # Sam <-> Morgan
+    add(outdoors[2], outdoors[3], 10, 5, 1)  # Jordan <-> Morgan
 
     # Creative cluster
     creative = user_ids_by_cluster["creative"]
@@ -352,7 +358,7 @@ def build_interactions(user_ids_by_cluster: dict) -> list:
 
     # Tech/Gaming cluster
     tech = user_ids_by_cluster["tech"]
-    add(tech[0], tech[1], 15, 9, 4)    # Power pair — tests 95th-pct clipping in Phase 2
+    add(tech[0], tech[1], 15, 9, 4)  # Power pair — tests 95th-pct clipping in Phase 2
     add(tech[0], tech[2], 12, 7, 3)
     add(tech[0], tech[3], 10, 5, 2)
     add(tech[1], tech[2], 13, 8, 3)
@@ -378,11 +384,11 @@ def build_interactions(user_ids_by_cluster: dict) -> list:
     add(sports[2], sports[3], 8, 4, 1)
 
     # Sparse cross-cluster interactions (low counts — algorithm keeps these further apart)
-    add(outdoors[0], tech[0], 2, 1, 0)      # hiker who codes
+    add(outdoors[0], tech[0], 2, 1, 0)  # hiker who codes
     add(outdoors[3], creative[0], 3, 1, 0)  # photographer <-> musician
-    add(tech[1], social[0], 1, 0, 0)        # programmer <-> foodie
-    add(creative[3], sports[0], 2, 1, 0)    # film fan <-> runner
-    add(sports[3], social[3], 3, 2, 0)      # traveler bridge
+    add(tech[1], social[0], 1, 0, 0)  # programmer <-> foodie
+    add(creative[3], sports[0], 2, 1, 0)  # film fan <-> runner
+    add(sports[3], social[3], 3, 2, 0)  # traveler bridge
 
     return interactions
 
@@ -391,15 +397,18 @@ def seed_interactions(supabase, user_ids_by_cluster: dict):
     """Upsert all interaction pairs."""
     interactions = build_interactions(user_ids_by_cluster)
     print(f"Seeding {len(interactions)} interaction pairs...")
-    response = supabase.table("interactions").upsert(
-        interactions, on_conflict="user_id_a,user_id_b"
-    ).execute()
+    response = (
+        supabase.table("interactions")
+        .upsert(interactions, on_conflict="user_id_a,user_id_b")
+        .execute()
+    )
     print(f"  Seeded {len(response.data)} interaction rows")
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     supabase = get_supabase_client()
@@ -413,9 +422,9 @@ def main():
     user_ids_by_cluster = {
         "outdoors": user_ids[0:4],
         "creative": user_ids[4:8],
-        "tech":     user_ids[8:12],
-        "social":   user_ids[12:16],
-        "sports":   user_ids[16:20],
+        "tech": user_ids[8:12],
+        "social": user_ids[12:16],
+        "sports": user_ids[16:20],
     }
 
     # Seed interactions
@@ -437,7 +446,9 @@ def main():
 
     assert len(timezones) >= 4, f"Expected >= 4 timezones, got {len(timezones)}"
     assert user_count >= 15, f"Expected >= 15 users, got {user_count}"
-    assert interaction_count >= 30, f"Expected >= 30 interaction pairs, got {interaction_count}"
+    assert interaction_count >= 30, (
+        f"Expected >= 30 interaction pairs, got {interaction_count}"
+    )
 
     print("\nSeed complete. All assertions passed.")
 
