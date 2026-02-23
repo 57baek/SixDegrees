@@ -60,6 +60,8 @@ const loading = ref(false)
 /** Function to fetch posts from the database w/ user info, like count, comment count
  * posts ordered by recency (newst first)
 */
+
+
 async function loadPosts() {
   loading.value = true
   
@@ -82,7 +84,7 @@ async function loadPosts() {
   } finally {
     loading.value = false
   }
-
+  
   /**
    * Logs current user out and redirects to login page. 
    */
