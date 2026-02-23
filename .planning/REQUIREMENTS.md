@@ -82,7 +82,7 @@ Requirements for this milestone. All are backend/algorithm — no frontend UI im
 
 All frontend data writes go through the backend — no direct frontend → Supabase writes for application data. Frontend only calls Supabase directly for Auth.
 
-- [ ] **AUTH-01**: Backend validates the Supabase JWT on all write endpoints using `supabase.auth.get_user(token)`; returns HTTP 401 for missing or invalid tokens
+- [x] **AUTH-01**: Backend validates the Supabase JWT on all write endpoints using `supabase.auth.get_user(token)`; returns HTTP 401 for missing or invalid tokens
 - [ ] **WRITE-01**: `POST /interactions/like` — accepts `{ target_user_id }` in body; validates JWT to identify acting user; upserts `interactions` row (canonical pair order) incrementing `likes_count`
 - [ ] **WRITE-02**: `POST /interactions/comment` — accepts `{ target_user_id }` in body; validates JWT; upserts `interactions` row incrementing `comments_count`
 - [ ] **WRITE-03**: `POST /interactions/dm` — accepts `{ target_user_id }` in body; validates JWT; upserts `interactions` row incrementing `dm_count`

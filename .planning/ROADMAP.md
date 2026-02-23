@@ -81,7 +81,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — increment_interaction Postgres RPC + get_current_user auth dependency (Wave 1)
+- [x] 04-01-PLAN.md — increment_interaction Postgres RPC + get_current_user auth dependency (Wave 1)
 - [ ] 04-02-PLAN.md — GET /map/{user_id} and POST /map/trigger/{user_id} map routes (Wave 2)
 - [ ] 04-03-PLAN.md — POST /interactions/* and PUT /profile write endpoints (Wave 2)
 - [ ] 04-04-PLAN.md — APScheduler setup + app.py lifespan wiring + requirements.txt (Wave 3)
@@ -107,5 +107,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Database Foundation | 2/2 | Complete    | 2026-02-22 |
 | 2. Core Algorithm | 4/4 | Complete   | 2026-02-23 |
 | 3. Pipeline Integration | 2/2 | Complete    | 2026-02-23 |
-| 4. API and Scheduler | 0/? | Not started | - |
+| 4. API and Scheduler | 1/4 | In progress | - |
 | 5. Demo and Docs | 0/? | Not started | - |

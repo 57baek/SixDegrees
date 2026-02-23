@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** The People Map — every user is always at (0,0), all others positioned by profile similarity + interaction intensity, updated daily
-**Current focus:** Phase 3 — Pipeline Integration (DB wiring)
+**Current focus:** Phase 4 — API and Scheduler
 
 ## Current Position
 
-Phase: 3 of 5 (Pipeline Integration) — COMPLETE
-Current Plan: 03-02 complete
-Next: Phase 4 Plan 01 — API routes (GET /map/{user_id}, POST /map/trigger/{user_id}, interaction endpoints)
-Status: Plan 03-02 complete — run_pipeline_for_user() orchestrator implemented and all 3 Phase 3 ROADMAP success criteria verified against live Supabase
-Last activity: 2026-02-23 — Plan 03-02 complete; full DB-connected pipeline end-to-end verified
+Phase: 4 of 5 (API and Scheduler) — IN PROGRESS
+Current Plan: 04-01 complete
+Next: Phase 4 Plan 02 — interaction endpoints (POST /interactions/like, /comment, /dm)
+Status: Plan 04-01 complete — get_current_user JWT dependency and increment_interaction Postgres RPC both live
+Last activity: 2026-02-23 — Plan 04-01 complete; shared auth foundation ready for all write endpoints
 
-Progress: [█████████░] 60%
+Progress: [██████████░] 65%
 
 ## Performance Metrics
 
@@ -31,9 +31,10 @@ Progress: [█████████░] 60%
 | 01-database-foundation | 2 complete / 2 total | ~49min | ~24min |
 | 02-core-algorithm | 4 complete / 4 total | ~12min | ~3min |
 | 03-pipeline-integration | 2 complete / 2 total | ~3min | ~1.5min |
+| 04-api-and-scheduler | 1 complete / 4 total | ~13min | ~13min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (~6min), 02-03 (~2min), 02-04 (~2min), 03-01 (~2min)
+- Last 5 plans: 02-04 (~2min), 03-01 (~2min), 03-02 (~1min), 04-01 (~13min)
 - Trend: Fast execution for pure coding tasks
 
 *Updated after each plan completion*
@@ -68,6 +69,9 @@ Recent decisions affecting current work:
 - occupation hardcoded to "" at DB boundary — user_profiles has no occupation column; UserProfile model requires it; boundary absorbs the mismatch (plan 03-01)
 - No try/except in run_pipeline_for_user(): ValueError propagates to Phase 4 scheduler for logging — error handling is the caller's responsibility, not the orchestrator's (plan 03-02)
 - services.map_pipeline is the single public API surface for Phase 4 — import run_pipeline_for_user, not sub-modules (plan 03-02)
+- HTTPBearer(auto_error=False) + explicit None check — converts missing auth header to HTTP 401 (not FastAPI default 403) (plan 04-01)
+- increment_interaction RPC uses INSERT...ON CONFLICT DO NOTHING then UPDATE col+1 — standard upsert resets counts to 0 (plan 04-01)
+- Applied DDL via asyncpg direct connection (not MCP) — MCP requires personal access token; asyncpg with project password is equivalent (plan 04-01)
 
 ### Pending Todos
 
@@ -83,4 +87,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Plan 03-02 complete. Phase 3 fully done. Next: Phase 4 Plan 01 — API routes (GET /map/{user_id}, POST /map/trigger/{user_id}, interaction write endpoints).
+Stopped at: Completed 04-api-and-scheduler/04-01-PLAN.md. Plan 04-01 complete. Next: Phase 4 Plan 02 — interaction write endpoints (POST /interactions/like, /comment, /dm).
