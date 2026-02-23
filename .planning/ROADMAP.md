@@ -95,7 +95,12 @@ Plans:
   2. Opening `scripts/people_map_demo.ipynb` and running all cells completes without errors and shows per-stage inline plots
   3. Increasing the seeded interaction count between two users and re-running either script produces a scatter plot where those two users are visibly closer than before
   4. `docs/API_CONTRACT.md` and `docs/DB_SCHEMA.md` exist and contain enough detail that the frontend team can implement without asking follow-up questions
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — scripts/test_map.py standalone scatter plot + sensitivity demo + matplotlib in requirements.txt
+- [ ] 05-02-PLAN.md — scripts/people_map_demo.ipynb per-stage Jupyter notebook + sensitivity demo + Jupyter in requirements.txt
+- [ ] 05-03-PLAN.md — docs/API_CONTRACT.md (all 6 endpoints) + docs/DB_SCHEMA.md (all 3 tables)
 
 ## Progress
 
@@ -108,4 +113,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Core Algorithm | 4/4 | Complete   | 2026-02-23 |
 | 3. Pipeline Integration | 2/2 | Complete    | 2026-02-23 |
 | 4. API and Scheduler | 4/4 | Complete   | 2026-02-23 |
-| 5. Demo and Docs | 0/? | Not started | - |
+| 5. Demo and Docs | 0/3 | Not started | - |
