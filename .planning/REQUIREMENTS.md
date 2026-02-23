@@ -26,10 +26,10 @@ Requirements for this milestone. All are backend/algorithm — no frontend UI im
 
 ### Distance Matrix
 
-- [ ] **DIST-01**: Combined distance formula: `distance(i,j) = α × profile_distance(i,j) + β × (1 - interaction_score(i,j))`
+- [x] **DIST-01**: Combined distance formula: `distance(i,j) = α × profile_distance(i,j) + β × (1 - interaction_score(i,j))`
 - [x] **DIST-02**: α and β are stored in `backend/config/algorithm.py` with defaults α=0.6, β=0.4; no magic numbers in algorithm code
-- [ ] **DIST-03**: Profile distance computation preserves existing field weights (interests 35%, location 20%, languages 15%, field_of_study 10%, industry 10%, education 5%, age 5%)
-- [ ] **DIST-04**: Resulting NxN distance matrix has values in [0, 1], is symmetric, and has zeros on diagonal
+- [x] **DIST-03**: Profile distance computation preserves existing field weights (interests 35%, location 20%, languages 15%, field_of_study 10%, industry 10%, education 5%, age 5%)
+- [x] **DIST-04**: Resulting NxN distance matrix has values in [0, 1], is symmetric, and has zeros on diagonal
 
 ### t-SNE Projection
 
@@ -40,9 +40,9 @@ Requirements for this milestone. All are backend/algorithm — no frontend UI im
 
 ### Origin Translation & Tier Assignment
 
-- [ ] **ORIG-01**: After t-SNE, coordinates are translated so the requesting user is at exactly (0.0, 0.0) by subtracting their raw coordinates from all users' coordinates
-- [ ] **ORIG-02**: Tier assignment uses existing KNN logic: Tier 1 = 5 nearest, Tier 2 = next 10, Tier 3 = all within distance threshold; the requesting user themselves is included at (0,0) as Tier 1
-- [ ] **ORIG-03**: Origin translation is applied independently per requesting user (each user gets their own translated coordinate set)
+- [x] **ORIG-01**: After t-SNE, coordinates are translated so the requesting user is at exactly (0.0, 0.0) by subtracting their raw coordinates from all users' coordinates
+- [x] **ORIG-02**: Tier assignment uses existing KNN logic: Tier 1 = 5 nearest, Tier 2 = next 10, Tier 3 = all within distance threshold; the requesting user themselves is included at (0,0) as Tier 1
+- [x] **ORIG-03**: Origin translation is applied independently per requesting user (each user gets their own translated coordinate set)
 
 ### Data Access Layer
 

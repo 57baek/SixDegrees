@@ -95,7 +95,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Database Foundation | 2/2 | Complete    | 2026-02-22 |
-| 2. Core Algorithm | 2/4 | In Progress|  |
+| 2. Core Algorithm | 3/4 | In Progress|  |
 | 3. Pipeline Integration | 0/? | Not started | - |
 | 4. API and Scheduler | 0/? | Not started | - |
 | 5. Demo and Docs | 0/? | Not started | - |
