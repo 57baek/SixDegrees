@@ -61,7 +61,11 @@ Plans:
   1. Running the full pipeline for a specific user_id produces rows in `map_coordinates` with `is_current=true` and correct x/y/tier values
   2. Running the pipeline a second time for the same user marks the previous rows `is_current=false` and inserts fresh rows — old rows are retained, not deleted
   3. The requesting user appears in `map_coordinates` at (0.0, 0.0) alongside all other users
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — data_fetcher.py (reads user_profiles + interactions) and coord_writer.py (two-step write to map_coordinates)
+- [ ] 03-02-PLAN.md — run_pipeline_for_user() DB-connected orchestrator in __init__.py + end-to-end integration test against live Supabase
 
 ### Phase 4: API and Scheduler
 **Goal**: The People Map is accessible via HTTP, interaction events and profile data are written through backend endpoints with JWT validation, and daily batch recomputation runs automatically per user timezone
