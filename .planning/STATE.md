@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** The People Map — every user is always at (0,0), all others positioned by profile similarity + interaction intensity, updated daily
-**Current focus:** Phase 4 complete — Phase 5 next (Demo and Docs)
+**Current focus:** Phase 5 — Demo and Docs (in progress, plan 05-01 complete)
 
 ## Current Position
 
-Phase: 4 of 5 (API and Scheduler) — COMPLETE
-Current Plan: 04-04 complete
-Next: Phase 5 — Demo and Docs
-Status: Plan 04-04 complete — APScheduler timezone-grouped CronTriggers wired into FastAPI lifespan; all Phase 4 routes registered; server starts cleanly
-Last activity: 2026-02-23 — Plan 04-04 complete; scheduler.py and app.py wiring finalized; Phase 4 all 4 plans complete
+Phase: 5 of 5 (Demo and Docs) — IN PROGRESS
+Current Plan: 05-01 complete
+Next: Plan 05-02 — Jupyter Notebook Demo
+Status: Plan 05-01 complete — scripts/test_map.py created; matplotlib installed; sensitivity demo script validates algorithm end-to-end
+Last activity: 2026-02-23 — Plan 05-01 complete; scatter plot demo script created with try/finally restore pattern
 
-Progress: [█████████████░] 80%
+Progress: [██████████████░] 87%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: ~7min (01-01: ~45min including checkpoint, 01-02: ~4min, 02-01: ~2min, 02-02: ~6min, 02-03: ~2min, 02-04: ~2min, 03-01: ~2min, 03-02: ~1min, 04-01: ~13min, 04-02: ~2min, 04-03: ~2min, 04-04: ~3min)
-- Total execution time: ~1.3 hours
+- Total plans completed: 13
+- Average duration: ~7min (01-01: ~45min including checkpoint, 01-02: ~4min, 02-01: ~2min, 02-02: ~6min, 02-03: ~2min, 02-04: ~2min, 03-01: ~2min, 03-02: ~1min, 04-01: ~13min, 04-02: ~2min, 04-03: ~2min, 04-04: ~3min, 05-01: ~2min)
+- Total execution time: ~1.4 hours
 
 **By Phase:**
 
@@ -32,6 +32,7 @@ Progress: [█████████████░] 80%
 | 02-core-algorithm | 4 complete / 4 total | ~12min | ~3min |
 | 03-pipeline-integration | 2 complete / 2 total | ~3min | ~1.5min |
 | 04-api-and-scheduler | 4 complete / 4 total | ~20min | ~5min |
+| 05-demo-and-docs | 1 complete / 3 total | ~2min | ~2min |
 
 **Recent Trend:**
 - Last 5 plans: 04-01 (~13min), 04-02 (~2min), 04-03 (~2min), 04-04 (~3min)
@@ -82,6 +83,10 @@ Recent decisions affecting current work:
 - replace_existing=True on add_job — safe for future app restarts without duplicate jobs (plan 04-04)
 - asynccontextmanager lifespan replaces deprecated @app.on_event — modern FastAPI pattern (plan 04-04)
 - apscheduler pinned to >=3.10,<4 in requirements.txt — prevents accidental 4.x upgrade (plan 04-04)
+- matplotlib.use('MacOSX') called before import matplotlib.pyplot — order is mandatory for backend selection (plan 05-01)
+- euclidean() returns None if either user missing from coordinates — graceful non-crash in demo script (plan 05-01)
+- scripts/ at project root import backend/ modules via sys.path.insert(0, BACKEND_DIR) — standard pattern for demo scripts (plan 05-01)
+- try/finally in demo script guarantees Supabase interaction count restoration even if pipeline raises (plan 05-01)
 
 ### Pending Todos
 
@@ -97,4 +102,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 04-api-and-scheduler/04-04-PLAN.md. Phase 4 complete (4/4 plans). Next: Phase 5 — Demo and Docs.
+Stopped at: Completed 05-demo-and-docs/05-01-PLAN.md. Phase 5 plan 1/3 complete. Next: Plan 05-02 — Jupyter Notebook Demo.

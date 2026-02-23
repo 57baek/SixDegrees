@@ -73,10 +73,10 @@ Requirements for this milestone. All are backend/algorithm — no frontend UI im
 
 ### Demo Deliverables
 
-- [ ] **DEMO-01**: `scripts/test_map.py` is a standalone Python script that seeds mock data, runs the full pipeline, and plots a 2D scatter plot with matplotlib; dots labeled by display_name and color-coded by tier
+- [x] **DEMO-01**: `scripts/test_map.py` is a standalone Python script that seeds mock data, runs the full pipeline, and plots a 2D scatter plot with matplotlib; dots labeled by display_name and color-coded by tier
 - [ ] **DEMO-02**: `scripts/people_map_demo.ipynb` is a Jupyter notebook with per-stage explanations and inline plots; runs end-to-end with a single "Run All" command
-- [ ] **DEMO-03**: Both scripts demonstrate sensitivity: increasing interaction count between two users moves them visibly closer; changing profile interests moves users relative to their interest cluster
-- [ ] **DEMO-04**: Both scripts connect to the real Supabase instance (using `.env` credentials) and work with the seeded mock data
+- [x] **DEMO-03**: Both scripts demonstrate sensitivity: increasing interaction count between two users moves them visibly closer; changing profile interests moves users relative to their interest cluster
+- [x] **DEMO-04**: Both scripts connect to the real Supabase instance (using `.env` credentials) and work with the seeded mock data
 
 ### Write API Endpoints
 
