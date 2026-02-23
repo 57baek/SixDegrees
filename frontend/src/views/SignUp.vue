@@ -107,8 +107,8 @@ async function handleSignUp() {
     return
   }
 
-  alert("Signup successful! You can now log in.")
-  router.push("/login")
+  alert("Signup successful! You can now set up your profile.")
+  router.push("/profile-setup")
 }
 
 const handleBack2Login = async () => {
