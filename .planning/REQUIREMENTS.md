@@ -90,8 +90,8 @@ All frontend data writes go through the backend — no direct frontend → Supab
 
 ### Frontend API Contract Document
 
-- [ ] **SPEC-01**: `docs/API_CONTRACT.md` documents all endpoints: `GET /map/{user_id}` response format, all write endpoint request/response formats, auth header requirement, and error shapes
-- [ ] **SPEC-02**: `docs/DB_SCHEMA.md` documents the table schemas — for reference only; frontend does not write directly to any table
+- [x] **SPEC-01**: `docs/API_CONTRACT.md` documents all endpoints: `GET /map/{user_id}` response format, all write endpoint request/response formats, auth header requirement, and error shapes
+- [x] **SPEC-02**: `docs/DB_SCHEMA.md` documents the table schemas — for reference only; frontend does not write directly to any table
 
 ---
 

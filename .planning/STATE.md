@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** The People Map — every user is always at (0,0), all others positioned by profile similarity + interaction intensity, updated daily
-**Current focus:** Phase 5 — Demo and Docs (in progress, plan 05-01 complete)
+**Current focus:** Phase 5 — Demo and Docs (in progress, plans 05-01 and 05-03 complete)
 
 ## Current Position
 
 Phase: 5 of 5 (Demo and Docs) — IN PROGRESS
-Current Plan: 05-01 complete
-Next: Plan 05-02 — Jupyter Notebook Demo
-Status: Plan 05-01 complete — scripts/test_map.py created; matplotlib installed; sensitivity demo script validates algorithm end-to-end
-Last activity: 2026-02-23 — Plan 05-01 complete; scatter plot demo script created with try/finally restore pattern
+Current Plan: 05-03 complete
+Next: Plan 05-02 — Jupyter Notebook Demo (remaining plan)
+Status: Plan 05-03 complete — docs/API_CONTRACT.md and docs/DB_SCHEMA.md written; complete frontend contract covering 6 endpoints and 3 DB tables
+Last activity: 2026-02-23 — Plan 05-03 complete; both frontend contract docs created from verified route code
 
 Progress: [██████████████░] 87%
 
@@ -32,13 +32,14 @@ Progress: [██████████████░] 87%
 | 02-core-algorithm | 4 complete / 4 total | ~12min | ~3min |
 | 03-pipeline-integration | 2 complete / 2 total | ~3min | ~1.5min |
 | 04-api-and-scheduler | 4 complete / 4 total | ~20min | ~5min |
-| 05-demo-and-docs | 1 complete / 3 total | ~2min | ~2min |
+| 05-demo-and-docs | 2 complete / 3 total | ~5min | ~2.5min |
 
 **Recent Trend:**
 - Last 5 plans: 04-01 (~13min), 04-02 (~2min), 04-03 (~2min), 04-04 (~3min)
 - Trend: Fast execution for pure coding tasks
 
 *Updated after each plan completion*
+| Phase 05-demo-and-docs P03 | 3 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -53,7 +54,7 @@ Recent decisions affecting current work:
 - Canonical pair ordering in interactions table (user_id_a < user_id_b) — prevents duplicate rows
 - Batch precompute + store: t-SNE is expensive; precompute at 7pm, serve from DB
 - No FK from user_profiles.user_id to auth.users — seed users won't exist in auth.users, FK would block inserts
-- FK constraints on interactions wrapped in DO $$ block for idempotency (plan 01-01)
+- FK constraints on interactions wrapped in DO $ block for idempotency (plan 01-01)
 - RLS enabled on all 3 tables; service role key used in all backend DB access (plan 01-01)
 - Column names in user_profiles are location_city/location_state (not city/state) — matches DDL from plan 01-01
 - Hardcoded UUIDs in seed script for idempotent upserts — same PKs on every re-run
@@ -87,6 +88,9 @@ Recent decisions affecting current work:
 - euclidean() returns None if either user missing from coordinates — graceful non-crash in demo script (plan 05-01)
 - scripts/ at project root import backend/ modules via sys.path.insert(0, BACKEND_DIR) — standard pattern for demo scripts (plan 05-01)
 - try/finally in demo script guarantees Supabase interaction count restoration even if pipeline raises (plan 05-01)
+- [Phase 05-demo-and-docs]: Documented actual response shapes from code: interaction endpoints return {detail: '<type> recorded'} not {status: 'ok'} — code is authoritative over plan template
+- [Phase 05-demo-and-docs]: Documented exact 401 strings from deps.py: 'Authorization header missing' vs 'Invalid or expired token' — distinction helps frontend distinguish missing vs expired auth
+- [Phase 05-demo-and-docs]: DB_SCHEMA.md notes location_city/location_state column names explicitly (not city/state) — matches data_fetcher.py boundary
 
 ### Pending Todos
 
@@ -102,4 +106,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 05-demo-and-docs/05-01-PLAN.md. Phase 5 plan 1/3 complete. Next: Plan 05-02 — Jupyter Notebook Demo.
+Stopped at: Completed 05-demo-and-docs/05-03-PLAN.md. Phase 5 plans 05-01 and 05-03 complete (2/3). Next: Plan 05-02 — Jupyter Notebook Demo.
