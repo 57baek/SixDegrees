@@ -1,13 +1,33 @@
 <!-- 
 SIGNUP PAGE - form users see when creating a new account 
 -->
-import { supabase } from "../lib/supabase";
 
 <template>
     <div class="signup-container">
         <div class="signup-box">
           <h2>Create a SixDegrees Account</h2>
             <form @submit.prevent="handleSignUp">
+                <div class="form-group">
+                    <label>Nickname</label>
+                    <input
+                        v-model="nickname"
+                        type="text"
+                        @focus="showValidation = true"
+                        @blur="showValidation = ~uniqueUser"
+                        @input="checkNickname(nickname); emptyUser = nickname.trimEnd().length == 0;"
+                        placeholder="Create nickname"
+                        required
+                    />
+                  <div v-if="showValidation" class="pw-checklist" aria-live="polite">
+                    <ul>
+                      <li :class="{valid: uniqueUser && !emptyUser, invalid: !uniqueUser}">
+                        <span class="dot">{{ emptyUser ? '✕' : (uniqueUser ? '✓' : '✕') }}</span>
+                        {{ emptyUser ? 'Enter a valid nickname' : (uniqueUser ? 'Nickname is available' : 'Nickname is not available') }}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
                 <div class="form-group">
                     <label>Email</label>
                     <input
@@ -73,10 +93,25 @@ import { useRouter } from 'vue-router'
 import { supabase } from "../lib/supabase";
 
 const router = useRouter()
+const nickname = ref('')
 const email = ref('')
 const password = ref('')
 const error = ref('')
+const uniqueUser = ref(false)
+const emptyUser = ref(true)
+const showValidation = ref(false)
 const showChecklist = ref(false)
+
+async function checkNickname(nickname) {
+  const nick = nickname.toLowerCase();
+  const { count, error } = await supabase
+    .from('profiles')
+    .select('*', { count : 'exact', head: true })
+    .eq('lowercase',nick)
+  uniqueUser.value = count < 1
+  if (showValidation.value != uniqueUser.value)
+    showValidation.value = true;
+}
 
 const validations = computed(() => {
   const pw = password.value || ''
@@ -100,6 +135,11 @@ async function handleSignUp() {
   const { data, error: signUpError } = await supabase.auth.signUp({
     email: email.value,
     password: password.value,
+    options : {
+      data :{
+        nickname: nickname.value,
+      },
+    },
   })
 
   if (signUpError) {
