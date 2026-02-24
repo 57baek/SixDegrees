@@ -4,7 +4,7 @@
       <div class="user-info">
         <div class="avatar">{{ userInitial }}</div>
         <div>
-          <div class="username">{{ post.profiles?.username || 'Unknown User' }}</div>
+          <div class="username">{{ post.profiles?.nickname || 'Unknown User' }}</div>
           <div class="post-meta">
             <span class="timestamp">{{ formatDate(post.created_at) }}</span>
             <span class="tier-badge" :class="`tier-${post.tier}`">
@@ -49,7 +49,7 @@
       </div>
       
       <div v-for="comment in comments" :key="comment.id" class="comment">
-        <strong>{{ comment.profiles?.username || 'Unknown' }}</strong>
+        <strong>{{ comment.profiles?.nickname || 'Unknown' }}</strong>
         <span>{{ comment.content }}</span>
       </div>
     </div>
@@ -73,14 +73,14 @@ const showComments = ref(false)
 const newComment = ref('')
 const comments = ref([])
 const isLiked = ref(false)
-const likeCount = ref(props.post.like_count || 0)
-const commentCount = ref(props.post.comment_count || 0)
+const likeCount = ref(props.post.like_count?.[0]?.count || 0)
+const commentCount = ref(props.post.comment_count?.[0]?.count || 0)
 
 /**
  * Get first initial of username for avatar
  */
 const userInitial = computed(() => {
-  const username = props.post.profiles?.username || 'U'
+  const username = props.post.profiles?.nickname || 'U'
   return username.charAt(0).toUpperCase()
 })
 
@@ -197,7 +197,7 @@ async function handleComment() {
         user_id: user.id,
         content: newComment.value.trim()
       })
-      .select('*, profiles(username)')
+      .select('*, profiles(nickname)')
     
     if (error) throw error
     

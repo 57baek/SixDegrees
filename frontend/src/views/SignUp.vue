@@ -1,7 +1,6 @@
 <!-- 
 SIGNUP PAGE - form users see when creating a new account 
 -->
-
 <template>
     <div class="signup-container">
         <div class="signup-box">
