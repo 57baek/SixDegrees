@@ -37,6 +37,20 @@ echo "Reminder: Ensure both servers are running before continuing."
 echo "  Backend:  http://localhost:8000  (uvicorn app:app --reload)"
 echo "  Frontend: http://localhost:5173  (npm run dev)"
 echo ""
+
+# Load SUPABASE_URL and SUPABASE_KEY from backend/.env so Playwright can
+# pre-provision the test account via admin API (creates account on first run).
+BACKEND_ENV="$(dirname "$0")/../backend/.env"
+if [ -f "$BACKEND_ENV" ]; then
+  export SUPABASE_URL SUPABASE_KEY
+  SUPABASE_URL=$(grep -E "^SUPABASE_URL=" "$BACKEND_ENV" | head -1 | cut -d= -f2-)
+  SUPABASE_KEY=$(grep -E "^SUPABASE_KEY=" "$BACKEND_ENV" | head -1 | cut -d= -f2-)
+  echo "Supabase config loaded from backend/.env."
+else
+  echo "WARNING: backend/.env not found — account auto-creation will be skipped."
+fi
+
+echo ""
 echo "Starting demo in 2 seconds..."
 sleep 2
 
@@ -44,6 +58,7 @@ sleep 2
 cd "$(dirname "$0")/../frontend"
 
 TEST_EMAIL="$TEST_EMAIL" TEST_PASSWORD="$TEST_PASSWORD" \
+  SUPABASE_URL="${SUPABASE_URL:-}" SUPABASE_KEY="${SUPABASE_KEY:-}" \
   npx playwright test e2e/demo.spec.js --headed --timeout=60000 --project=chromium
 
 EXIT_CODE=$?

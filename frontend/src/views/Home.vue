@@ -53,7 +53,6 @@ async function loadPosts() {
       .from('posts')
       .select(`
         *,
-        user_profiles(display_name),
         like_count:likes(count),
         comment_count:comments(count)
       `)

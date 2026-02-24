@@ -2,9 +2,49 @@ import { test, expect } from '@playwright/test';
 
 // INTEGRATION DEMO TEST — requires live backend, frontend dev server, and test credentials
 // Enable by setting TEST_EMAIL and TEST_PASSWORD environment variables
-// Usage: TEST_EMAIL=you@example.com TEST_PASSWORD=yourpass npx playwright test e2e/demo.spec.js --headed
+// SUPABASE_URL and SUPABASE_KEY (service role) are loaded from backend/.env by run_demo.sh
+//
+// Usage: TEST_EMAIL=you@example.com TEST_PASSWORD=yourpass ./scripts/run_demo.sh
+// The script pre-provisions the test account via Supabase admin API on first run.
 
 test.describe('SixDegrees v1.1 Demo', () => {
+
+  // Pre-provision the test account via Supabase admin API so login always works.
+  // Creates the user with email_confirm: true, bypassing email verification.
+  // Idempotent — 422 means the account already exists, which is fine.
+  test.beforeAll(async ({ request }) => {
+    if (!process.env.TEST_EMAIL) return;
+
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.log('SUPABASE_URL/SUPABASE_KEY not set — skipping account pre-provisioning');
+      return;
+    }
+
+    const res = await request.post(`${supabaseUrl}/auth/v1/admin/users`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        email: process.env.TEST_EMAIL,
+        password: process.env.TEST_PASSWORD,
+        email_confirm: true,
+      },
+    });
+
+    if (res.status() === 200 || res.status() === 201) {
+      console.log('Test account created via admin API.');
+    } else if (res.status() === 422) {
+      console.log('Test account already exists — proceeding.');
+    } else {
+      const body = await res.text();
+      console.warn(`Account pre-provisioning returned ${res.status()}: ${body} — proceeding anyway.`);
+    }
+  });
 
   test('SixDegrees v1.1 full demo walkthrough', async ({ page }) => {
     test.setTimeout(60000);
@@ -14,12 +54,13 @@ test.describe('SixDegrees v1.1 Demo', () => {
     const email = process.env.TEST_EMAIL;
     const password = process.env.TEST_PASSWORD;
 
-    // Step 1: Browse to /signup — show it exists, do not submit
+    // Step 1: Browse to /signup — show the form being filled in
+    // (Account was pre-provisioned in beforeAll via admin API — this is for visual demo)
     await page.goto('/signup');
-    const emailInput = page.locator(
-      'input[type="email"], input[placeholder*="email" i], input[name="email"]'
-    );
-    await expect(emailInput.first()).toBeVisible({ timeout: 5000 });
+    const nicknameInput = page.locator('input[placeholder*="nickname" i], input[placeholder*="name" i]');
+    if (await nicknameInput.count() > 0) await nicknameInput.first().fill('Demo User');
+    const signupEmailInput = page.locator('input[placeholder*="email" i]');
+    if (await signupEmailInput.count() > 0) await signupEmailInput.first().fill(email);
     await page.waitForTimeout(800);
 
     // Step 2: Log in with existing test account

@@ -60,6 +60,8 @@ def update_profile(
         if v is not None and k != "user_id"
     })
     payload["is_onboarded"] = True  # Always set on successful profile write
+    # display_name is NOT NULL — default to empty string on first insert if not supplied
+    payload.setdefault("display_name", "")
 
     get_supabase_client().table("user_profiles").upsert(
         payload, on_conflict="user_id"
