@@ -121,7 +121,7 @@ const { data: profile } = await supabase
   .single()
 ```
 
-**Do NOT use the service role key in the frontend.** The service role key bypasses all RLS policies and must only be used in the backend server. The backend sets it via the `SUPABASE_SERVICE_ROLE_KEY` environment variable.
+**Do NOT use the service role key in the frontend.** The service role key bypasses all RLS policies and must only be used in the backend server. The backend sets it via the `SUPABASE_KEY` environment variable.
 
 ---
 
