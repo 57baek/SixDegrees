@@ -29,15 +29,9 @@
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Occupation</label>
-            <input v-model="form.occupation" type="text" placeholder="e.g. Software Engineer" required />
-          </div>
-          <div class="form-group">
-            <label>Industry</label>
-            <input v-model="form.industry" type="text" placeholder="e.g. Tech" required />
-          </div>
+        <div class="form-group">
+          <label>Industry</label>
+          <input v-model="form.industry" type="text" placeholder="e.g. Tech" required />
         </div>
 
         <div class="form-group">
@@ -83,7 +77,6 @@ const form = ref({
   state: "",
   age: null,
   education: "",
-  occupation: "",
   industry: ""
 });
 
