@@ -125,3 +125,61 @@ def test_put_profile_no_jwt_returns_401(client_no_auth):
     """PUT /profile without JWT returns 401."""
     response = client_no_auth.put("/profile", json={"display_name": "Should Fail"})
     assert response.status_code == 401
+
+
+# ── GET /match ───────────────────────────────────────────────────────────
+
+def test_get_match_happy_path(client, mock_sb):
+    """GET /match with valid JWT returns 200 with matches list and correct shape.
+
+    Overrides the Supabase select mock to return two user rows so the match
+    endpoint can find the acting user and compute at least one similarity score.
+    """
+    from unittest.mock import patch
+
+    _OTHER_USER_ROW = {
+        "user_id": "other-user-uuid",
+        "display_name": "Other User",
+        "is_onboarded": True,
+        "interests": ["hiking"],
+        "location_city": "LA",
+        "location_state": "CA",
+        "age": 30,
+        "languages": ["English"],
+        "field_of_study": "Biology",
+        "industry": "Health",
+        "education_level": "masters",
+        "occupation": "",
+        "timezone": "UTC",
+    }
+    _ACTING_USER_ROW = {
+        "user_id": "test-user-uuid",
+        "display_name": "Test User",
+        "is_onboarded": True,
+        "interests": ["coding"],
+        "location_city": "SF",
+        "location_state": "CA",
+        "age": 25,
+        "languages": ["English"],
+        "field_of_study": "CS",
+        "industry": "Tech",
+        "education_level": "bachelors",
+        "occupation": "",
+        "timezone": "UTC",
+    }
+    # Patch the select chain used by GET /match: .table().select("*").execute().data
+    # This is the chain WITHOUT .eq() — different from the GET /profile chain.
+    select_chain = mock_sb.table.return_value.select.return_value
+    select_chain.execute.return_value.data = [_ACTING_USER_ROW, _OTHER_USER_ROW]
+
+    response = client.get("/match")
+    assert response.status_code == 200
+    data = response.json()
+    assert "matches" in data
+    assert isinstance(data["matches"], list)
+    assert len(data["matches"]) >= 1
+    match_item = data["matches"][0]
+    assert "user_id" in match_item
+    assert "display_name" in match_item
+    assert "similarity_score" in match_item
+    assert isinstance(match_item["similarity_score"], float)
