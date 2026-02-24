@@ -59,6 +59,7 @@ def update_profile(
         for k, v in body.model_dump().items()
         if v is not None and k != "user_id"
     })
+    payload["is_onboarded"] = True  # Always set on successful profile write
 
     get_supabase_client().table("user_profiles").upsert(
         payload, on_conflict="user_id"
