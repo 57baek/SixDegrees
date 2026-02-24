@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.map import router as map_router
 from routes.interactions import router as interactions_router
 from routes.profile import router as profile_router
+from routes.match import router as match_router
 from services.map_pipeline.scheduler import setup_scheduler
 
 
@@ -40,6 +41,7 @@ app.add_middleware(
 app.include_router(map_router)
 app.include_router(interactions_router)
 app.include_router(profile_router)
+app.include_router(match_router)
 
 
 @app.get("/test-cors")
