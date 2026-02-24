@@ -1,0 +1,127 @@
+"""Contract tests: verify all v1.1 endpoints return correct status + response shape.
+
+These tests document the API contract each endpoint must honor so future changes
+can be verified automatically. They run against a mocked Supabase client so no
+real database or network calls are made.
+"""
+import pytest
+
+
+# ── GET /map/{user_id} ────────────────────────────────────────────────────
+
+def test_get_map_response_shape(client):
+    """GET /map/{user_id} returns 200 with correct shape when map exists.
+
+    With the default MagicMock Supabase, the map_coordinates query returns a
+    MagicMock that iterates as empty — so coordinates is []. Both 200 (empty map)
+    and 404 (no map) are acceptable here; 500 is never acceptable.
+    """
+    response = client.get("/map/test-user-uuid")
+    assert response.status_code in (200, 404)
+    if response.status_code == 200:
+        data = response.json()
+        assert "user_id" in data
+        assert "coordinates" in data
+        assert isinstance(data["coordinates"], list)
+        if data["coordinates"]:
+            coord = data["coordinates"][0]
+            assert all(k in coord for k in ("user_id", "x", "y", "tier", "display_name"))
+
+
+def test_get_map_returns_non_500(client):
+    """GET /map/{user_id} returns 200 or 404 when no map exists — never 500."""
+    response = client.get("/map/nonexistent-user-uuid")
+    assert response.status_code in (200, 404)
+    assert response.status_code != 500
+
+
+def test_get_map_no_jwt_returns_401(client_no_auth):
+    """GET /map/{user_id} without JWT returns 401 (Phase 7 BEND-06)."""
+    response = client_no_auth.get("/map/some-user-uuid")
+    assert response.status_code == 401
+
+
+def test_map_trigger_no_jwt_returns_401(client_no_auth):
+    """POST /map/trigger/{user_id} without JWT returns 401 (Phase 7 BEND-06)."""
+    response = client_no_auth.post("/map/trigger/some-user-uuid")
+    assert response.status_code == 401
+
+
+# ── POST /map/trigger/{user_id} ───────────────────────────────────────────
+
+def test_post_map_trigger_returns_non_500(client):
+    """POST /map/trigger/{user_id} never returns 500 — either 200 or 422 (pipeline error).
+
+    The pipeline fails with 422 (ValueError: requesting_user_id not found) when
+    there are not enough users in the mocked Supabase — correct behavior.
+    """
+    response = client.post("/map/trigger/test-user-uuid")
+    assert response.status_code in (200, 422)
+    assert response.status_code != 500
+
+
+def test_post_map_trigger_other_user_returns_403(client):
+    """POST /map/trigger/{user_id} for another user returns 403 (self-only guard)."""
+    response = client.post("/map/trigger/other-user-uuid")
+    assert response.status_code == 403
+
+
+# ── POST /interactions/* ─────────────────────────────────────────────────
+
+def test_interactions_like_contract(client):
+    """POST /interactions/like returns 200 with {detail: 'likes recorded'}."""
+    response = client.post("/interactions/like", json={"target_user_id": "other-user-uuid"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("detail") == "likes recorded"
+
+
+def test_interactions_comment_contract(client):
+    """POST /interactions/comment returns 200 with {detail: 'comments recorded'}."""
+    response = client.post("/interactions/comment", json={"target_user_id": "other-user-uuid"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("detail") == "comments recorded"
+
+
+def test_interactions_dm_returns_dms_recorded(client):
+    """POST /interactions/dm returns 200 with {detail: 'dms recorded'} — not 'dm recorded'.
+
+    This test verifies the BEND-04 bug fix: response was 'dm recorded' (wrong),
+    must now be 'dms recorded' (correct). The fix was applied in Phase 7 via
+    _RESPONSE_LABELS dict in routes/interactions.py.
+    """
+    response = client.post("/interactions/dm", json={"target_user_id": "other-user-uuid"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("detail") == "dms recorded", (
+        f"Expected 'dms recorded' but got '{data.get('detail')}'. "
+        "BEND-04 fix may not be applied."
+    )
+
+
+def test_interactions_self_returns_400(client):
+    """POST /interactions/* with self as target returns 400."""
+    # client fixture sets acting user to "test-user-uuid"
+    response = client.post("/interactions/like", json={"target_user_id": "test-user-uuid"})
+    assert response.status_code == 400
+
+
+def test_interactions_no_jwt_returns_401(client_no_auth):
+    """POST /interactions/* without JWT returns 401."""
+    response = client_no_auth.post("/interactions/like", json={"target_user_id": "other-uuid"})
+    assert response.status_code == 401
+
+
+# ── PUT /profile ──────────────────────────────────────────────────────────
+
+def test_put_profile_contract(client):
+    """PUT /profile with valid JWT and body returns 200."""
+    response = client.put("/profile", json={"display_name": "Contract Test"})
+    assert response.status_code == 200
+
+
+def test_put_profile_no_jwt_returns_401(client_no_auth):
+    """PUT /profile without JWT returns 401."""
+    response = client_no_auth.put("/profile", json={"display_name": "Should Fail"})
+    assert response.status_code == 401
