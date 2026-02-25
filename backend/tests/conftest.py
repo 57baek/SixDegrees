@@ -21,18 +21,18 @@ from routes.deps import get_current_user
 TEST_USER_ID = "test-user-uuid"
 
 _MOCK_PROFILE_ROW = {
-    "user_id": TEST_USER_ID,
-    "display_name": "Test User",
+    "id": TEST_USER_ID,
+    "nickname": "Test User",
     "is_onboarded": True,
     "interests": ["coding"],
-    "location_city": "SF",
-    "location_state": "CA",
+    "city": "SF",
+    "state": "CA",
     "age": 25,
     "languages": ["English"],
-    "field_of_study": "CS",
+    "education": "CS",
     "industry": "Tech",
-    "education_level": "bachelors",
     "timezone": "UTC",
+    "occupation": None,
 }
 
 
@@ -40,14 +40,14 @@ def _build_mock_supabase() -> MagicMock:
     """Build a MagicMock Supabase client with realistic chained return values."""
     mock_sb = MagicMock()
 
-    # GET /profile: sb.table("user_profiles").select("*").eq(uid).execute().data
+    # GET /profile: sb.table("profiles").select("*").eq(uid).execute().data
     select_chain = mock_sb.table.return_value.select.return_value
     select_chain.eq.return_value.execute.return_value.data = [_MOCK_PROFILE_ROW]
 
-    # PUT /profile: sb.table("user_profiles").upsert(...).execute()
+    # PUT /profile: sb.table("profiles").upsert(...).execute()
     mock_sb.table.return_value.upsert.return_value.execute.return_value = MagicMock()
 
-    # scheduler setup_scheduler queries: sb.table("user_profiles").select("timezone").execute().data
+    # scheduler setup_scheduler queries: sb.table("profiles").select("timezone").execute().data
     # This is the same chain as above but returns empty list so no timezones are registered
     # The chain is shared via table().select() so we need a general fallback.
     # We override the select chain's execute to return empty data for the scheduler query.
