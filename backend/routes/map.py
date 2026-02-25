@@ -7,7 +7,7 @@ router = APIRouter(prefix="/map", tags=["map"])
 
 
 def _fetch_map_response(user_id: str) -> dict:
-    """Shared helper: fetch current map_coordinates + display_names for a user."""
+    """Shared helper: fetch current map_coordinates + nicknames for a user."""
     sb = get_supabase_client()
     rows = (
         sb.table("map_coordinates")
@@ -22,12 +22,12 @@ def _fetch_map_response(user_id: str) -> dict:
 
     other_ids = [r["other_user_id"] for r in rows]
     profiles = (
-        sb.table("user_profiles")
-        .select("user_id, display_name")
-        .in_("user_id", other_ids)
+        sb.table("profiles")
+        .select("id, nickname")
+        .in_("id", other_ids)
         .execute()
     ).data
-    name_map = {p["user_id"]: p["display_name"] for p in profiles}
+    name_map = {p["id"]: p["nickname"] for p in profiles}
 
     return {
         "user_id": user_id,
@@ -38,7 +38,7 @@ def _fetch_map_response(user_id: str) -> dict:
                 "x": r["x"],
                 "y": r["y"],
                 "tier": r["tier"],
-                "display_name": name_map.get(r["other_user_id"], ""),
+                "nickname": name_map.get(r["other_user_id"], ""),
             }
             for r in rows
         ],
