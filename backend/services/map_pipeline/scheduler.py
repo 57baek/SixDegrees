@@ -32,27 +32,27 @@ def _run_pipeline_for_timezone(timezone: str) -> None:
     """
     sb = get_supabase_client()
     rows = (
-        sb.table("user_profiles")
-        .select("user_id")
+        sb.table("profiles")
+        .select("id")
         .eq("timezone", timezone)
         .execute()
     ).data
     logger.info("Scheduler: running pipeline for %d users in timezone %s", len(rows), timezone)
     for row in rows:
         try:
-            run_pipeline_for_user(row["user_id"])
-            logger.info("Scheduler: pipeline complete for user %s", row["user_id"])
+            run_pipeline_for_user(row["id"])
+            logger.info("Scheduler: pipeline complete for user %s", row["id"])
         except Exception as exc:
             logger.error(
                 "Scheduler: pipeline FAILED for user %s in timezone %s: %s",
-                row["user_id"],
+                row["id"],
                 timezone,
                 exc,
             )
 
 
 def setup_scheduler() -> AsyncIOScheduler:
-    """Query user_profiles for unique timezones and register one CronTrigger each.
+    """Query profiles for unique timezones and register one CronTrigger each.
 
     Timezones are queried once at startup. New timezones added after startup
     require an app restart to be picked up. Users in already-registered timezones
@@ -65,7 +65,7 @@ def setup_scheduler() -> AsyncIOScheduler:
 
     sb = get_supabase_client()
     rows = (
-        sb.table("user_profiles")
+        sb.table("profiles")
         .select("timezone")
         .execute()
     ).data
