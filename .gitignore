@@ -42,6 +42,8 @@ Thumbs.db
 .mcp.json
 CLAUDE.md
 .claude/
+.playwright
+.playwright-cli
 
 # Python test cache
 .pytest_cache/
