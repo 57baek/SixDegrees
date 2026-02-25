@@ -31,12 +31,7 @@ def _run_pipeline_for_timezone(timezone: str) -> None:
     abort the rest of the batch. Errors are logged at ERROR level.
     """
     sb = get_supabase_client()
-    rows = (
-        sb.table("profiles")
-        .select("id")
-        .eq("timezone", timezone)
-        .execute()
-    ).data
+    rows = sb.rpc("get_profiles_by_timezone", {"p_timezone": timezone}).execute().data
     logger.info("Scheduler: running pipeline for %d users in timezone %s", len(rows), timezone)
     for row in rows:
         try:
@@ -64,11 +59,7 @@ def setup_scheduler() -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler()
 
     sb = get_supabase_client()
-    rows = (
-        sb.table("profiles")
-        .select("timezone")
-        .execute()
-    ).data
+    rows = sb.rpc("get_distinct_timezones", {}).execute().data
 
     unique_timezones = {row["timezone"] for row in rows if row.get("timezone")}
     logger.info("Scheduler: found %d unique timezone(s) to register", len(unique_timezones))

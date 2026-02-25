@@ -33,7 +33,7 @@ def fetch_all() -> Tuple[list[UserProfile], dict[tuple[str, str], dict[str, int]
     sb = get_supabase_client()
 
     # ── Read profiles ─────────────────────────────────────────────────────────
-    profile_response = sb.table("profiles").select("*").execute()
+    profile_response = sb.rpc("get_all_profiles", {}).execute()
 
     users: list[UserProfile] = []
     for row in profile_response.data:
@@ -54,7 +54,7 @@ def fetch_all() -> Tuple[list[UserProfile], dict[tuple[str, str], dict[str, int]
         )
 
     # ── Read interactions ─────────────────────────────────────────────────────
-    interaction_response = sb.table("interactions").select("*").execute()
+    interaction_response = sb.rpc("get_all_interactions", {}).execute()
 
     raw_interaction_counts: dict[tuple[str, str], dict[str, int]] = {}
     for row in interaction_response.data:

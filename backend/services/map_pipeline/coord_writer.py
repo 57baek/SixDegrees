@@ -48,11 +48,7 @@ def write_coordinates(center_user_id: str, translated_results: list[dict]) -> No
 
     # ── Step 1: Mark old rows as not current (STORE-01, STORE-02) ────────────
     # NEVER use .delete() — old rows are retained for animation delta (STORE-02).
-    sb.table("map_coordinates") \
-        .update({"is_current": False}) \
-        .eq("center_user_id", center_user_id) \
-        .eq("is_current", True) \
-        .execute()
+    sb.rpc("archive_map_coordinates", {"p_center_user_id": center_user_id}).execute()
 
     # ── Step 2: Insert new rows (STORE-03) ────────────────────────────────────
     now = datetime.now(timezone.utc).isoformat()
@@ -72,4 +68,4 @@ def write_coordinates(center_user_id: str, translated_results: list[dict]) -> No
         # is included in every write per STORE-03.
     ]
 
-    sb.table("map_coordinates").insert(rows).execute()
+    sb.rpc("insert_map_coordinates", {"p_rows": rows}).execute()
