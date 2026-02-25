@@ -4,7 +4,7 @@
       <div class="user-info">
         <div class="avatar">{{ userInitial }}</div>
         <div>
-          <div class="username">{{ post.user_profiles?.display_name || 'Unknown User' }}</div>
+          <div class="username">{{ post.profiles?.nickname || 'Unknown User' }}</div>
           <div class="post-meta">
             <span class="timestamp">{{ formatDate(post.created_at) }}</span>
             <span class="tier-badge" :class="`tier-${post.tier}`">
@@ -49,7 +49,7 @@
       </div>
       
       <div v-for="comment in comments" :key="comment.id" class="comment">
-        <strong>{{ comment.user_profiles?.display_name || 'Unknown' }}</strong>
+        <strong>{{ comment.profiles?.nickname || 'Unknown' }}</strong>
         <span>{{ comment.content }}</span>
       </div>
     </div>
@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted} from 'vue'
 import { supabase } from '../lib/supabase'
 import { Heart, MessageCircle, Lock, Users, Globe } from 'lucide-vue-next' 
 
@@ -80,8 +80,8 @@ const commentCount = ref(props.post.comment_count?.[0]?.count || 0)
  * Get first initial of username for avatar
  */
 const userInitial = computed(() => {
-  const name = props.post.user_profiles?.display_name || 'U'
-  return name.charAt(0).toUpperCase()
+  const username = props.post.profiles?.nickname || 'U'
+  return username.charAt(0).toUpperCase()
 })
 
 /**
@@ -160,6 +160,36 @@ async function handleLike() {
   }
 }
 
+// Check if current user has liked the post
+async function fetchUserLike() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { data, error } = await supabase
+    .from('likes')
+    .select('*')
+    .eq('post_id', props.post.id)
+    .eq('user_id', user.id)
+    .single()  // returns null if not found
+
+  if (!error && data) {
+    isLiked.value = true
+  }
+}
+
+// On component mount, check if user has liked the post and fetch latest like count
+onMounted(async () => {
+  await fetchUserLike()
+
+  // refresh like count from DB
+  const { count, error } = await supabase
+    .from('likes')
+    .select('*', { count: 'exact', head: true })
+    .eq('post_id', props.post.id)
+
+  if (!error) likeCount.value = count
+})
+
 /**
  * Toggles the comments section visibility. 
  * Loads comments from db on first open
@@ -171,7 +201,7 @@ async function toggleComments() {
     // Load comments
     const { data } = await supabase
       .from('comments')
-      .select('*, user_profiles(display_name)')
+      .select('*, profiles(nickname)')
       .eq('post_id', props.post.id)
       .order('created_at', { ascending: true })
     
@@ -197,8 +227,8 @@ async function handleComment() {
         user_id: user.id,
         content: newComment.value.trim()
       })
-      .select('*, user_profiles(display_name)')
-
+      .select('*, profiles(nickname)')
+    
     if (error) throw error
     
     comments.value.push(data[0])

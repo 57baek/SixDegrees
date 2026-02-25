@@ -104,10 +104,10 @@ const showChecklist = ref(false)
 async function checkNickname(nickname) {
   const nick = nickname.toLowerCase();
   const { count, error } = await supabase
-    .from('user_profiles')
-    .select('display_name', { count: 'exact', head: true })
-    .ilike('display_name', nick)
-  uniqueUser.value = (count ?? 0) < 1
+    .from('profiles')
+    .select('*', { count : 'exact', head: true })
+    .eq('lowercase',nick)
+  uniqueUser.value = count < 1
   if (showValidation.value != uniqueUser.value)
     showValidation.value = true;
 }

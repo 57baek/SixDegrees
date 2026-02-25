@@ -1,3 +1,9 @@
+<!-- 
+LOGIN PAGE - form users see when logging in 
+TODO: When they click submit, POST to http://localhost:8000/auth/login 
+TODO: If successful, save the token to localStorage and redirect them 
+--> 
+
 <template>
     <div class="login-container">
         <div class="login-box">
@@ -69,25 +75,24 @@ const handleLogin = async () => {
     // Save session token
     localStorage.setItem("supabase_token", data.session.access_token);
 
-    // Check onboarding status via FastAPI GET /profile
-    const token = data.session.access_token;
-    let isOnboarded = false;
+    // Get user data
+    const user = data.user;
 
-    try {
-      const profileRes = await fetch("http://localhost:8000/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (profileRes.ok) {
-        const profileData = await profileRes.json();
-        isOnboarded = profileData.is_onboarded === true;
-      }
-      // If GET /profile returns 404 (no profile yet), isOnboarded stays false — route to setup
-    } catch (fetchErr) {
-      console.error("Profile fetch failed:", fetchErr);
-      // Network error — default to profile setup to be safe
+    // check if profile exists
+    const { data: profile, error: profileError } =
+      await supabase
+        .from("profiles")
+        .select("is_onboarded")
+        .eq("id", user.id)
+        .maybeSingle();
+
+    if (profileError) {
+      console.error(profileError.message);
+      error.value = "Cannot load profile.";
+      return;
     }
 
-    if (!isOnboarded) {
+    if (!profile || !profile.is_onboarded) {
       router.push("/profile-setup");
     } else {
       router.push("/");
