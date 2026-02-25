@@ -102,22 +102,19 @@ const handleSubmit = async () => {
       .map(s => s.trim())
       .filter(Boolean);
 
-    const { error: upsertError } = await supabase
-      .from("profiles")
-      .upsert({
-        id: user.id,
+    const { error: profileError } = await supabase.rpc('create_profile', {
+        bio: '',
+        age: parseInt(form.value.age),
         city: form.value.city,
         state: form.value.state,
-        age: parseInt(form.value.age),
         education: form.value.education,
         occupation: form.value.occupation,
         industry: form.value.industry,
         interests: interestsArray,
         languages: languagesArray,
-        is_onboarded: true
-      });
+    });
 
-    if (upsertError) throw upsertError;
+    if (profileError) throw profileError;
 
     router.push("/");
 

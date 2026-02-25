@@ -79,12 +79,7 @@ const handleLogin = async () => {
     const user = data.user;
 
     // check if profile exists
-    const { data: profile, error: profileError } =
-      await supabase
-        .from("profiles")
-        .select("is_onboarded")
-        .eq("id", user.id)
-        .maybeSingle();
+    const { data: onboarded, error: profileError } = await supabase.rpc('is_onboarded');
 
     if (profileError) {
       console.error(profileError.message);
@@ -92,7 +87,7 @@ const handleLogin = async () => {
       return;
     }
 
-    if (!profile || !profile.is_onboarded) {
+    if (!onboarded) {
       router.push("/profile-setup");
     } else {
       router.push("/");

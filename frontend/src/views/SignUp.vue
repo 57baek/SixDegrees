@@ -13,7 +13,7 @@ SIGNUP PAGE - form users see when creating a new account
                         type="text"
                         @focus="showValidation = true"
                         @blur="showValidation = ~uniqueUser"
-                        @input="checkNickname(nickname); emptyUser = nickname.trimEnd().length == 0;"
+                        @input="checkNickname(); emptyUser = nickname.trimEnd().length == 0;"
                         placeholder="Create nickname"
                         required
                     />
@@ -101,15 +101,22 @@ const emptyUser = ref(true)
 const showValidation = ref(false)
 const showChecklist = ref(false)
 
-async function checkNickname(nickname) {
-  const nick = nickname.toLowerCase();
-  const { count, error } = await supabase
-    .from('profiles')
-    .select('*', { count : 'exact', head: true })
-    .eq('lowercase',nick)
-  uniqueUser.value = count < 1
-  if (showValidation.value != uniqueUser.value)
-    showValidation.value = true;
+async function checkNickname() {
+  try {
+    const { data, NicknameError } = await supabase.rpc('nickname_available', {
+      nickname: nickname.value
+    })
+    if (NicknameError) { 
+      error.value = NicknameError;
+      return;
+    }
+
+    uniqueUser.value = data;
+    if (showValidation.value != uniqueUser.value)
+      showValidation.value = true;
+  } catch (err) {
+    console.err(error.message);
+  }
 }
 
 const validations = computed(() => {

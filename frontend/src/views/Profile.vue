@@ -159,12 +159,12 @@ const friendCount = computed(() => {
 async function loadProfile() {
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    
-    const { data, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
+    if (!user) {
+      error.value = 'Not logged in'
+      return
+    }
+
+    const { data, error: profileError } = await supabase.rpc('user_profile').single()
     
     if (profileError) throw profileError
     
@@ -204,7 +204,6 @@ async function saveProfile() {
   error.value = ''
   
   try {
-    const { data: { user } } = await supabase.auth.getUser()
     
     // Parse comma-separated inputs
     const interests = interestsInput.value
@@ -217,9 +216,7 @@ async function saveProfile() {
       .map(l => l.trim())
       .filter(l => l.length > 0)
     
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
+    const { error: updateError } = await supabase.rpc('update_profile', {
         nickname: editForm.value.nickname,
         bio: editForm.value.bio,
         age: editForm.value.age,
@@ -230,8 +227,7 @@ async function saveProfile() {
         industry: editForm.value.industry,
         interests,
         languages
-      })
-      .eq('id', user.id)
+    })
     
     if (updateError) throw updateError
     
