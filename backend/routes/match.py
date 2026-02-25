@@ -1,6 +1,6 @@
 """Match endpoint — returns top profile matches for the authenticated user.
 
-Requires a valid Supabase JWT. Reads user_profiles to build similarity scores
+Requires a valid Supabase JWT. Reads profiles to build similarity scores
 and returns the top N most similar users (excluding the requester).
 """
 
@@ -19,30 +19,30 @@ def get_matches(
 ):
     """Return the top_n most similar users to the authenticated user."""
     sb = get_supabase_client()
-    rows = sb.table("user_profiles").select("*").execute().data
+    rows = sb.table("profiles").select("*").execute().data
 
     if not rows:
         raise HTTPException(status_code=404, detail="No profiles found")
 
     # Build UserProfile objects from DB rows
-    # UserProfile uses city/state internally; DB stores location_city/location_state
     users = []
     user_index = None
     for i, row in enumerate(rows):
         up = UserProfile(
-            id=row["user_id"],
+            id=row["id"],
+            nickname=row.get("nickname") or "",
             interests=row.get("interests") or [],
-            city=row.get("location_city") or "",
-            state=row.get("location_state") or "",
+            city=row.get("city") or "",
+            state=row.get("state") or "",
             age=row.get("age") or 0,
             languages=row.get("languages") or [],
-            field_of_study=row.get("field_of_study") or "",
+            education=row.get("education") or "",
             industry=row.get("industry") or "",
-            education_level=row.get("education_level") or "",
-            occupation=row.get("occupation") or "",
+            timezone=row.get("timezone") or "UTC",
+            occupation=row.get("occupation"),
         )
         users.append(up)
-        if row["user_id"] == acting_user_id:
+        if row["id"] == acting_user_id:
             user_index = i
 
     if user_index is None:
@@ -64,7 +64,7 @@ def get_matches(
             continue
         results.append({
             "user_id": user.id,
-            "display_name": rows[i].get("display_name") or "",
+            "nickname": rows[i].get("nickname") or "",
             "similarity_score": round(float(similarity_row[i]), 4),
         })
 
