@@ -1,13 +1,7 @@
 """Data fetcher for the map pipeline.
 
-Reads all user_profiles and interactions from Supabase using the service role key
+Reads all profiles and interactions from Supabase using the service role key
 and returns them in the format expected by run_pipeline().
-
-Field mapping notes:
-  - DB column location_city  → UserProfile.city
-  - DB column location_state → UserProfile.state
-  - occupation is hardcoded to "" because the user_profiles table has no occupation column.
-    (The UserProfile model requires this field; the DB omits it.)
 
 Returns a tuple matching run_pipeline()'s input contract:
   (list[UserProfile], dict[tuple[str, str], dict[str, int]])
@@ -23,11 +17,10 @@ from models.user import UserProfile
 
 
 def fetch_all() -> Tuple[list[UserProfile], dict[tuple[str, str], dict[str, int]]]:
-    """Fetch all user profiles and interaction counts from Supabase.
+    """Fetch all profiles and interaction counts from Supabase.
 
     Reads:
-      - user_profiles table → list[UserProfile] (maps location_city→city,
-        location_state→state; hardcodes occupation="" for absent DB column)
+      - profiles table → list[UserProfile]
       - interactions table → dict keyed by canonical pair tuple (uid_a, uid_b)
         with values {"likes": int, "comments": int, "dms": int}
 
@@ -39,23 +32,24 @@ def fetch_all() -> Tuple[list[UserProfile], dict[tuple[str, str], dict[str, int]
     """
     sb = get_supabase_client()
 
-    # ── Read user profiles ────────────────────────────────────────────────────
-    profile_response = sb.table("user_profiles").select("*").execute()
+    # ── Read profiles ─────────────────────────────────────────────────────────
+    profile_response = sb.table("profiles").select("*").execute()
 
     users: list[UserProfile] = []
     for row in profile_response.data:
         users.append(
             UserProfile(
-                id=row["user_id"],
-                city=row["location_city"],        # NOT "city" — DB column is location_city
-                state=row["location_state"],      # NOT "state" — DB column is location_state
-                interests=row["interests"] or [], # guard None → empty list
-                languages=row["languages"] or [], # guard None → empty list
-                education_level=row["education_level"],
-                field_of_study=row["field_of_study"],
-                occupation="",                   # no occupation column in DB — hardcoded
-                industry=row["industry"],
-                age=row["age"],
+                id=row["id"],
+                nickname=row.get("nickname") or "",
+                city=row.get("city") or "",
+                state=row.get("state") or "",
+                interests=row.get("interests") or [],
+                languages=row.get("languages") or [],
+                education=row.get("education") or "",
+                occupation=row.get("occupation"),
+                industry=row.get("industry") or "",
+                age=row.get("age") or 0,
+                timezone=row.get("timezone") or "UTC",
             )
         )
 
