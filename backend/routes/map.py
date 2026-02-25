@@ -9,24 +9,13 @@ router = APIRouter(prefix="/map", tags=["map"])
 def _fetch_map_response(user_id: str) -> dict:
     """Shared helper: fetch current map_coordinates + nicknames for a user."""
     sb = get_supabase_client()
-    rows = (
-        sb.table("map_coordinates")
-        .select("other_user_id, x, y, tier, computed_at")
-        .eq("center_user_id", user_id)
-        .eq("is_current", True)
-        .execute()
-    ).data
+    rows = sb.rpc("get_map_coordinates", {"p_center_user_id": user_id}).execute().data
 
     if not rows:
         raise HTTPException(status_code=404, detail="Map not yet computed for this user")
 
     other_ids = [r["other_user_id"] for r in rows]
-    profiles = (
-        sb.table("profiles")
-        .select("id, nickname")
-        .in_("id", other_ids)
-        .execute()
-    ).data
+    profiles = sb.rpc("get_profile_nicknames", {"p_ids": other_ids}).execute().data
     name_map = {p["id"]: p["nickname"] for p in profiles}
 
     return {
