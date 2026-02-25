@@ -18,15 +18,16 @@ from services.map_pipeline.pipeline import run_pipeline
 def make_user(uid: str, interests: list[str], age: int = 25) -> UserProfile:
     return UserProfile(
         id=uid,
+        nickname=uid,
         interests=interests,
         languages=["English"],
         city="San Francisco",
         state="CA",
-        education_level="bachelors",
-        field_of_study="Computer Science",
+        education="Computer Science",
         occupation="Engineer",
         industry="Technology",
         age=age,
+        timezone="UTC",
     )
 
 
