@@ -1,37 +1,50 @@
 # SixDegrees Database Schema
 
 **Database:** Supabase PostgreSQL
-**Note:** Frontend reads these tables directly via Supabase client (anon key). Frontend does NOT write directly to any table — all writes go through the backend API.
+**Version:** 1.1 (Phase 17 — v1.2 migration complete)
+**Note:** Frontend reads these tables directly via Supabase client (anon key). Frontend may write directly to `profiles`; all other writes go through the backend API.
 
 ---
 
-## user_profiles
+## profiles
 
-Stores each user's profile data. This is the primary input to the People Map algorithm.
+The canonical profile table. This is the primary input to the People Map algorithm and the table used by both the backend and frontend.
+
+`user_profiles` was the previous algorithm input table — it has been **dropped in v1.2**. All backend code now reads from and writes to `profiles`.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| `user_id` | UUID | PRIMARY KEY | Matches Supabase Auth user ID (no FK constraint — seed/demo users may not have auth accounts) |
-| `display_name` | TEXT | | Public display name shown on the map |
+| `id` | UUID | PRIMARY KEY | Matches Supabase Auth user ID (no FK constraint — seed/demo users may not have auth accounts) |
+| `nickname` | TEXT | UNIQUE | Public username shown on the map |
 | `interests` | TEXT[] | | Array of interest tags (e.g. `["hiking", "photography"]`) |
-| `location_city` | TEXT | | City name — note: column is `location_city`, NOT `city` |
-| `location_state` | TEXT | | State or region code — note: column is `location_state`, NOT `state` (empty string for international users) |
-| `age` | INTEGER | | Age in years |
+| `city` | TEXT | | City name |
+| `state` | TEXT | | State or region code (empty string for international users) |
+| `age` | SMALLINT | | Age in years |
 | `languages` | TEXT[] | | Languages spoken (e.g. `["English", "Spanish"]`) |
-| `field_of_study` | TEXT | | Academic discipline (e.g. `"computer science"`, `"biology"`) |
+| `education` | TEXT | | Academic discipline (e.g. `"Computer Science"`, `"Biology"`) |
+| `occupation` | TEXT | | Job title (nullable) |
 | `industry` | TEXT | | Professional industry (e.g. `"software"`, `"healthcare"`) |
-| `education_level` | TEXT | | Highest degree (e.g. `"bachelors"`, `"masters"`, `"phd"`) |
-| `timezone` | TEXT | | IANA timezone string (e.g. `"America/New_York"`) — used by scheduler to determine when the daily map update fires |
-| `updated_at` | TIMESTAMPTZ | DEFAULT now() | Auto-updated timestamp |
+| `timezone` | TEXT | NOT NULL DEFAULT 'UTC' | IANA timezone string (e.g. `"America/New_York"`) — used by scheduler to determine when the daily map update fires. **Added in v1.2 migration.** |
+| `is_onboarded` | BOOLEAN | DEFAULT false | `false` until the user completes profile setup. Used to redirect to `/profile-setup`. |
+| `profile_tier` | SMALLINT | | Which friend tier can see your profile (1 = only closest friends, 6 = everyone) — frontend-managed, backend ignores |
+| `friends` | UUID[] | | Array of user IDs the user is friends with — frontend-managed, backend ignores |
+| `pending_friend_requests` | UUID[] | | Array of user IDs who have sent a friend request — frontend-managed, backend ignores |
+| `rejected_friends` | UUID[] | | User IDs whose requests were declined — frontend-managed, backend ignores |
+| `created_at` | TIMESTAMPTZ | DEFAULT now() | Row creation timestamp |
 
-**RLS:** Enabled. Frontend anon key can read all rows. Writes require service role key (backend only, via `PUT /profile`).
-
-**Important column naming:** The DB columns are `location_city` and `location_state` (not `city` and `state`). The backend's `UserProfile` Pydantic model uses `city` and `state` internally — the `data_fetcher.py` translates at the DB boundary.
+**RLS:** Enabled. Frontend anon key can read and write (frontend writes profile directly). Backend uses service role key for map/match algorithm reads and `PUT /profile` upsert.
 
 **Notes:**
-- No foreign key from `user_id` to Supabase Auth `users` table — seed/demo users may not have auth accounts; a FK would block inserts
+- No foreign key from `id` to Supabase Auth `users` table — seed/demo users may not have auth accounts; a FK would block inserts
 - `timezone` determines when the daily map recomputation fires for this user (19:00 in that timezone)
-- All array fields (`interests`, `languages`) default to empty arrays when null
+- All array fields (`interests`, `languages`, `friends`, etc.) default to empty arrays when null
+- `education_level` was removed in v1.2 — that field is not in `profiles` and weight was redistributed to `interests` (now 40%)
+
+---
+
+## user_profiles (dropped in v1.2)
+
+> **Deprecated.** The `user_profiles` table was the previous algorithm input table. It has been dropped in v1.2 and replaced by `profiles`. All backend code has been migrated to `profiles`. Do not reference `user_profiles` in new code.
 
 ---
 
@@ -61,6 +74,8 @@ The frontend does NOT need to enforce this — the backend API (`POST /interacti
 **Atomic write pattern:** Counts are incremented via a Postgres RPC function (`increment_interaction`) using `INSERT ... ON CONFLICT DO NOTHING` followed by `UPDATE col = col + 1`. This prevents race conditions and avoids the standard upsert problem (which would reset counts to 0 on conflict).
 
 **RLS:** Enabled. Reads allowed via anon key. Writes require service role key (backend only, via `POST /interactions/*` endpoints).
+
+**FK note:** `user_id_a` and `user_id_b` FKs are being migrated to reference `profiles.id` — handled by the DB team after backend migration completes.
 
 **Adding new interaction types:** Add a new `INTEGER DEFAULT 0` column (e.g. `shares_count`) and add a corresponding entry to `INTERACTION_WEIGHTS` in `backend/config/algorithm.py`. No other code changes required — the algorithm picks up the new column automatically.
 
@@ -96,6 +111,36 @@ Stores the precomputed 2D (x, y) coordinates for each user pair. The pipeline wr
 
 ---
 
+## posts
+
+Stores user-created posts for the social feed.
+
+**RLS:** Enabled. Reads allowed via anon key. Writes go through frontend directly (Supabase client).
+
+**FK:** `user_id → profiles.id`
+
+---
+
+## likes
+
+Stores post likes.
+
+**RLS:** Enabled. Reads allowed via anon key. Writes go through frontend directly.
+
+**FK:** `user_id → profiles.id`
+
+---
+
+## comments
+
+Stores post comments.
+
+**RLS:** Enabled. Reads allowed via anon key. Writes go through frontend directly.
+
+**FK:** `user_id → profiles.id`
+
+---
+
 ## Supabase Client Setup (Frontend)
 
 ```javascript
@@ -115,9 +160,9 @@ const { data, error } = await supabase
 
 // Read a user's profile
 const { data: profile } = await supabase
-  .from('user_profiles')
-  .select('display_name, interests, location_city, location_state, age')
-  .eq('user_id', userId)
+  .from('profiles')
+  .select('nickname, interests, city, state, age')
+  .eq('id', userId)
   .single()
 ```
 
@@ -129,8 +174,8 @@ const { data: profile } = await supabase
 
 | Operation | Frontend (anon key) | Backend (service role key) |
 |-----------|--------------------|-----------------------------|
-| Read `user_profiles` | Yes | Yes |
-| Write `user_profiles` | No — use `PUT /profile` | Yes |
+| Read `profiles` | Yes | Yes |
+| Write `profiles` | Yes (direct Supabase) | Yes (via `PUT /profile`) |
 | Read `interactions` | Yes | Yes |
 | Write `interactions` | No — use `POST /interactions/*` | Yes |
 | Read `map_coordinates` | Yes | Yes |
