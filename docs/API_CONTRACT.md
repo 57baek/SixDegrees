@@ -1,6 +1,6 @@
 # SixDegrees API Contract
 
-**Version:** 1.0 (Phase 4 complete — 2026-02-23)
+**Version:** 1.1 (Phase 17 — v1.2 migration complete)
 **Base URL:** `http://localhost:8000` (local development)
 **Purpose:** Frontend API reference. The frontend reads map coordinates directly from Supabase; all writes go through these endpoints.
 
@@ -23,7 +23,6 @@ Authorization: Bearer <supabase_jwt>
 |------|--------------|---------|
 | 401 | `"Authorization header missing"` | `Authorization` header is absent from the request |
 | 401 | `"Invalid or expired token"` | Token present but expired, revoked, or malformed |
-| 403 | `"Cannot update another user's profile"` | Token valid but the `user_id` field in the body belongs to a different user |
 
 The `WWW-Authenticate: Bearer` response header is included on all 401 responses.
 
@@ -54,14 +53,14 @@ Returns the precomputed People Map for the given user.
       "x": 0.0,
       "y": 0.0,
       "tier": 1,
-      "display_name": "Alex Rivera"
+      "nickname": "alexrivera"
     },
     {
       "user_id": "af17902c-723d-4a32-a5a1-93d9fb7777ee",
       "x": 12.34,
       "y": -5.67,
       "tier": 2,
-      "display_name": "Skyler Thompson"
+      "nickname": "skyler_t"
     }
   ]
 }
@@ -78,7 +77,7 @@ Returns the precomputed People Map for the given user.
 | `coordinates[].x` | float | Horizontal position (center user is always 0.0) |
 | `coordinates[].y` | float | Vertical position (center user is always 0.0) |
 | `coordinates[].tier` | integer | 1 = closest 5, 2 = next 10, 3 = outer ring |
-| `coordinates[].display_name` | string | The user's display name (empty string if not set) |
+| `coordinates[].nickname` | string | The user's nickname (empty string if not set) |
 
 **Notes:**
 - The center user always appears in `coordinates` at `x: 0.0, y: 0.0` with `tier: 1`
@@ -107,7 +106,7 @@ Manually triggers the full pipeline recomputation for a single user and returns 
 
 | Code | Body | When |
 |------|------|------|
-| 422 | `{"detail": "Pipeline failed: N=<n> users is below the minimum of 10 required for t-SNE. Seed more users."}` | Fewer than 10 users exist in `user_profiles` (t-SNE minimum) |
+| 422 | `{"detail": "Pipeline failed: N=<n> users is below the minimum of 10 required for t-SNE. Seed more users."}` | Fewer than 10 users exist in `profiles` (t-SNE minimum) |
 | 422 | `{"detail": "Pipeline failed: ..."}` | Any other `ValueError` raised by the pipeline (e.g. user not found) |
 
 ---
@@ -198,22 +197,22 @@ Records a direct message interaction. Atomically increments `dm_count` in the `i
 
 ### PUT /profile
 
-Creates or updates the authenticated user's profile in `user_profiles`. All fields are optional — only provided fields are written (existing fields not in the request body are preserved, because the backend builds the upsert payload from non-null fields only).
+Creates or updates the authenticated user's profile in `profiles`. All fields are optional — only provided fields are written (existing fields not in the request body are preserved, because the backend builds the upsert payload from non-null fields only).
 
-The `user_id` is always taken from the JWT — the backend sets it from the validated token. If `user_id` is included in the request body, it must match the authenticated user's ID or the request will be rejected with 403.
+The `id` (user UUID) is always taken from the JWT — the backend sets it from the validated token.
 
 **Request body (all fields optional):**
 ```json
 {
-  "display_name": "Alex Rivera",
+  "nickname": "alexrivera",
   "interests": ["hiking", "photography"],
-  "location_city": "Denver",
-  "location_state": "CO",
+  "city": "Denver",
+  "state": "CO",
   "age": 28,
   "languages": ["English", "Spanish"],
-  "field_of_study": "Environmental Science",
+  "education": "Environmental Science",
   "industry": "Outdoor Recreation",
-  "education_level": "Bachelor's",
+  "occupation": "Trail Guide",
   "timezone": "America/Denver"
 }
 ```
@@ -222,15 +221,15 @@ The `user_id` is always taken from the JWT — the backend sets it from the vali
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `display_name` | string | Public display name shown on the People Map |
+| `nickname` | string | Public username shown on the People Map |
 | `interests` | string[] | Array of interest tags (e.g. `["hiking", "photography"]`) |
-| `location_city` | string | City name |
-| `location_state` | string | State or region code (empty string for international users) |
+| `city` | string | City name |
+| `state` | string | State or region code (empty string for international users) |
 | `age` | integer | Age in years |
 | `languages` | string[] | Languages spoken (e.g. `["English", "Spanish"]`) |
-| `field_of_study` | string | Academic discipline |
+| `education` | string | Academic discipline or field of study |
 | `industry` | string | Professional industry |
-| `education_level` | string | Highest degree (e.g. `"bachelors"`, `"masters"`, `"phd"`) |
+| `occupation` | string (optional) | Job title — nullable |
 | `timezone` | string | IANA timezone string (e.g. `"America/New_York"`) — controls when the daily map recomputation fires for this user |
 
 **Success response (200):**
@@ -246,7 +245,73 @@ The `user_id` is always taken from the JWT — the backend sets it from the vali
 |------|------|------|
 | 401 | `{"detail": "Authorization header missing"}` | No `Authorization` header |
 | 401 | `{"detail": "Invalid or expired token"}` | Token present but invalid or expired |
-| 403 | `{"detail": "Cannot update another user's profile"}` | `user_id` in request body does not match authenticated user's ID |
+
+---
+
+### GET /profile
+
+Returns the authenticated user's profile from `profiles`.
+
+**No request body. Authentication required.**
+
+**Success response (200):**
+```json
+{
+  "id": "3561ceb0-d433-437d-8a4f-08da002dff50",
+  "nickname": "alexrivera",
+  "interests": ["hiking", "photography"],
+  "city": "Denver",
+  "state": "CO",
+  "age": 28,
+  "languages": ["English", "Spanish"],
+  "education": "Environmental Science",
+  "industry": "Outdoor Recreation",
+  "occupation": "Trail Guide",
+  "timezone": "America/Denver",
+  "is_onboarded": true
+}
+```
+
+**Error responses:**
+
+| Code | Body | When |
+|------|------|------|
+| 401 | `{"detail": "Authorization header missing"}` | No `Authorization` header |
+| 401 | `{"detail": "Invalid or expired token"}` | Token present but invalid or expired |
+| 404 | `{"detail": "Profile not found"}` | No profile row exists yet for this user |
+
+---
+
+### GET /match
+
+Returns profile similarity matches for the authenticated user. Ranked by weighted similarity score.
+
+**No request body. Authentication required.**
+
+**Success response (200):**
+```json
+{
+  "matches": [
+    {
+      "user_id": "af17902c-723d-4a32-a5a1-93d9fb7777ee",
+      "nickname": "skyler_t",
+      "similarity_score": 0.87
+    },
+    {
+      "user_id": "b2c4e6f8-0000-1111-2222-333344445555",
+      "nickname": "morgan_k",
+      "similarity_score": 0.74
+    }
+  ]
+}
+```
+
+**Error responses:**
+
+| Code | Body | When |
+|------|------|------|
+| 401 | `{"detail": "Authorization header missing"}` | No `Authorization` header |
+| 401 | `{"detail": "Invalid or expired token"}` | Token present but invalid or expired |
 
 ---
 
@@ -265,7 +330,7 @@ Validation errors (e.g. missing required field, wrong type) return HTTP 422 with
 
 ## Notes for Frontend Implementation
 
-1. **Direct Supabase reads:** Frontend should read `map_coordinates` and `user_profiles` directly from Supabase (not via this API) for display purposes. The Supabase anon key is safe for reads — RLS allows it. Example:
+1. **Direct Supabase reads:** Frontend should read `map_coordinates` and `profiles` directly from Supabase (not via this API) for display purposes. The Supabase anon key is safe for reads — RLS allows it. Example:
    ```javascript
    const { data } = await supabase
      .from('map_coordinates')
@@ -274,7 +339,7 @@ Validation errors (e.g. missing required field, wrong type) return HTTP 422 with
      .eq('is_current', true)
    ```
 
-2. **Write pattern:** All interaction events and profile updates MUST go through this API (not direct Supabase writes). Supabase RLS blocks anon key writes to `interactions` and `user_profiles`.
+2. **Write pattern:** All interaction events go through this API (not direct Supabase writes). Supabase RLS blocks anon key writes to `interactions`. Profile updates go through `PUT /profile`.
 
 3. **Map freshness:** Coordinates are batch-updated at 19:00 in each user's timezone. After calling `POST /interactions/*`, the map does not update immediately — the interaction will be reflected at the next scheduled run or on manual trigger via `POST /map/trigger/{user_id}`.
 
