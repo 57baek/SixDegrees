@@ -4,6 +4,8 @@ These tests document the API contract each endpoint must honor so future changes
 can be verified automatically. They run against a mocked Supabase client so no
 real database or network calls are made.
 """
+from unittest.mock import patch
+
 import pytest
 
 
@@ -59,6 +61,17 @@ def test_post_map_trigger_other_user_returns_403(client):
     """POST /map/trigger/{user_id} for another user returns 403 (self-only guard)."""
     response = client.post("/map/trigger/other-user-uuid")
     assert response.status_code == 403
+
+
+def test_post_map_trigger_success_keeps_map_metadata_contract(client):
+    """POST /map/trigger/{user_id} success still returns map metadata fields."""
+    with patch("routes.map.run_pipeline_for_user", return_value=None):
+        response = client.post("/map/trigger/test-user-uuid")
+    assert response.status_code == 200
+    data = response.json()
+    assert "version_date" in data
+    assert "computed_at" in data
+    assert isinstance(data.get("coordinates"), list)
 
 
 # ── POST /interactions/* ─────────────────────────────────────────────────
