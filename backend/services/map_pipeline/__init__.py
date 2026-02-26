@@ -1,8 +1,8 @@
 """DB-connected pipeline orchestrator.
 
-Chains fetch_all() -> run_pipeline() -> write_coordinates() for a single user.
-Called by scheduler and trigger endpoint.
-Raises ValueError if N < 10 or requesting_user_id not in profiles.
+Chains fetch_all() -> run_pipeline() -> write_coordinates() for a full global
+coordinate batch. Called by scheduler and trigger endpoint. Raises ValueError
+if N < 10 or requesting_user_id not in profiles.
 """
 
 from services.map_pipeline.data_fetcher import fetch_all
@@ -34,5 +34,5 @@ def run_pipeline_for_user(requesting_user_id: str) -> None:
     # Step 2: Run the pure-computation pipeline
     result = run_pipeline(users, raw_interaction_counts, requesting_user_id)
 
-    # Step 3: Persist coordinates to map_coordinates table
-    write_coordinates(requesting_user_id, result["translated_results"])
+    # Step 3: Persist one global row per user to map_coordinates table.
+    write_coordinates(result["translated_results"])
