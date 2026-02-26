@@ -10,22 +10,17 @@ import pytest
 # ── GET /map/{user_id} ────────────────────────────────────────────────────
 
 def test_get_map_response_shape(client):
-    """GET /map/{user_id} returns 200 with correct shape when map exists.
-
-    With the default MagicMock Supabase, the map_coordinates query returns a
-    MagicMock that iterates as empty — so coordinates is []. Both 200 (empty map)
-    and 404 (no map) are acceptable here; 500 is never acceptable.
-    """
+    """GET /map/{user_id} returns 200 with global metadata contract fields."""
     response = client.get("/map/test-user-uuid")
-    assert response.status_code in (200, 404)
-    if response.status_code == 200:
-        data = response.json()
-        assert "user_id" in data
-        assert "coordinates" in data
-        assert isinstance(data["coordinates"], list)
-        if data["coordinates"]:
-            coord = data["coordinates"][0]
-            assert all(k in coord for k in ("user_id", "x", "y", "tier", "nickname"))
+    assert response.status_code == 200
+    data = response.json()
+    assert "user_id" in data
+    assert "version_date" in data
+    assert "computed_at" in data
+    assert "coordinates" in data
+    assert isinstance(data["coordinates"], list)
+    coord = data["coordinates"][0]
+    assert all(k in coord for k in ("user_id", "x", "y", "tier", "nickname"))
 
 
 def test_get_map_returns_non_500(client):

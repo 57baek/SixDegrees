@@ -41,8 +41,8 @@ def _build_mock_supabase() -> MagicMock:
     mock_sb = MagicMock()
 
     # rpc() calls are routed by function name via side_effect so that:
-    # - get_map_coordinates / get_profile_nicknames return [] → map.py returns 404
-    #   (test_get_map_response_shape accepts 200 or 404; empty data → 404 is fine).
+    # - get_global_map_coordinates returns deterministic map rows for map contract tests.
+    # - get_profile_nicknames returns nickname rows matching the map result IDs.
     # - get_all_interactions returns [] (no interaction rows — avoids KeyError on
     #   user_id_a/user_id_b when pipeline iterates interaction rows).
     # - All other rpc() calls (get_profile, get_all_profiles, upsert_profile,
@@ -52,20 +52,34 @@ def _build_mock_supabase() -> MagicMock:
     _empty_result = MagicMock()
     _empty_result.execute.return_value.data = []
 
+    _map_result = MagicMock()
+    _map_result.execute.return_value.data = [
+        {
+            "user_id": TEST_USER_ID,
+            "x": 0.0,
+            "y": 0.0,
+            "prev_x": None,
+            "prev_y": None,
+            "computed_at": "2026-02-26T00:00:00Z",
+            "version_date": "2026-02-26",
+        }
+    ]
+
+    _nickname_result = MagicMock()
+    _nickname_result.execute.return_value.data = [{"id": TEST_USER_ID, "nickname": "Test User"}]
+
     _default_result = MagicMock()
     _default_result.execute.return_value.data = [_MOCK_PROFILE_ROW]
 
     # Store default result on return_value so tests can inspect call_args_list.
     mock_sb.rpc.return_value = _default_result
 
-    _EMPTY_RESULT_RPCS = frozenset({
-        "get_map_coordinates",
-        "get_profile_nicknames",
-        "get_all_interactions",
-    })
-
     def _rpc_side_effect(fn_name, *args, **kwargs):
-        if fn_name in _EMPTY_RESULT_RPCS:
+        if fn_name == "get_global_map_coordinates":
+            return _map_result
+        if fn_name == "get_profile_nicknames":
+            return _nickname_result
+        if fn_name == "get_all_interactions":
             return _empty_result
         return _default_result
 
