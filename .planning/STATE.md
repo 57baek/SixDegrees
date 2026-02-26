@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-02-26T22:53:00.851Z"
+last_updated: "2026-02-26T22:57:18.371Z"
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -23,28 +23,29 @@ See: `.planning/PROJECT.md` (updated 2026-02-26)
 ## Current Position
 
 Phase: 1 of 4 (Phase 20 - Global Coordinate Data Contract)
-Plan: 2 of 3 in current phase
+Plan: 3 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-26 - Completed 20-01 global coordinate data contract execution.
+Last activity: 2026-02-26 - Completed 20-02 interactions rebuild and FK repoint execution.
 
-Progress: [███░░░░░░░] 33%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 4 min
+- Total plans completed: 2
+- Average duration: 3 min
 - Total execution time: 0.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 20 | 1 | 4 min | 4 min |
+| 20 | 2 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 20-01 (4 min)
+- Last 5 plans: 20-02 (2 min), 20-01 (4 min)
 - Trend: Stable
+| Phase 20 P02 | 2 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -61,6 +62,8 @@ Recent decisions affecting current work:
 - [Phase 23]: Milestone cannot close until DB/runtime have zero `user_profiles` dependency and safe drop is complete.
 - [Phase 20]: Use upsert_global_map_coordinates JSONB RPC so backend publishes one batch timestamp/version across all users.
 - [Phase 20]: Preserve one-step movement continuity in SQL by assigning prev_x/prev_y from current row on conflict updates.
+- [Phase 20]: Rebuild interactions via truncate and deterministic re-aggregation from profile-scoped activity before enforcing FK constraints.
+- [Phase 20]: Standardize interaction FK names to fk_interactions_user_a_profiles and fk_interactions_user_b_profiles after removing any user_profiles references.
 
 ### Pending Todos
 
@@ -73,6 +76,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-26 17:53 EST
-Stopped at: Completed 20-01-PLAN.md
+Last session: 2026-02-26 17:57 EST
+Stopped at: Completed 20-02-PLAN.md
 Resume file: None

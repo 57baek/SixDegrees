@@ -14,9 +14,9 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **DATA-03**: User map reads/writes do not depend on legacy per-viewer map semantics.
 - [x] **DATA-04**: User map data version is explicit (`version_date`, `computed_at`) and returned in API metadata.
 - [x] **DATA-05**: User map persistence/update operations are executed through secured backend data-access interfaces consistent with existing runtime patterns.
-- [ ] **DATA-06**: User interactions foreign keys (`user_id_a`, `user_id_b`) reference `profiles(id)` only.
-- [ ] **DATA-07**: User interactions table contains only user IDs that exist in `profiles`.
-- [ ] **DATA-08**: User interactions baseline is rebuilt from `posts`/`likes`/`comments` activity for existing `profiles` users only.
+- [x] **DATA-06**: User interactions foreign keys (`user_id_a`, `user_id_b`) reference `profiles(id)` only.
+- [x] **DATA-07**: User interactions table contains only user IDs that exist in `profiles`.
+- [x] **DATA-08**: User interactions baseline is rebuilt from `posts`/`likes`/`comments` activity for existing `profiles` users only.
 
 ### Algorithm Engine + Validation
 
@@ -89,9 +89,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-03 | Phase 20 | Complete |
 | DATA-04 | Phase 20 | Complete |
 | DATA-05 | Phase 20 | Complete |
-| DATA-06 | Phase 20 | Pending |
-| DATA-07 | Phase 20 | Pending |
-| DATA-08 | Phase 20 | Pending |
+| DATA-06 | Phase 20 | Complete |
+| DATA-07 | Phase 20 | Complete |
+| DATA-08 | Phase 20 | Complete |
 | ALGO-01 | Phase 21 | Pending |
 | ALGO-02 | Phase 21 | Pending |
 | ALGO-03 | Phase 21 | Pending |
