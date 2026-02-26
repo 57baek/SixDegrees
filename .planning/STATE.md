@@ -2,13 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: in_progress
-last_updated: "2026-02-26T23:01:15.309Z"
+status: executing
+last_updated: "2026-02-26T23:18:30.000Z"
 progress:
-  total_phases: 1
+  total_phases: 4
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 5
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -18,23 +19,23 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-02-26)
 
 **Core value:** A user opens the People Map and immediately sees meaningful nearby people around themselves at (0,0), with stable, explainable positions that update daily.
-**Current focus:** Phase 20 - Global Coordinate Data Contract
+**Current focus:** Phase 21 - Compute Engine and Publish Validation
 
 ## Current Position
 
-Phase: 1 of 4 (Phase 20 - Global Coordinate Data Contract)
-Plan: 3 of 3 in current phase
-Status: Completed (Phase 20 complete)
-Last activity: 2026-02-26 - Completed 20-03 map API global-contract wiring and metadata contract tests.
+Phase: 2 of 4 (Phase 21 - Compute Engine and Publish Validation)
+Plan: 2 of 2 in current phase
+Status: In Progress
+Last activity: 2026-02-26 - Completed 21-01 sparse compute core and deterministic stage tests.
 
-Progress: [██████████] 100%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 3 min
-- Total execution time: 0.1 hours
+- Total execution time: 0.2 hours
 
 **By Phase:**
 
@@ -43,10 +44,11 @@ Progress: [██████████] 100%
 | 20 | 3 | 8 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 20-03 (2 min), 20-02 (2 min), 20-01 (4 min)
+- Last 5 plans: 21-01 (5 min), 20-03 (2 min), 20-02 (2 min), 20-01 (4 min)
 - Trend: Stable
 | Phase 20 P02 | 2 min | 2 tasks | 2 files |
 | Phase 20 P03 | 2 min | 2 tasks | 3 files |
+| Phase 21 P01 | 5min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -67,6 +69,9 @@ Recent decisions affecting current work:
 - [Phase 20]: Standardize interaction FK names to fk_interactions_user_a_profiles and fk_interactions_user_b_profiles after removing any user_profiles references.
 - [Phase 20]: Map route reads now use get_global_map_coordinates and return shared version metadata from global rows.
 - [Phase 20]: Map contract tests now require version_date/computed_at with deterministic RPC mocks to prevent false-green 404 behavior.
+- [Phase 21]: Use sparse profile vectors plus k-NN graph extraction to avoid dense NxN precompute in the pipeline path.
+- [Phase 21]: Apply interaction refinement as iterative sparse edge pulls with exponential recency decay from optional days-since fields.
+- [Phase 21]: Expose optional prior anchors in run_pipeline and enforce per-user movement clipping through a dedicated stability stage.
 
 ### Pending Todos
 
@@ -79,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-26 18:00 EST
-Stopped at: Completed 20-03-PLAN.md
+Last session: 2026-02-26T23:16:21Z
+Stopped at: Completed 21-01-PLAN.md
 Resume file: None
