@@ -112,6 +112,7 @@ const handleSubmit = async () => {
         industry: form.value.industry,
         interests: interestsArray,
         languages: languagesArray,
+        profile_tier: 6 //visible to everyone, can change later
     });
 
     if (profileError) throw profileError;

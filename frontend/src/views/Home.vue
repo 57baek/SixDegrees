@@ -33,7 +33,10 @@
         <ul v-else class="requests-list">
           <li v-for="user in incomingRequests" :key="user.id" class="request-item">
           
-          <span class="request-text"><strong>{{ user.nickname }}</strong> wants to be friends!</span>
+          <div class="request-user">
+            <div class="avatar-small">{{ user.nickname.charAt(0).toUpperCase() }}</div>
+            <span class="request-text"><strong>{{ user.nickname }}</strong> wants to be friends!</span>
+          </div>
           
           <div class="request-buttons">
             <button @click="handleAccept(user.nickname)" class="accept-btn">
@@ -364,5 +367,25 @@ async function loadPosts() {
   margin-top: 10px;
   padding: 5px;
   cursor: pointer;
+}
+
+.request-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #088F8F;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  font-size: 1.2rem;
+  flex-shrink: 0;
 }
 </style>
