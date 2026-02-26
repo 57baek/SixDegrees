@@ -28,6 +28,9 @@ def write_coordinates(
     Returns:
         None. Raises on Supabase error (no retry logic).
     """
+    if not translated_results:
+        raise ValueError("translated_results must include at least one coordinate row")
+
     sb = get_supabase_client()
 
     computed_at_value = computed_at or datetime.now(timezone.utc).isoformat()
@@ -41,7 +44,7 @@ def write_coordinates(
             "version_date": version_date_value,
             "computed_at": computed_at_value,
         }
-        for entry in translated_results
+        for entry in sorted(translated_results, key=lambda item: str(item["user_id"]))
     ]
 
     sb.rpc("upsert_global_map_coordinates", {"p_rows": rows}).execute()
