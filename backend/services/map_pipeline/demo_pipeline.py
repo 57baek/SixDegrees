@@ -27,6 +27,11 @@ def run_phase24_demo(
     profile_rows = _fetch_demo_profiles(client)
     interaction_rows = _fetch_demo_interactions(client)
     users = _rows_to_users(profile_rows)
+    eleanor_row = next(
+        (row for row in profile_rows if str(row["id"]) == ELEANOR_ID),
+        None,
+    )
+    eleanor_friend_ids = sorted(str(value) for value in (eleanor_row or {}).get("friends") or [])
 
     baseline_counts = _interaction_rows_to_counts(interaction_rows)
     amplified_rows = _amplify_pair(interaction_rows, ELEANOR_ID, WINSTON_ID)
@@ -50,6 +55,7 @@ def run_phase24_demo(
             "requesting_user_id": ELEANOR_ID,
             "eleanor_id": ELEANOR_ID,
             "winston_id": WINSTON_ID,
+            "eleanor_friend_ids": eleanor_friend_ids,
         },
         "baseline": _build_variant_payload(users, baseline_result, baseline_counts),
         "amplified": _build_variant_payload(users, amplified_result, amplified_counts),
