@@ -22,6 +22,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from config.supabase import get_supabase_client
 from services.map_pipeline import run_pipeline_for_user
+from services.map_pipeline.warm_cache import refresh_warm_payload_if_stale
 from services.map_pipeline.scheduler_lock import (
     DEFAULT_LOCK_TTL_SECONDS,
     acquire_global_compute_lock,
@@ -45,7 +46,12 @@ def _select_global_compute_user_id() -> str | None:
     """Select deterministic profile id used to run one global compute batch."""
     sb = get_supabase_client()
     rows = _rows_list(sb.rpc("get_all_profiles", {}).execute().data)
-    user_ids = [row.get("id") for row in rows if row.get("id")]
+    user_ids: list[str] = []
+    for row in rows:
+        raw_user_id = row.get("id")
+        if raw_user_id is None:
+            continue
+        user_ids.append(str(raw_user_id))
     if not user_ids:
         return None
     return sorted(user_ids)[0]
@@ -78,10 +84,28 @@ def _run_warm_only_for_timezone(timezone: str) -> None:
     """Fetch all users in timezone and run warm-only behavior."""
     sb = get_supabase_client()
     rows = _rows_list(sb.rpc("get_profiles_by_timezone", {"p_timezone": timezone}).execute().data)
+    refreshed_count = 0
+
+    for row in rows:
+        user_id = row.get("id")
+        if not user_id:
+            continue
+        try:
+            if refresh_warm_payload_if_stale(str(user_id)):
+                refreshed_count += 1
+        except Exception as exc:
+            logger.error(
+                "Scheduler: warm-only refresh failed for user %s in timezone %s: %s",
+                user_id,
+                timezone,
+                exc,
+            )
+
     logger.info(
-        "Scheduler: warm-only refresh for %d users in timezone %s",
+        "Scheduler: warm-only refresh for %d users in timezone %s (refreshed=%d)",
         len(rows),
         timezone,
+        refreshed_count,
     )
 
 

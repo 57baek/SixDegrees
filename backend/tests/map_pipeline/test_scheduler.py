@@ -154,11 +154,16 @@ def test_warm_only_job_does_not_run_pipeline(monkeypatch):
     monkeypatch.setattr("services.map_pipeline.scheduler.get_supabase_client", lambda: mock_sb)
 
     run_pipeline_mock = MagicMock()
+    refresh_mock = MagicMock(return_value=False)
     monkeypatch.setattr("services.map_pipeline.scheduler.run_pipeline_for_user", run_pipeline_mock)
+    monkeypatch.setattr("services.map_pipeline.scheduler.refresh_warm_payload_if_stale", refresh_mock)
 
     scheduler._run_warm_only_for_timezone("UTC")
 
     run_pipeline_mock.assert_not_called()
+    assert refresh_mock.call_count == 2
+    refresh_mock.assert_any_call("u1")
+    refresh_mock.assert_any_call("u2")
     mock_sb.rpc.assert_called_once_with("get_profiles_by_timezone", {"p_timezone": "UTC"})
 
 
