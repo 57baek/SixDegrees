@@ -66,7 +66,7 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **DYN-03**: Demo pair nearest-neighbor rank response improves with amplification and is exported as an auditable artifact.
 - [x] **DYN-04**: Dynamic sensitivity changes preserve global stability bounds (movement clipping and no runaway coordinate divergence).
 - [x] **DYN-05**: Demo artifacts include force/edge diagnostics that explain observed geometric movement.
-- [ ] **DYN-06**: Notebook and README communicate dynamic tuning behavior, limits, and recommended presets for clear stakeholder demos.
+- [x] **DYN-06**: Notebook and README communicate dynamic tuning behavior, limits, and recommended presets for clear stakeholder demos.
 
 ## Future Requirements
 

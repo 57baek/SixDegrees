@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: in_progress
-last_updated: "2026-02-27T05:25:21.796Z"
+status: complete
+last_updated: "2026-02-27T05:30:00.072Z"
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 17
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: `.planning/PROJECT.md` (updated 2026-02-26)
 ## Current Position
 
 Phase: 6 of 6 (Phase 25 - Interaction Sensitivity and Dynamic Distance Tuning)
-Plan: 2 of 3 in current phase
-Status: In Progress
-Last activity: 2026-02-27 - Completed 25-02 explainable diagnostics exports and trend regressions.
+Plan: 3 of 3 in current phase
+Status: Complete
+Last activity: 2026-02-27 - Completed 25-03 demo notebook dynamic tuning narrative and contract coverage.
 
-Progress: [█████████▓] 94%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [█████████▓] 94%
 | Phase 24 P03 | 2min | 2 tasks | 4 files |
 | Phase 25 P01 | 2min | 2 tasks | 6 files |
 | Phase 25 P02 | 3min | 2 tasks | 5 files |
+| Phase 25-interaction-sensitivity-and-dynamic-distance-tuning P03 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,8 @@ Recent decisions affecting current work:
 - [Phase 25]: Expose optional InteractionSensitivity overrides in run_pipeline for deterministic tuning sweeps without mutating global defaults.
 - [Phase 25]: Expose run_pipeline refinement diagnostics as additive payload fields for deterministic explainability exports.
 - [Phase 25]: Expand distance-curve CSV rows with rank and force deltas (instead of adding a new file) to preserve existing artifact consumers.
+- [Phase 25]: Keep phase 25 contract checks kernel-free and JSON-content based to stay fast and deterministic in CI.
+- [Phase 25]: Encode safety framing in README/notebook explicitly: demo amplification can increase visibility, but clipping guardrails remain enabled.
 
 ### Pending Todos
 
@@ -118,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-27T05:24:45Z
-Stopped at: Completed 25-02-PLAN.md
+Last session: 2026-02-27T05:30:00Z
+Stopped at: Completed 25-03-PLAN.md
 Resume file: None
