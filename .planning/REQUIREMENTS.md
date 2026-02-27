@@ -59,6 +59,15 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **DEMO-05**: Demo notebook visualizes Eleanor Colvin ego subset, Eleanor-centered coordinate shift, and side-by-side before/after Eleanor maps.
 - [x] **DEMO-06**: Demo workflow is reproducible from documented commands and protected by lightweight automated contract tests.
 
+### Dynamic Sensitivity and Explainability (Phase 25)
+
+- [x] **DYN-01**: Interaction-force scaling remains sensitivity-preserving at high interaction counts and avoids early saturation that hides strong amplification effects.
+- [x] **DYN-02**: Demo pair-distance response for Eleanor<->Winston is monotonic (or near-monotonic with bounded tolerance) as amplification increases.
+- [ ] **DYN-03**: Demo pair nearest-neighbor rank response improves with amplification and is exported as an auditable artifact.
+- [x] **DYN-04**: Dynamic sensitivity changes preserve global stability bounds (movement clipping and no runaway coordinate divergence).
+- [ ] **DYN-05**: Demo artifacts include force/edge diagnostics that explain observed geometric movement.
+- [ ] **DYN-06**: Notebook and README communicate dynamic tuning behavior, limits, and recommended presets for clear stakeholder demos.
+
 ## Future Requirements
 
 Deferred to future milestones.
@@ -127,12 +136,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEMO-04 | Phase 24 | Complete |
 | DEMO-05 | Phase 24 | Complete |
 | DEMO-06 | Phase 24 | Complete |
+| DYN-01 | Phase 25 | Planned |
+| DYN-02 | Phase 25 | Planned |
+| DYN-03 | Phase 25 | Planned |
+| DYN-04 | Phase 25 | Planned |
+| DYN-05 | Phase 25 | Planned |
+| DYN-06 | Phase 25 | Planned |
 
 **Coverage:**
-- Total requirements: 34
-- Mapped to phases: 34
+- Total requirements: 40
+- Mapped to phases: 40
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-27 after adding Phase 24 demo notebook requirements*
+*Last updated: 2026-02-27 after adding Phase 25 dynamic sensitivity requirements*

@@ -8,7 +8,7 @@ Milestone v2.0 delivers a backend-only global coordinate map engine that replace
 
 **Phase Numbering:**
 - Integer phases (20, 21, 22, 23): Planned milestone v2.0 work
-- Integer phase (24): Post-v2 demo and visualization work
+- Integer phases (24, 25): Post-v2 demo and visualization work
 - Decimal phases (20.1, 21.1): Urgent insertions if needed
 
 - [x] **Phase 20: Global Coordinate Data Contract** - Establish one-row-per-user global coordinate semantics with secure, versioned persistence. (completed 2026-02-26)
@@ -16,6 +16,7 @@ Milestone v2.0 delivers a backend-only global coordinate map engine that replace
 - [x] **Phase 22: Ego Map API and Compatibility Serving** - Serve requester-centered mutual-friend maps and bounded suggestions without frontend changes. (completed 2026-02-27)
 - [x] **Phase 23: Scheduler Operations and Safe Rollout** - Run daily compute + local warm operations with duplicate protection and rollback safety. (completed 2026-02-27)
 - [x] **Phase 24: Clustering and Dimensionality Reduction Demo Notebook** - Build deterministic demo data + pipeline artifacts and notebook visuals for global/ego/centered before-after analysis. (completed 2026-02-27)
+- [ ] **Phase 25: Interaction Sensitivity and Dynamic Distance Tuning** - Increase interaction-to-distance responsiveness so strong amplification produces visible, explainable proximity changes.
 
 ## Phase Details
 
@@ -101,6 +102,23 @@ Plans:
 - [ ] 24-02-PLAN.md - Build demo pipeline runner and generate baseline/amplified before-after artifacts.
 - [ ] 24-03-PLAN.md - Create Phase 24 notebook visuals and notebook contract smoke tests.
 
+### Phase 25: Interaction Sensitivity and Dynamic Distance Tuning
+**Goal**: Make interaction-driven changes visibly meaningful by redesigning interaction-force scaling and demo diagnostics so strong amplification clearly changes pair proximity and rank.
+**Depends on**: Phase 24
+**Requirements**: DYN-01, DYN-02, DYN-03, DYN-04, DYN-05, DYN-06
+**Success Criteria** (what must be TRUE):
+  1. Interaction-force scaling no longer saturates too early; very large interaction boosts produce materially larger force deltas than baseline edges.
+  2. Eleanor<->Winston distance and nearest-neighbor rank show clear monotonic improvement across increasing amplification levels in demo mode.
+  3. Global-map stability remains bounded (no chaotic drift) while local dynamic response becomes visibly stronger.
+  4. Pipeline exports include diagnostics that explain why pair movement changed (edge strength, pull magnitude, and rank delta).
+  5. Notebook demo presents before/after and amplification-curve evidence that is interpretable by non-technical stakeholders.
+  6. Tuning parameters and safeguards are documented, with defaults that preserve production safety and opt-in stronger demo sensitivity.
+**Plans**: 3 plans
+Plans:
+- [ ] 25-01-PLAN.md - Redesign interaction scaling/force model and add deterministic monotonicity tests.
+- [ ] 25-02-PLAN.md - Add sensitivity diagnostics exports (distance curve, rank curve, force metadata) and stable parameter presets.
+- [ ] 25-03-PLAN.md - Update demo notebook/README to showcase clearly visible dynamic changes with side-by-side evidence.
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -110,3 +128,4 @@ Plans:
 | 22. Ego Map API and Compatibility Serving | 3/3 | Complete   | 2026-02-27 |
 | 23. Scheduler Operations and Safe Rollout | 3/3 | Complete   | 2026-02-27 |
 | 24. Clustering and Dimensionality Reduction Demo Notebook | 3/3 | Complete   | 2026-02-27 |
+| 25. Interaction Sensitivity and Dynamic Distance Tuning | 1/3 | In Progress|  |
