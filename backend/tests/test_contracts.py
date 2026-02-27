@@ -12,7 +12,7 @@ import pytest
 # ── GET /map/{user_id} ────────────────────────────────────────────────────
 
 def test_get_map_response_shape(client):
-    """GET /map/{user_id} returns 200 with global metadata contract fields."""
+    """GET /map/{user_id} keeps compatibility keys and adds suggestion metadata."""
     response = client.get("/map/test-user-uuid")
     assert response.status_code == 200
     data = response.json()
@@ -22,14 +22,35 @@ def test_get_map_response_shape(client):
     assert "coordinates" in data
     assert isinstance(data["coordinates"], list)
     coord = data["coordinates"][0]
-    assert all(k in coord for k in ("user_id", "x", "y", "tier", "nickname"))
+    assert all(k in coord for k in ("user_id", "x", "y", "tier", "nickname", "is_suggestion"))
 
 
-def test_get_map_returns_non_500(client):
-    """GET /map/{user_id} returns 200 or 404 when no map exists — never 500."""
-    response = client.get("/map/nonexistent-user-uuid")
-    assert response.status_code in (200, 404)
-    assert response.status_code != 500
+def test_get_map_other_user_returns_403(client):
+    """GET /map/{user_id} for another user returns 403 (self-only guard)."""
+    response = client.get("/map/other-user-uuid")
+    assert response.status_code == 403
+
+
+def test_get_map_requester_origin_and_mutual_primarys(client):
+    """GET /map/{user_id} anchors requester and marks only fallback as suggestions."""
+    response = client.get("/map/test-user-uuid")
+    assert response.status_code == 200
+    data = response.json()
+
+    by_id = {row["user_id"]: row for row in data["coordinates"]}
+    requester = by_id["test-user-uuid"]
+    assert requester["x"] == pytest.approx(0.0)
+    assert requester["y"] == pytest.approx(0.0)
+    assert requester["is_suggestion"] is False
+
+    mutual = by_id["mutual-user-uuid"]
+    assert mutual["is_suggestion"] is False
+    assert mutual["x"] == pytest.approx(4.0)
+    assert mutual["y"] == pytest.approx(6.0)
+
+    suggestion_nodes = [row for row in data["coordinates"] if row["is_suggestion"]]
+    assert suggestion_nodes
+    assert all(node["user_id"] != "test-user-uuid" for node in suggestion_nodes)
 
 
 def test_get_map_no_jwt_returns_401(client_no_auth):

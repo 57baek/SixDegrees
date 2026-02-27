@@ -19,6 +19,9 @@ from app import app
 from routes.deps import get_current_user
 
 TEST_USER_ID = "test-user-uuid"
+MUTUAL_USER_ID = "mutual-user-uuid"
+ONE_WAY_USER_ID = "one-way-user-uuid"
+SUGGESTION_USER_ID = "suggestion-user-uuid"
 
 _MOCK_PROFILE_ROW = {
     "id": TEST_USER_ID,
@@ -42,7 +45,7 @@ def _build_mock_supabase() -> MagicMock:
 
     # rpc() calls are routed by function name via side_effect so that:
     # - get_global_map_coordinates returns deterministic map rows for map contract tests.
-    # - get_profile_nicknames returns nickname rows matching the map result IDs.
+    # - get_ego_map_profiles returns allow-listed ego projection rows.
     # - get_all_interactions returns [] (no interaction rows — avoids KeyError on
     #   user_id_a/user_id_b when pipeline iterates interaction rows).
     # - All other rpc() calls (get_profile, get_all_profiles, upsert_profile,
@@ -56,8 +59,35 @@ def _build_mock_supabase() -> MagicMock:
     _map_result.execute.return_value.data = [
         {
             "user_id": TEST_USER_ID,
-            "x": 0.0,
-            "y": 0.0,
+            "x": 10.0,
+            "y": 5.0,
+            "prev_x": None,
+            "prev_y": None,
+            "computed_at": "2026-02-26T00:00:00Z",
+            "version_date": "2026-02-26",
+        },
+        {
+            "user_id": MUTUAL_USER_ID,
+            "x": 14.0,
+            "y": 11.0,
+            "prev_x": None,
+            "prev_y": None,
+            "computed_at": "2026-02-26T00:00:00Z",
+            "version_date": "2026-02-26",
+        },
+        {
+            "user_id": ONE_WAY_USER_ID,
+            "x": 20.0,
+            "y": 8.0,
+            "prev_x": None,
+            "prev_y": None,
+            "computed_at": "2026-02-26T00:00:00Z",
+            "version_date": "2026-02-26",
+        },
+        {
+            "user_id": SUGGESTION_USER_ID,
+            "x": 11.0,
+            "y": 6.0,
             "prev_x": None,
             "prev_y": None,
             "computed_at": "2026-02-26T00:00:00Z",
@@ -65,8 +95,13 @@ def _build_mock_supabase() -> MagicMock:
         }
     ]
 
-    _nickname_result = MagicMock()
-    _nickname_result.execute.return_value.data = [{"id": TEST_USER_ID, "nickname": "Test User"}]
+    _profile_projection_result = MagicMock()
+    _profile_projection_result.execute.return_value.data = [
+        {"id": TEST_USER_ID, "nickname": "Test User", "friends": [MUTUAL_USER_ID, ONE_WAY_USER_ID]},
+        {"id": MUTUAL_USER_ID, "nickname": "Mutual User", "friends": [TEST_USER_ID]},
+        {"id": ONE_WAY_USER_ID, "nickname": "One Way User", "friends": []},
+        {"id": SUGGESTION_USER_ID, "nickname": "Suggestion User", "friends": []},
+    ]
 
     _default_result = MagicMock()
     _default_result.execute.return_value.data = [_MOCK_PROFILE_ROW]
@@ -77,8 +112,8 @@ def _build_mock_supabase() -> MagicMock:
     def _rpc_side_effect(fn_name, *args, **kwargs):
         if fn_name == "get_global_map_coordinates":
             return _map_result
-        if fn_name == "get_profile_nicknames":
-            return _nickname_result
+        if fn_name == "get_ego_map_profiles":
+            return _profile_projection_result
         if fn_name == "get_all_interactions":
             return _empty_result
         return _default_result
