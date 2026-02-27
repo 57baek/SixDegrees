@@ -4,6 +4,7 @@ import numpy as np
 
 from models.user import UserProfile
 from services.map_pipeline.contracts import (
+    InteractionSensitivity,
     RawInteractionCounts,
     RefinementInput,
     SparseEmbeddingInput,
@@ -21,6 +22,7 @@ def run_pipeline(
     requesting_user_id: str,
     prior_coordinates: dict[str, tuple[float, float]] | None = None,
     max_movement_delta: float = 0.35,
+    interaction_sensitivity: InteractionSensitivity | None = None,
 ) -> dict:
     """Run sparse embedding, interaction refinement, and stability stages."""
     user_id_set = {u.id for u in users}
@@ -39,6 +41,7 @@ def run_pipeline(
             base_coordinates=embedding_result.coordinates,
             profile_edges=embedding_result.profile_edges,
             raw_interaction_counts=raw_interaction_counts,
+            interaction_sensitivity=interaction_sensitivity,
         )
     )
 
