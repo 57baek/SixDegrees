@@ -8,12 +8,14 @@ Milestone v2.0 delivers a backend-only global coordinate map engine that replace
 
 **Phase Numbering:**
 - Integer phases (20, 21, 22, 23): Planned milestone v2.0 work
+- Integer phase (24): Post-v2 demo and visualization work
 - Decimal phases (20.1, 21.1): Urgent insertions if needed
 
 - [x] **Phase 20: Global Coordinate Data Contract** - Establish one-row-per-user global coordinate semantics with secure, versioned persistence. (completed 2026-02-26)
 - [x] **Phase 21: Compute Engine and Publish Validation** - Build scalable profile+interaction global embedding with fail-closed publish gates. (completed 2026-02-26)
 - [x] **Phase 22: Ego Map API and Compatibility Serving** - Serve requester-centered mutual-friend maps and bounded suggestions without frontend changes. (completed 2026-02-27)
 - [x] **Phase 23: Scheduler Operations and Safe Rollout** - Run daily compute + local warm operations with duplicate protection and rollback safety. (completed 2026-02-27)
+- [ ] **Phase 24: Clustering and Dimensionality Reduction Demo Notebook** - Build deterministic demo data + pipeline artifacts and notebook visuals for global/ego/centered before-after analysis.
 
 ## Phase Details
 
@@ -82,6 +84,23 @@ Plans:
 - [ ] 23-02-PLAN.md - Add version-aware warm cache and last-known-good fallback contract for rollout safety.
 - [ ] 23-03-PLAN.md - Validate likes/comments trigger integrity and enforce fail-closed legacy `user_profiles` drop gate.
 
+### Phase 24: Clustering and Dimensionality Reduction Demo Notebook
+**Goal**: Produce a standalone, reproducible demo that seeds 100 users, runs map pipeline logic on demo tables, and visualizes required global and Eleanor-centric before/after views.
+**Depends on**: Phase 23
+**Requirements**: DEMO-01, DEMO-02, DEMO-03, DEMO-04, DEMO-05, DEMO-06
+**Success Criteria** (what must be TRUE):
+  1. Demo data is isolated in demo tables (`demo_profiles`, `demo_interactions`, and demo map outputs), avoiding production runtime table coupling.
+  2. Deterministic seed flow creates exactly 100 demo users including Eleanor Colvin and Winston Churchill, with Eleanor configured with 20 friends.
+  3. Backend map pipeline logic runs on demo data and emits both baseline and amplified (Eleanor↔Winston likes/comments increased) coordinate artifacts.
+  4. Notebook under `demo/` visualizes the global map for all 100 users.
+  5. Notebook includes Eleanor ego subset, Eleanor-centered coordinate shift, and a side-by-side before/after Eleanor comparison.
+  6. Demo flow is reproducible via documented commands and guarded by lightweight automated contract tests.
+**Plans**: 3 plans
+Plans:
+- [ ] 24-01-PLAN.md - Define demo SQL/data contracts and deterministic 100-user seeding fixtures.
+- [ ] 24-02-PLAN.md - Build demo pipeline runner and generate baseline/amplified before-after artifacts.
+- [ ] 24-03-PLAN.md - Create Phase 24 notebook visuals and notebook contract smoke tests.
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -90,3 +109,4 @@ Plans:
 | 21. Compute Engine and Publish Validation | 2/2 | Complete   | 2026-02-26 |
 | 22. Ego Map API and Compatibility Serving | 3/3 | Complete   | 2026-02-27 |
 | 23. Scheduler Operations and Safe Rollout | 3/3 | Complete   | 2026-02-27 |
+| 24. Clustering and Dimensionality Reduction Demo Notebook | 1/3 | In Progress|  |

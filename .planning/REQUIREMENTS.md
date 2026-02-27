@@ -50,6 +50,15 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **COMP-04**: User migration and rollout path includes safe fallback/rollback behavior if v2 validation fails.
 - [x] **COMP-05**: User milestone completion requires zero runtime and zero DB dependency on `user_profiles`.
 
+### Demo and Visualization (Phase 24)
+
+- [x] **DEMO-01**: Demo experimentation uses isolated demo tables (`demo_profiles`, `demo_interactions`, and demo map outputs) without mutating production map runtime tables.
+- [x] **DEMO-02**: Demo seed flow creates exactly 100 deterministic users including Eleanor Colvin and Winston Churchill, with Eleanor configured for a 20-friend ego subset.
+- [x] **DEMO-03**: Demo artifacts include baseline and amplified coordinate outputs, where Eleanor↔Winston likes/comments are increased before the amplified rerun.
+- [x] **DEMO-04**: Demo notebook visualizes the global map for all 100 users.
+- [x] **DEMO-05**: Demo notebook visualizes Eleanor Colvin ego subset, Eleanor-centered coordinate shift, and side-by-side before/after Eleanor maps.
+- [x] **DEMO-06**: Demo workflow is reproducible from documented commands and protected by lightweight automated contract tests.
+
 ## Future Requirements
 
 Deferred to future milestones.
@@ -112,12 +121,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMP-03 | Phase 22 | Complete |
 | COMP-04 | Phase 23 | Complete |
 | COMP-05 | Phase 23 | Complete |
+| DEMO-01 | Phase 24 | Complete |
+| DEMO-02 | Phase 24 | Complete |
+| DEMO-03 | Phase 24 | Complete |
+| DEMO-04 | Phase 24 | Complete |
+| DEMO-05 | Phase 24 | Complete |
+| DEMO-06 | Phase 24 | Complete |
 
 **Coverage:**
-- v2.0 requirements: 28 total
-- Mapped to phases: 28
+- Total requirements: 34
+- Mapped to phases: 34
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-26 after v2.0 legacy-detach and interactions integrity updates*
+*Last updated: 2026-02-27 after adding Phase 24 demo notebook requirements*

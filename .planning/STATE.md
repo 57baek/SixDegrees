@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: complete
-last_updated: "2026-02-27T01:36:20.632Z"
+status: in_progress
+last_updated: "2026-02-27T03:07:50.555Z"
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 14
+  completed_plans: 12
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-02-26)
 
 **Core value:** A user opens the People Map and immediately sees meaningful nearby people around themselves at (0,0), with stable, explainable positions that update daily.
-**Current focus:** Phase 23 - Scheduler Operations and Safe Rollout
+**Current focus:** Phase 24 - Clustering and Dimensionality Reduction Demo Notebook
 
 ## Current Position
 
-Phase: 4 of 4 (Phase 23 - Scheduler Operations and Safe Rollout)
-Plan: 3 of 3 in current phase
-Status: Complete
-Last activity: 2026-02-27 - Completed 23-03 trigger validation and legacy drop gate.
+Phase: 5 of 5 (Phase 24 - Clustering and Dimensionality Reduction Demo Notebook)
+Plan: 1 of 3 in current phase
+Status: In Progress
+Last activity: 2026-02-27 - Completed 24-01 deterministic demo SQL/data contract and seed fixtures.
 
-Progress: [██████████] 100%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [██████████] 100%
 | Phase 23-scheduler-operations-and-safe-rollout P01 | 4min | 2 tasks | 3 files |
 | Phase 23 P02 | 4min | 2 tasks | 6 files |
 | Phase 23-scheduler-operations-and-safe-rollout P03 | 3min | 2 tasks | 3 files |
+| Phase 24 P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 23]: Use latest diagnostics publish status plus get_last_good_version to choose fallback warm metadata.
 - [Phase 23]: Guard legacy drop with trigger/counter prerequisite checks so migration fails closed before destructive DDL.
 - [Phase 23]: Validate dependency detach at catalog level (FK/view/function) before dropping public.user_profiles.
+- [Phase 24]: Use dedicated demo_* tables and helper RPCs so notebook iteration cannot touch production map tables.
+- [Phase 24]: Generate deterministic user IDs/data with uuid5 and fixed fixtures so reruns are byte-stable.
 
 ### Pending Todos
 
@@ -103,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-27T01:35:42Z
-Stopped at: Completed 23-03-PLAN.md
+Last session: 2026-02-27T03:07:35Z
+Stopped at: Completed 24-01-PLAN.md
 Resume file: None
