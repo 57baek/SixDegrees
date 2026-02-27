@@ -57,6 +57,20 @@ def test_refinement_applies_recency_weighted_interaction_pulls():
     refined_u1_u2 = _distance(refined.coordinates, user_ids, "u1", "u2")
     refined_u3_u4 = _distance(refined.coordinates, user_ids, "u3", "u4")
 
+    edge_u1_u2 = next(
+        edge
+        for edge in refined.interaction_edges
+        if {edge.user_id_a, edge.user_id_b} == {"u1", "u2"}
+    )
+    edge_u3_u4 = next(
+        edge
+        for edge in refined.interaction_edges
+        if {edge.user_id_a, edge.user_id_b} == {"u3", "u4"}
+    )
+
     assert refined_u1_u2 < baseline_u1_u2
     assert refined_u1_u2 < refined_u3_u4
     assert refined_u3_u4 <= baseline_u3_u4
+    assert edge_u1_u2.weighted_interactions > 0.0
+    assert edge_u1_u2.sensitivity_multiplier > 1.0
+    assert edge_u1_u2.final_weight > edge_u3_u4.final_weight
