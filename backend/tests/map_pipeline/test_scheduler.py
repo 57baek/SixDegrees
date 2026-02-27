@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from services.map_pipeline import scheduler
 from services.map_pipeline import scheduler_lock
 from services.map_pipeline.scheduler_lock import (
     DEFAULT_LOCK_TTL_SECONDS,
@@ -102,3 +103,100 @@ def test_release_global_compute_lock_success(monkeypatch):
             "p_owner_token": "owner-4",
         },
     )
+
+
+def test_setup_scheduler_registers_global_and_warm_only_jobs(monkeypatch):
+    mock_sb = MagicMock()
+    mock_sb.rpc.return_value.execute.return_value = SimpleNamespace(
+        data=[{"timezone": "UTC"}, {"timezone": "America/New_York"}]
+    )
+    monkeypatch.setattr("services.map_pipeline.scheduler.get_supabase_client", lambda: mock_sb)
+
+    captured_jobs = []
+
+    class FakeScheduler:
+        def add_job(self, func, trigger=None, args=None, id=None, replace_existing=None):
+            captured_jobs.append(
+                {
+                    "func": func,
+                    "trigger": trigger,
+                    "args": args,
+                    "id": id,
+                    "replace_existing": replace_existing,
+                }
+            )
+
+    monkeypatch.setattr("services.map_pipeline.scheduler.AsyncIOScheduler", FakeScheduler)
+    monkeypatch.setattr(
+        "services.map_pipeline.scheduler.CronTrigger",
+        lambda **kwargs: kwargs,
+    )
+
+    configured_scheduler = scheduler.setup_scheduler()
+
+    assert isinstance(configured_scheduler, FakeScheduler)
+    assert len(captured_jobs) == 3
+
+    global_job = next(job for job in captured_jobs if job["id"] == "global_compute_daily_utc")
+    assert global_job["func"] is scheduler._run_daily_global_compute
+    assert global_job["trigger"] == {"hour": 0, "minute": 0, "timezone": "UTC"}
+
+    warm_jobs = [job for job in captured_jobs if job["id"].startswith("warm_only_")]
+    assert {job["args"][0] for job in warm_jobs} == {"UTC", "America/New_York"}
+    for warm_job in warm_jobs:
+        assert warm_job["func"] is scheduler._run_warm_only_for_timezone
+        assert warm_job["trigger"]["hour"] == 19
+        assert warm_job["trigger"]["minute"] == 0
+
+
+def test_warm_only_job_does_not_run_pipeline(monkeypatch):
+    mock_sb = _build_mock_supabase_with_payload([{"id": "u1"}, {"id": "u2"}])
+    monkeypatch.setattr("services.map_pipeline.scheduler.get_supabase_client", lambda: mock_sb)
+
+    run_pipeline_mock = MagicMock()
+    monkeypatch.setattr("services.map_pipeline.scheduler.run_pipeline_for_user", run_pipeline_mock)
+
+    scheduler._run_warm_only_for_timezone("UTC")
+
+    run_pipeline_mock.assert_not_called()
+    mock_sb.rpc.assert_called_once_with("get_profiles_by_timezone", {"p_timezone": "UTC"})
+
+
+def test_dedupe_skips_global_compute_when_lock_not_acquired(monkeypatch):
+    monkeypatch.setattr(
+        "services.map_pipeline.scheduler.acquire_global_compute_lock",
+        lambda ttl_seconds=DEFAULT_LOCK_TTL_SECONDS: (False, "owner-x"),
+    )
+
+    run_pipeline_mock = MagicMock()
+    release_mock = MagicMock()
+    monkeypatch.setattr("services.map_pipeline.scheduler.run_pipeline_for_user", run_pipeline_mock)
+    monkeypatch.setattr("services.map_pipeline.scheduler.release_global_compute_lock", release_mock)
+
+    scheduler._run_daily_global_compute()
+
+    run_pipeline_mock.assert_not_called()
+    release_mock.assert_not_called()
+
+
+def test_dedupe_releases_lock_on_global_compute_error(monkeypatch):
+    monkeypatch.setattr(
+        "services.map_pipeline.scheduler.acquire_global_compute_lock",
+        lambda ttl_seconds=DEFAULT_LOCK_TTL_SECONDS: (True, "owner-y"),
+    )
+    monkeypatch.setattr(
+        "services.map_pipeline.scheduler._select_global_compute_user_id",
+        lambda: "u-anchor",
+    )
+
+    release_mock = MagicMock(return_value=True)
+    monkeypatch.setattr("services.map_pipeline.scheduler.release_global_compute_lock", release_mock)
+    monkeypatch.setattr(
+        "services.map_pipeline.scheduler.run_pipeline_for_user",
+        lambda user_id: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+
+    with pytest.raises(RuntimeError, match="boom"):
+        scheduler._run_daily_global_compute()
+
+    release_mock.assert_called_once_with("owner-y")
