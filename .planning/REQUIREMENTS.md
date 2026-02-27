@@ -75,7 +75,7 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **PROF-03**: Migration path for dropping `public.user_profiles` is fail-closed and blocks on dependency/preflight violations.
 - [x] **PROF-04**: Demo sensitivity modes are selectable as `natural`, `strong-bounded`, and `uncapped`, with `natural` preserving current bounded defaults.
 - [x] **PROF-05**: CLI exposes tunable amplification and sensitivity knobs, and exports metadata that allows observing Eleanor/Winston distance and rank changes.
-- [ ] **PROF-06**: Verification proves monotonic movement improvements in demo modes and no regressions in natural mode.
+- [x] **PROF-06**: Verification proves monotonic movement improvements in demo modes and no regressions in natural mode.
 
 ## Future Requirements
 
@@ -152,11 +152,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DYN-05 | Phase 25 | Planned |
 | DYN-06 | Phase 25 | Planned |
 | PROF-01 | Phase 26 | Planned |
-| PROF-02 | Phase 26 | Planned |
+| PROF-02 | Phase 26 | Complete |
 | PROF-03 | Phase 26 | Planned |
 | PROF-04 | Phase 26 | Planned |
 | PROF-05 | Phase 26 | Planned |
-| PROF-06 | Phase 26 | Planned |
+| PROF-06 | Phase 26 | Complete |
 
 **Coverage:**
 - Total requirements: 46

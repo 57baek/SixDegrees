@@ -17,7 +17,7 @@ Milestone v2.0 delivers a backend-only global coordinate map engine that replace
 - [x] **Phase 23: Scheduler Operations and Safe Rollout** - Run daily compute + local warm operations with duplicate protection and rollback safety. (completed 2026-02-27)
 - [x] **Phase 24: Clustering and Dimensionality Reduction Demo Notebook** - Build deterministic demo data + pipeline artifacts and notebook visuals for global/ego/centered before-after analysis. (completed 2026-02-27)
 - [x] **Phase 25: Interaction Sensitivity and Dynamic Distance Tuning** - Increase interaction-to-distance responsiveness so strong amplification produces visible, explainable proximity changes. (completed 2026-02-27)
-- [ ] **Phase 26: Profiles-Only Convergence and Sensitivity Modes** - Execute staging-first convergence path B, finalize profiles-only contracts, and add demo-selectable sensitivity modes with verification gates.
+- [x] **Phase 26: Profiles-Only Convergence and Sensitivity Modes** - Execute staging-first convergence path B, finalize profiles-only contracts, and add demo-selectable sensitivity modes with verification gates. (completed 2026-02-27)
 
 ## Phase Details
 
@@ -147,4 +147,4 @@ Plans:
 | 23. Scheduler Operations and Safe Rollout | 3/3 | Complete   | 2026-02-27 |
 | 24. Clustering and Dimensionality Reduction Demo Notebook | 3/3 | Complete   | 2026-02-27 |
 | 25. Interaction Sensitivity and Dynamic Distance Tuning | 3/3 | Complete   | 2026-02-27 |
-| 26. Profiles-Only Convergence and Sensitivity Modes | 2/3 | In Progress|  |
+| 26. Profiles-Only Convergence and Sensitivity Modes | 3/3 | Complete   | 2026-02-27 |
