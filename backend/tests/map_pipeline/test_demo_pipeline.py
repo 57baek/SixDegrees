@@ -10,6 +10,7 @@ from copy import deepcopy
 
 from scripts.seed_demo_map_data import ELEANOR_ID, WINSTON_ID, build_demo_dataset, canonical_pair
 from scripts.run_phase24_demo_pipeline import run as run_demo_artifact_writer
+from services.map_pipeline.contracts import InteractionSensitivity
 from services.map_pipeline.demo_pipeline import run_phase24_demo
 
 
@@ -62,6 +63,23 @@ def test_run_phase24_demo_baseline_returns_expected_shapes():
         "sensitivity_multiplier",
         "effective_pull",
     }.issubset(set(baseline_edges[0].keys()))
+    assert result["metadata"]["sensitivity_mode"] == "natural"
+    assert set(result["metadata"]["interaction_sensitivity"].keys()) == {
+        "strength_scale",
+        "curve_exponent",
+        "normalizer",
+        "max_weight",
+    }
+
+
+def test_run_phase24_demo_honors_selected_sensitivity_mode():
+    result = run_phase24_demo(
+        supabase=_make_fake_supabase(),
+        interaction_sensitivity=InteractionSensitivity(mode="strong-bounded"),
+    )
+
+    assert result["metadata"]["sensitivity_mode"] == "strong-bounded"
+    assert result["metadata"]["interaction_sensitivity"]["max_weight"] < 1.0
 
 
 def test_run_phase24_demo_amplified_increases_eleanor_winston_counts():
@@ -82,6 +100,8 @@ def test_run_phase24_demo_artifacts_writes_expected_files(tmp_path):
     summary = run_demo_artifact_writer(
         output_dir=str(tmp_path),
         use_fixture_data=True,
+        sensitivity_mode="uncapped",
+        sensitivity_max_weight=1.0,
     )
 
     expected_files = {
@@ -108,6 +128,8 @@ def test_run_phase24_demo_artifacts_writes_expected_files(tmp_path):
     side_by_side = json.loads((tmp_path / "phase24_eleanor_side_by_side.json").read_text())
     assert len(side_by_side["before"]) == 21
     assert len(side_by_side["after"]) == 21
+    assert side_by_side["metadata"]["sensitivity_mode"] == "uncapped"
+    assert side_by_side["metadata"]["interaction_sensitivity"]["max_weight"] == 1.0
 
     distance_curve_rows = list(
         csv.DictReader((tmp_path / "phase24_eleanor_winston_distance_curve.csv").read_text().splitlines())
@@ -115,6 +137,7 @@ def test_run_phase24_demo_artifacts_writes_expected_files(tmp_path):
     assert len(distance_curve_rows) >= 5
     assert "euclidean_distance" in distance_curve_rows[0]
     assert {
+        "sensitivity_mode",
         "nearest_neighbor_rank",
         "distance_delta_from_baseline",
         "rank_delta_from_baseline",

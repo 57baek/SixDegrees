@@ -15,6 +15,10 @@ from typing import cast
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from scripts.seed_demo_map_data import build_demo_dataset
+from services.map_pipeline.contracts import (
+    InteractionSensitivity,
+    InteractionSensitivityMode,
+)
 from services.map_pipeline.demo_pipeline import run_phase24_demo
 
 
@@ -50,18 +54,32 @@ def run(
     use_fixture_data: bool = False,
     amplification_likes: int = 1200,
     amplification_comments: int = 800,
+    sensitivity_mode: InteractionSensitivityMode = "natural",
+    sensitivity_strength_scale: float | None = None,
+    sensitivity_curve_exponent: float | None = None,
+    sensitivity_normalizer: float | None = None,
+    sensitivity_max_weight: float | None = None,
 ) -> dict:
+    interaction_sensitivity = InteractionSensitivity(
+        mode=sensitivity_mode,
+        strength_scale=sensitivity_strength_scale,
+        curve_exponent=sensitivity_curve_exponent,
+        normalizer=sensitivity_normalizer,
+        max_weight=sensitivity_max_weight,
+    )
     demo_result = _load_demo_result(
         output_dir=output_dir,
         use_fixture_data=use_fixture_data,
         amplification_likes=amplification_likes,
         amplification_comments=amplification_comments,
+        interaction_sensitivity=interaction_sensitivity,
     )
     distance_curve = _build_distance_curve_rows(
         output_dir=output_dir,
         use_fixture_data=use_fixture_data,
         max_likes=amplification_likes,
         max_comments=amplification_comments,
+        interaction_sensitivity=interaction_sensitivity,
     )
     artifacts = _build_artifacts(demo_result, distance_curve)
     _write_artifacts(output_dir=output_dir, artifacts=artifacts)
@@ -76,6 +94,7 @@ def _load_demo_result(
     use_fixture_data: bool,
     amplification_likes: int,
     amplification_comments: int,
+    interaction_sensitivity: InteractionSensitivity | None = None,
 ) -> dict:
     if use_fixture_data:
         return run_phase24_demo(
@@ -83,6 +102,7 @@ def _load_demo_result(
             supabase=_build_fixture_supabase(),
             amplification_likes=amplification_likes,
             amplification_comments=amplification_comments,
+            interaction_sensitivity=interaction_sensitivity,
         )
 
     try:
@@ -90,6 +110,7 @@ def _load_demo_result(
             output_dir=output_dir,
             amplification_likes=amplification_likes,
             amplification_comments=amplification_comments,
+            interaction_sensitivity=interaction_sensitivity,
         )
     except Exception:
         return run_phase24_demo(
@@ -97,6 +118,7 @@ def _load_demo_result(
             supabase=_build_fixture_supabase(),
             amplification_likes=amplification_likes,
             amplification_comments=amplification_comments,
+            interaction_sensitivity=interaction_sensitivity,
         )
 
 
@@ -164,6 +186,7 @@ def _build_distance_curve_rows(
     use_fixture_data: bool,
     max_likes: int,
     max_comments: int,
+    interaction_sensitivity: InteractionSensitivity | None = None,
 ) -> list[dict]:
     likes_levels = sorted({
         0,
@@ -186,6 +209,7 @@ def _build_distance_curve_rows(
             use_fixture_data=use_fixture_data,
             amplification_likes=likes,
             amplification_comments=comments,
+            interaction_sensitivity=interaction_sensitivity,
         )
         distance = _pair_distance(
             run_result["amplified_local"]["translated_points"],
@@ -226,6 +250,7 @@ def _build_distance_curve_rows(
             {
                 "amplification_likes": likes,
                 "amplification_comments": comments,
+                "sensitivity_mode": str(run_result["metadata"].get("sensitivity_mode", "natural")),
                 "euclidean_distance": distance,
                 "nearest_neighbor_rank": amplified_rank,
                 "distance_delta_from_baseline": distance - baseline_distance,
@@ -376,6 +401,36 @@ def _parse_args() -> argparse.Namespace:
         default=800,
         help="Comments boost applied to Eleanor<->Winston interaction for amplified scenario.",
     )
+    parser.add_argument(
+        "--sensitivity-mode",
+        choices=["natural", "strong-bounded", "uncapped"],
+        default="natural",
+        help="Interaction sensitivity preset used by the map pipeline.",
+    )
+    parser.add_argument(
+        "--sensitivity-strength-scale",
+        type=float,
+        default=None,
+        help="Optional override for sensitivity strength_scale.",
+    )
+    parser.add_argument(
+        "--sensitivity-curve-exponent",
+        type=float,
+        default=None,
+        help="Optional override for sensitivity curve_exponent.",
+    )
+    parser.add_argument(
+        "--sensitivity-normalizer",
+        type=float,
+        default=None,
+        help="Optional override for sensitivity normalizer.",
+    )
+    parser.add_argument(
+        "--sensitivity-max-weight",
+        type=float,
+        default=None,
+        help="Optional override for sensitivity max_weight cap.",
+    )
     return parser.parse_args()
 
 
@@ -386,6 +441,11 @@ def main() -> None:
         use_fixture_data=args.use_fixture_data,
         amplification_likes=args.amplification_likes,
         amplification_comments=args.amplification_comments,
+        sensitivity_mode=args.sensitivity_mode,
+        sensitivity_strength_scale=args.sensitivity_strength_scale,
+        sensitivity_curve_exponent=args.sensitivity_curve_exponent,
+        sensitivity_normalizer=args.sensitivity_normalizer,
+        sensitivity_max_weight=args.sensitivity_max_weight,
     )
     print("Generated Phase 24 demo artifacts")
     print(f"  output_dir={result['output_dir']}")

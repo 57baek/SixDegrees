@@ -4,6 +4,7 @@ from models.user import UserProfile
 from scripts.run_phase24_demo_pipeline import _build_distance_curve_rows
 from services.map_pipeline.contracts import (
     InteractionSensitivity,
+    InteractionSensitivityMode,
     RefinementInput,
     SparseEmbeddingResult,
 )
@@ -188,3 +189,38 @@ def test_demo_distance_curve_rank_and_force_diagnostics_trend(tmp_path):
         for prev, curr in zip(weighted_interactions, weighted_interactions[1:])
     )
     assert all("movement_explanation" in row for row in rows)
+
+
+def test_sensitivity_modes_monotonic_behavior(tmp_path):
+    mode_rows: dict[InteractionSensitivityMode, list[dict]] = {}
+    for mode in ("natural", "strong-bounded", "uncapped"):
+        mode_rows[mode] = _build_distance_curve_rows(
+            output_dir=str(tmp_path),
+            use_fixture_data=True,
+            max_likes=1200,
+            max_comments=800,
+            interaction_sensitivity=InteractionSensitivity(mode=mode),
+        )
+
+    for mode, rows in mode_rows.items():
+        distances = [float(row["euclidean_distance"]) for row in rows]
+        weights = [float(row["final_weight"]) for row in rows]
+        assert all(curr <= prev + 1e-6 for prev, curr in zip(distances, distances[1:])), mode
+        assert all(curr >= prev - 1e-9 for prev, curr in zip(weights, weights[1:])), mode
+        assert all(str(row["sensitivity_mode"]) == mode for row in rows)
+
+    natural_rows = mode_rows["natural"]
+    strong_rows = mode_rows["strong-bounded"]
+    uncapped_rows = mode_rows["uncapped"]
+
+    natural_distance = float(natural_rows[-1]["euclidean_distance"])
+    strong_distance = float(strong_rows[-1]["euclidean_distance"])
+    uncapped_distance = float(uncapped_rows[-1]["euclidean_distance"])
+    assert strong_distance <= natural_distance + 1e-6
+    assert uncapped_distance <= strong_distance + 1e-6
+
+    natural_weight = float(natural_rows[-1]["final_weight"])
+    strong_weight = float(strong_rows[-1]["final_weight"])
+    uncapped_weight = float(uncapped_rows[-1]["final_weight"])
+    assert strong_weight >= natural_weight - 1e-9
+    assert uncapped_weight >= strong_weight - 1e-9
