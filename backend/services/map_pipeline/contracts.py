@@ -76,3 +76,29 @@ class StabilityResult:
     user_ids: list[str]
     coordinates: np.ndarray
     metrics: StabilityMetrics
+
+
+@dataclass(frozen=True)
+class EgoCoordinateRow:
+    user_id: str
+    x: float
+    y: float
+    computed_at: str
+    version_date: str
+
+
+@dataclass(frozen=True)
+class EgoProfileRow:
+    id: str
+    nickname: str
+    friends: list[str]
+
+
+@dataclass(frozen=True)
+class EgoMapNode:
+    user_id: str
+    x: float
+    y: float
+    tier: int
+    nickname: str
+    is_suggestion: bool = False
