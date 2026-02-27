@@ -128,4 +128,4 @@ Plans:
 | 22. Ego Map API and Compatibility Serving | 3/3 | Complete   | 2026-02-27 |
 | 23. Scheduler Operations and Safe Rollout | 3/3 | Complete   | 2026-02-27 |
 | 24. Clustering and Dimensionality Reduction Demo Notebook | 3/3 | Complete   | 2026-02-27 |
-| 25. Interaction Sensitivity and Dynamic Distance Tuning | 1/3 | In Progress|  |
+| 25. Interaction Sensitivity and Dynamic Distance Tuning | 2/3 | In Progress|  |

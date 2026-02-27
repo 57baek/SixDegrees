@@ -63,9 +63,9 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 
 - [x] **DYN-01**: Interaction-force scaling remains sensitivity-preserving at high interaction counts and avoids early saturation that hides strong amplification effects.
 - [x] **DYN-02**: Demo pair-distance response for Eleanor<->Winston is monotonic (or near-monotonic with bounded tolerance) as amplification increases.
-- [ ] **DYN-03**: Demo pair nearest-neighbor rank response improves with amplification and is exported as an auditable artifact.
+- [x] **DYN-03**: Demo pair nearest-neighbor rank response improves with amplification and is exported as an auditable artifact.
 - [x] **DYN-04**: Dynamic sensitivity changes preserve global stability bounds (movement clipping and no runaway coordinate divergence).
-- [ ] **DYN-05**: Demo artifacts include force/edge diagnostics that explain observed geometric movement.
+- [x] **DYN-05**: Demo artifacts include force/edge diagnostics that explain observed geometric movement.
 - [ ] **DYN-06**: Notebook and README communicate dynamic tuning behavior, limits, and recommended presets for clear stakeholder demos.
 
 ## Future Requirements

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-02-27T05:21:05.667Z"
+last_updated: "2026-02-27T05:25:21.796Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 17
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
@@ -23,18 +23,18 @@ See: `.planning/PROJECT.md` (updated 2026-02-26)
 ## Current Position
 
 Phase: 6 of 6 (Phase 25 - Interaction Sensitivity and Dynamic Distance Tuning)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-02-27 - Completed 25-01 interaction sensitivity scaling and dynamic tuning regressions.
+Last activity: 2026-02-27 - Completed 25-02 explainable diagnostics exports and trend regressions.
 
-Progress: [█████████░] 88%
+Progress: [█████████▓] 94%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: 3 min
-- Total execution time: 0.2 hours
+- Total execution time: 0.3 hours
 
 **By Phase:**
 
@@ -59,6 +59,7 @@ Progress: [█████████░] 88%
 | Phase 24 P02 | 5min | 2 tasks | 6 files |
 | Phase 24 P03 | 2min | 2 tasks | 4 files |
 | Phase 25 P01 | 2min | 2 tasks | 6 files |
+| Phase 25 P02 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,8 @@ Recent decisions affecting current work:
 - [Phase 24]: Use notebook JSON content-contract tests instead of kernel execution for fast deterministic CI checks.
 - [Phase 25]: Use bounded exponential interaction sensitivity with tunable scale/exponent/normalizer/max cap to avoid early saturation while preserving safety bounds.
 - [Phase 25]: Expose optional InteractionSensitivity overrides in run_pipeline for deterministic tuning sweeps without mutating global defaults.
+- [Phase 25]: Expose run_pipeline refinement diagnostics as additive payload fields for deterministic explainability exports.
+- [Phase 25]: Expand distance-curve CSV rows with rank and force deltas (instead of adding a new file) to preserve existing artifact consumers.
 
 ### Pending Todos
 
@@ -115,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-27T05:20:24Z
-Stopped at: Completed 25-01-PLAN.md
+Last session: 2026-02-27T05:24:45Z
+Stopped at: Completed 25-02-PLAN.md
 Resume file: None
