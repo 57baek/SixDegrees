@@ -6,7 +6,10 @@ import math
 
 import numpy as np
 
-from config.algorithm import INTERACTION_WEIGHTS
+try:
+    from config.algorithm import INTERACTION_WEIGHTS
+except ModuleNotFoundError:  # compatibility for in-flight config relocation
+    from models.config.algorithm import INTERACTION_WEIGHTS
 from services.map_pipeline.contracts import RefinementInput, RefinementResult, SparseEdge
 
 _RECENCY_KEYS = (

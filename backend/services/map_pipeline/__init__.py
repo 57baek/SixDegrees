@@ -11,15 +11,6 @@ from typing import cast
 from uuid import uuid4
 
 from services.map_pipeline.contracts import RawInteractionCounts
-from services.map_pipeline.coord_writer import write_coordinates
-from services.map_pipeline.data_fetcher import (
-    fetch_all,
-    fetch_global_coordinate_rows,
-    fetch_prior_coordinates,
-)
-from services.map_pipeline.diagnostics import record_compute_run
-from services.map_pipeline.pipeline import run_pipeline
-from services.map_pipeline.publish_validation import validate_candidate_publish
 
 
 def run_pipeline_for_user(requesting_user_id: str) -> None:
@@ -40,6 +31,16 @@ def run_pipeline_for_user(requesting_user_id: str) -> None:
         ValueError: If N < 10 (propagated from tsne_projector — too few users).
         ValueError: If requesting_user_id is not in the profiles table.
     """
+    from services.map_pipeline.coord_writer import write_coordinates
+    from services.map_pipeline.data_fetcher import (
+        fetch_all,
+        fetch_global_coordinate_rows,
+        fetch_prior_coordinates,
+    )
+    from services.map_pipeline.diagnostics import record_compute_run
+    from services.map_pipeline.pipeline import run_pipeline
+    from services.map_pipeline.publish_validation import validate_candidate_publish
+
     run_id = str(uuid4())
     computed_at = datetime.now(timezone.utc).isoformat()
     version_date = datetime.now(timezone.utc).date().isoformat()
