@@ -23,6 +23,16 @@ class SparseEdge:
     interaction_weight: float
     recency_weight: float
     final_weight: float
+    weighted_interactions: float = 0.0
+    sensitivity_multiplier: float = 1.0
+
+
+@dataclass(frozen=True)
+class InteractionSensitivity:
+    strength_scale: float = 1.0
+    curve_exponent: float = 0.65
+    normalizer: float = 8.0
+    max_weight: float = 0.92
 
 
 @dataclass(frozen=True)
@@ -47,6 +57,7 @@ class RefinementInput:
     raw_interaction_counts: RawInteractionCounts
     step_size: float = 0.08
     iterations: int = 12
+    interaction_sensitivity: InteractionSensitivity | None = None
 
 
 @dataclass(frozen=True)
