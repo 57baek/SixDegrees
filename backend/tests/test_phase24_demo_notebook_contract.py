@@ -33,6 +33,10 @@ def test_phase24_notebook_contains_required_sections() -> None:
         "Eleanor Colvin ego subset (20 friends)",
         "Eleanor-centered coordinate shift",
         "Side-by-side before/after Eleanor map",
+        "Euclidean distance proof (Eleanor vs Winston)",
+        "Distance trend across amplification levels",
+        "Rank and force diagnostics across amplification levels",
+        "Safeguards and interpretation notes for non-technical review",
     ]
 
     for section in required_sections:
@@ -49,10 +53,11 @@ def test_phase24_notebook_loads_expected_demo_artifacts() -> None:
         "phase24_eleanor_ego_before.csv",
         "phase24_eleanor_ego_after.csv",
         "phase24_eleanor_shift.csv",
+        "phase24_eleanor_winston_distance_curve.csv",
         "phase24_eleanor_side_by_side.json",
     ]
 
-    assert "DATA_DIR = Path('data')" in source_text
+    assert "DATA_DIR = Path(\"data\")" in source_text or "DATA_DIR = Path('data')" in source_text
     for artifact in expected_artifacts:
         assert artifact in source_text
 
@@ -66,3 +71,13 @@ def test_phase24_notebook_has_side_by_side_before_after_visual() -> None:
     assert "After amplification" in source_text
     assert "Eleanor Colvin" in source_text
     assert "Winston Churchill" in source_text
+
+
+def test_phase24_notebook_contains_euclidean_distance_comparison() -> None:
+    notebook = _load_notebook()
+    source_text = "\n".join(_cell_text(cell) for cell in notebook.get("cells", []))
+
+    assert "euclidean_distance" in source_text
+    assert "pair = {\"a\": \"Eleanor Colvin\", \"b\": \"Winston Churchill\"}" in source_text or "pair = {'a': 'Eleanor Colvin', 'b': 'Winston Churchill'}" in source_text
+    assert "euclidean_between" in source_text
+    assert "Eleanor ↔ Winston distance before/after amplification" in source_text
