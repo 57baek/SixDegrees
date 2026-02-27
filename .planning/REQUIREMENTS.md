@@ -36,9 +36,9 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 
 ### Scheduler + Operations
 
-- [ ] **OPS-01**: User global coordinates are recomputed by one daily batch schedule at fixed UTC time.
-- [ ] **OPS-02**: User 7pm local-time jobs perform delivery/cache warm only and never trigger global recompute.
-- [ ] **OPS-03**: User scheduler runtime prevents duplicate compute execution from multi-worker or restart conditions.
+- [x] **OPS-01**: User global coordinates are recomputed by one daily batch schedule at fixed UTC time.
+- [x] **OPS-02**: User 7pm local-time jobs perform delivery/cache warm only and never trigger global recompute.
+- [x] **OPS-03**: User scheduler runtime prevents duplicate compute execution from multi-worker or restart conditions.
 - [ ] **OPS-04**: User cache warm path (if enabled) is version-aware and invalidates stale payloads safely.
 - [ ] **OPS-05**: User likes/comments triggers are validated end-to-end so interaction counters remain correct on insert/delete paths.
 
@@ -102,9 +102,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EGO-03 | Phase 22 | Complete |
 | EGO-04 | Phase 22 | Complete |
 | EGO-05 | Phase 22 | Complete |
-| OPS-01 | Phase 23 | Pending |
-| OPS-02 | Phase 23 | Pending |
-| OPS-03 | Phase 23 | Pending |
+| OPS-01 | Phase 23 | Complete |
+| OPS-02 | Phase 23 | Complete |
+| OPS-03 | Phase 23 | Complete |
 | OPS-04 | Phase 23 | Pending |
 | OPS-05 | Phase 23 | Pending |
 | COMP-01 | Phase 22 | Complete |

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-02-27T00:37:42.450Z"
+last_updated: "2026-02-27T01:24:58.283Z"
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 11
+  completed_plans: 9
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: `.planning/PROJECT.md` (updated 2026-02-26)
 ## Current Position
 
 Phase: 4 of 4 (Phase 23 - Scheduler Operations and Safe Rollout)
-Plan: 0 of TBD in current phase
-Status: Ready for planning
-Last activity: 2026-02-26 - Completed 22-03 ego map route integration and compatibility regressions.
+Plan: 1 of 3 in current phase
+Status: Executing
+Last activity: 2026-02-27 - Completed 23-01 scheduler split with dedupe lock coverage.
 
-Progress: [██████████] 100%
+Progress: [████████--] 82%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [██████████] 100%
 | Phase 22 P01 | 1min | 2 tasks | 2 files |
 | Phase 22 P02 | 2min | 3 tasks | 3 files |
 | Phase 22 P03 | 1min | 2 tasks | 3 files |
+| Phase 23-scheduler-operations-and-safe-rollout P01 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,8 @@ Recent decisions affecting current work:
 - [Phase 22]: Keep build_ego_map pure and deterministic with no Supabase I/O.
 - [Phase 22]: Select fallback suggestions by translated-distance then user_id for stable ordering.
 - [Phase 22]: Enforce self-only GET /map access and keep response shape backward-compatible with additive is_suggestion metadata.
+- [Phase 23]: Use dedicated Supabase RPC lock key with owner token and TTL for global scheduler dedupe.
+- [Phase 23]: Schedule one 00:00 UTC global recompute job and keep 19:00 timezone jobs warm-only.
 
 ### Pending Todos
 
@@ -94,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-27T00:37:42Z
-Stopped at: Completed 22-03-PLAN.md
+Last session: 2026-02-27T01:24:17Z
+Stopped at: Completed 23-01-PLAN.md
 Resume file: None

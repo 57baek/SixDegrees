@@ -76,7 +76,11 @@ Plans:
   5. Likes/comments triggers are verified to maintain interactions counters correctly for insert/delete flows under current RLS and RPC setup.
   6. If v2 validation fails during rollout, users continue to receive the last known good map version via safe fallback behavior.
   7. Final milestone gate passes only when runtime and DB have zero `user_profiles` dependency, and `user_profiles` is dropped safely without data-integrity regressions.
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 23-01-PLAN.md - Split scheduler into UTC global compute + local warm-only jobs with duplicate-run lock protection.
+- [ ] 23-02-PLAN.md - Add version-aware warm cache and last-known-good fallback contract for rollout safety.
+- [ ] 23-03-PLAN.md - Validate likes/comments trigger integrity and enforce fail-closed legacy `user_profiles` drop gate.
 
 ## Progress
 
@@ -85,4 +89,4 @@ Plans:
 | 20. Global Coordinate Data Contract | 3/3 | Complete   | 2026-02-26 |
 | 21. Compute Engine and Publish Validation | 2/2 | Complete   | 2026-02-26 |
 | 22. Ego Map API and Compatibility Serving | 3/3 | Complete   | 2026-02-27 |
-| 23. Scheduler Operations and Safe Rollout | 0/TBD | Not started | - |
+| 23. Scheduler Operations and Safe Rollout | 1/3 | In Progress|  |
