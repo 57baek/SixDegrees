@@ -169,7 +169,7 @@ def test_high_interaction_users_appear_closer():
 def test_new_interaction_type_requires_only_config_change():
     """SC-1: Adding a new interaction type to INTERACTION_WEIGHTS dict flows through
     with zero logic changes — no code modification required."""
-    import config.algorithm as cfg
+    from models.config import algorithm as cfg
     original_weights = dict(cfg.INTERACTION_WEIGHTS)
 
     try:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 import numpy as np
 
@@ -12,6 +12,7 @@ from models.user import UserProfile
 
 Coordinate = tuple[float, float]
 RawInteractionCounts = dict[tuple[str, str], dict[str, int | float]]
+InteractionSensitivityMode = Literal["natural", "strong-bounded", "uncapped"]
 
 
 @dataclass(frozen=True)
@@ -29,10 +30,11 @@ class SparseEdge:
 
 @dataclass(frozen=True)
 class InteractionSensitivity:
-    strength_scale: float = 1.0
-    curve_exponent: float = 0.65
-    normalizer: float = 8.0
-    max_weight: float = 0.92
+    mode: InteractionSensitivityMode = "natural"
+    strength_scale: float | None = None
+    curve_exponent: float | None = None
+    normalizer: float | None = None
+    max_weight: float | None = None
 
 
 @dataclass(frozen=True)

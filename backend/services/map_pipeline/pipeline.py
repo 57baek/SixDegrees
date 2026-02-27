@@ -2,6 +2,7 @@
 
 import numpy as np
 
+from models.config.algorithm import INTERACTION_SENSITIVITY_MODES
 from models.user import UserProfile
 from services.map_pipeline.contracts import (
     InteractionSensitivity,
@@ -31,6 +32,8 @@ def run_pipeline(
             f"requesting_user_id '{requesting_user_id}' not found in users list."
         )
 
+    resolved_sensitivity = _resolve_interaction_sensitivity(interaction_sensitivity)
+
     embedding_result = build_sparse_profile_embedding(
         SparseEmbeddingInput(users=users)
     )
@@ -40,7 +43,7 @@ def run_pipeline(
         base_coordinates=embedding_result.coordinates,
         profile_edges=embedding_result.profile_edges,
         raw_interaction_counts=raw_interaction_counts,
-        interaction_sensitivity=interaction_sensitivity,
+        interaction_sensitivity=resolved_sensitivity,
     )
     refinement_result = refine_sparse_embedding(refinement_input)
 
@@ -67,12 +70,49 @@ def run_pipeline(
             "refinement": {
                 "step_size": float(refinement_input.step_size),
                 "iterations": int(refinement_input.iterations),
+                "interaction_sensitivity": {
+                    "mode": resolved_sensitivity.mode,
+                    "strength_scale": float(resolved_sensitivity.strength_scale or 0.0),
+                    "curve_exponent": float(resolved_sensitivity.curve_exponent or 0.0),
+                    "normalizer": float(resolved_sensitivity.normalizer or 0.0),
+                    "max_weight": float(resolved_sensitivity.max_weight or 0.0),
+                },
             },
             "interaction_edges": _serialize_interaction_edges(
                 refinement_result.interaction_edges
             ),
         },
     }
+
+
+def _resolve_interaction_sensitivity(
+    interaction_sensitivity: InteractionSensitivity | None,
+) -> InteractionSensitivity:
+    sensitivity = interaction_sensitivity or InteractionSensitivity()
+    preset = INTERACTION_SENSITIVITY_MODES[sensitivity.mode]
+    return InteractionSensitivity(
+        mode=sensitivity.mode,
+        strength_scale=float(
+            sensitivity.strength_scale
+            if sensitivity.strength_scale is not None
+            else preset["strength_scale"]
+        ),
+        curve_exponent=float(
+            sensitivity.curve_exponent
+            if sensitivity.curve_exponent is not None
+            else preset["curve_exponent"]
+        ),
+        normalizer=float(
+            sensitivity.normalizer
+            if sensitivity.normalizer is not None
+            else preset["normalizer"]
+        ),
+        max_weight=float(
+            sensitivity.max_weight
+            if sensitivity.max_weight is not None
+            else preset["max_weight"]
+        ),
+    )
 
 
 def _serialize_interaction_edges(edges: list) -> list[dict[str, float | str]]:

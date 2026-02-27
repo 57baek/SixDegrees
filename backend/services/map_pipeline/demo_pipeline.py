@@ -6,7 +6,7 @@ from copy import deepcopy
 
 from models.user import UserProfile
 from scripts.seed_demo_map_data import ELEANOR_ID, WINSTON_ID, canonical_pair
-from services.map_pipeline.contracts import RawInteractionCounts
+from services.map_pipeline.contracts import InteractionSensitivity, RawInteractionCounts
 from services.map_pipeline.pipeline import run_pipeline
 
 
@@ -15,6 +15,7 @@ def run_phase24_demo(
     supabase=None,
     amplification_likes: int = 1200,
     amplification_comments: int = 800,
+    interaction_sensitivity: InteractionSensitivity | None = None,
 ) -> dict:
     """Generate baseline + amplified artifacts for notebook use."""
     client = supabase
@@ -54,22 +55,28 @@ def run_phase24_demo(
         users=users,
         raw_interaction_counts=baseline_counts,
         requesting_user_id=ELEANOR_ID,
+        interaction_sensitivity=interaction_sensitivity,
     )
     amplified_result = run_pipeline(
         users=users,
         raw_interaction_counts=amplified_counts,
         requesting_user_id=ELEANOR_ID,
+        interaction_sensitivity=interaction_sensitivity,
     )
     local_baseline_result = run_pipeline(
         users=local_users,
         raw_interaction_counts=local_baseline_counts,
         requesting_user_id=ELEANOR_ID,
+        interaction_sensitivity=interaction_sensitivity,
     )
     local_amplified_result = run_pipeline(
         users=local_users,
         raw_interaction_counts=local_amplified_counts,
         requesting_user_id=ELEANOR_ID,
+        interaction_sensitivity=interaction_sensitivity,
     )
+
+    resolved_sensitivity = _resolved_sensitivity(local_amplified_result)
 
     return {
         "metadata": {
@@ -81,6 +88,13 @@ def run_phase24_demo(
             "eleanor_friend_ids": eleanor_friend_ids,
             "amplification_likes": amplification_likes,
             "amplification_comments": amplification_comments,
+            "sensitivity_mode": str(resolved_sensitivity.get("mode", "natural")),
+            "interaction_sensitivity": {
+                "strength_scale": float(resolved_sensitivity.get("strength_scale", 0.0)),
+                "curve_exponent": float(resolved_sensitivity.get("curve_exponent", 0.0)),
+                "normalizer": float(resolved_sensitivity.get("normalizer", 0.0)),
+                "max_weight": float(resolved_sensitivity.get("max_weight", 0.0)),
+            },
         },
         "baseline": _build_variant_payload(users, baseline_result, baseline_counts),
         "amplified": _build_variant_payload(users, amplified_result, amplified_counts),
@@ -286,3 +300,16 @@ def _filter_counts_for_users(
         if user_id_a in allowed_user_ids and user_id_b in allowed_user_ids:
             filtered[(user_id_a, user_id_b)] = dict(value)
     return filtered
+
+
+def _resolved_sensitivity(pipeline_result: dict) -> dict[str, float | str]:
+    diagnostics = pipeline_result.get("diagnostics") or {}
+    refinement = diagnostics.get("refinement") or {}
+    sensitivity = refinement.get("interaction_sensitivity") or {}
+    return {
+        "mode": str(sensitivity.get("mode", "natural")),
+        "strength_scale": float(sensitivity.get("strength_scale", 0.0)),
+        "curve_exponent": float(sensitivity.get("curve_exponent", 0.0)),
+        "normalizer": float(sensitivity.get("normalizer", 0.0)),
+        "max_weight": float(sensitivity.get("max_weight", 0.0)),
+    }

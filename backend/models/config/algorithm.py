@@ -29,6 +29,15 @@ INTERACTION_SENSITIVITY_DEMO_STRONG: dict[str, float] = {
     "max_weight": 0.97,
 }
 
+INTERACTION_SENSITIVITY_MODES: dict[str, dict[str, float]] = {
+    "natural": dict(INTERACTION_SENSITIVITY_BASELINE),
+    "strong-bounded": dict(INTERACTION_SENSITIVITY_DEMO_STRONG),
+    "uncapped": {
+        **INTERACTION_SENSITIVITY_DEMO_STRONG,
+        "max_weight": 1.0,
+    },
+}
+
 # Mirrors DEFAULT_WEIGHTS from services/matching/scoring.py.
 # Kept here so map_pipeline/ can import without depending on matching/ directly.
 PROFILE_WEIGHTS: dict[str, float] = {
