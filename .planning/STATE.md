@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: complete
-last_updated: "2026-02-27T05:30:00.072Z"
+status: in_progress
+last_updated: "2026-02-27T18:50:19.132Z"
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 6
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 20
+  completed_plans: 18
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-02-26)
 
 **Core value:** A user opens the People Map and immediately sees meaningful nearby people around themselves at (0,0), with stable, explainable positions that update daily.
-**Current focus:** Phase 25 - Interaction Sensitivity and Dynamic Distance Tuning
+**Current focus:** Phase 26 - Profiles-Only Convergence and Sensitivity Modes
 
 ## Current Position
 
-Phase: 6 of 6 (Phase 25 - Interaction Sensitivity and Dynamic Distance Tuning)
-Plan: 3 of 3 in current phase
-Status: Complete
-Last activity: 2026-02-27 - Completed 25-03 demo notebook dynamic tuning narrative and contract coverage.
+Phase: 7 of 7 (Phase 26 - Profiles-Only Convergence and Sensitivity Modes)
+Plan: 1 of 3 in current phase
+Status: Plan 26-01 executed and summarized
+Last activity: 2026-02-27 - Executed 26-01 migration, tests, and staging-first runbook updates.
 
-Progress: [██████████] 100%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [██████████] 100%
 | Phase 25 P01 | 2min | 2 tasks | 6 files |
 | Phase 25 P02 | 3min | 2 tasks | 5 files |
 | Phase 25-interaction-sensitivity-and-dynamic-distance-tuning P03 | 3min | 2 tasks | 4 files |
+| Phase 26 P01 | 2 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,9 @@ Recent decisions affecting current work:
 - [Phase 25]: Expand distance-curve CSV rows with rank and force deltas (instead of adding a new file) to preserve existing artifact consumers.
 - [Phase 25]: Keep phase 25 contract checks kernel-free and JSON-content based to stay fast and deterministic in CI.
 - [Phase 25]: Encode safety framing in README/notebook explicitly: demo amplification can increase visibility, but clipping guardrails remain enabled.
+- [Phase 26]: Use public.phase26_profiles_only_preflight as a fail-closed gate before reset and drop.
+- [Phase 26]: Enforce migration ordering preflight -> map reset -> legacy drop to prevent partial destructive execution.
+- [Phase 26]: Use authenticated /map/trigger/{user_id} plus SQL metadata checks as staging republish verification.
 
 ### Pending Todos
 
@@ -121,6 +125,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-27T05:30:00Z
-Stopped at: Completed 25-03-PLAN.md
-Resume file: None
+Last session: 2026-02-27T18:50:19Z
+Stopped at: Completed 26-01-PLAN.md
+Resume file: .planning/phases/26-profiles-only-convergence-and-sensitivity-modes/26-02-PLAN.md
