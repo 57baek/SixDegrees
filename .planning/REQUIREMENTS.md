@@ -28,11 +28,11 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 
 ### Ego API + Suggestions
 
-- [ ] **EGO-01**: User map response always places the requesting user exactly at `(0,0)`.
-- [ ] **EGO-02**: User map includes only mutual friends (`profiles.friends` reciprocity) as primary visible nodes.
-- [ ] **EGO-03**: User map node coordinates are translated at request time from global coordinates to requester-centered coordinates.
-- [ ] **EGO-04**: User with empty/sparse mutual graph receives bounded fallback suggestions marked with `is_suggestion=true`.
-- [ ] **EGO-05**: User map response remains backward-compatible for existing frontend usage while adding non-breaking metadata fields.
+- [x] **EGO-01**: User map response always places the requesting user exactly at `(0,0)`.
+- [x] **EGO-02**: User map includes only mutual friends (`profiles.friends` reciprocity) as primary visible nodes.
+- [x] **EGO-03**: User map node coordinates are translated at request time from global coordinates to requester-centered coordinates.
+- [x] **EGO-04**: User with empty/sparse mutual graph receives bounded fallback suggestions marked with `is_suggestion=true`.
+- [x] **EGO-05**: User map response remains backward-compatible for existing frontend usage while adding non-breaking metadata fields.
 
 ### Scheduler + Operations
 
@@ -44,9 +44,9 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 
 ### Compatibility + Security
 
-- [ ] **COMP-01**: User map endpoints enforce authenticated access and prevent unauthorized cross-user map reads.
-- [ ] **COMP-02**: User suggestion payload excludes sensitive profile fields beyond allowed API contract.
-- [ ] **COMP-03**: User milestone rollout preserves existing frontend behavior without frontend code changes.
+- [x] **COMP-01**: User map endpoints enforce authenticated access and prevent unauthorized cross-user map reads.
+- [x] **COMP-02**: User suggestion payload excludes sensitive profile fields beyond allowed API contract.
+- [x] **COMP-03**: User milestone rollout preserves existing frontend behavior without frontend code changes.
 - [ ] **COMP-04**: User migration and rollout path includes safe fallback/rollback behavior if v2 validation fails.
 - [ ] **COMP-05**: User milestone completion requires zero runtime and zero DB dependency on `user_profiles`.
 
@@ -97,19 +97,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ALGO-03 | Phase 21 | Complete |
 | ALGO-04 | Phase 21 | Complete |
 | ALGO-05 | Phase 21 | Complete |
-| EGO-01 | Phase 22 | Pending |
-| EGO-02 | Phase 22 | Pending |
-| EGO-03 | Phase 22 | Pending |
-| EGO-04 | Phase 22 | Pending |
-| EGO-05 | Phase 22 | Pending |
+| EGO-01 | Phase 22 | Complete |
+| EGO-02 | Phase 22 | Complete |
+| EGO-03 | Phase 22 | Complete |
+| EGO-04 | Phase 22 | Complete |
+| EGO-05 | Phase 22 | Complete |
 | OPS-01 | Phase 23 | Pending |
 | OPS-02 | Phase 23 | Pending |
 | OPS-03 | Phase 23 | Pending |
 | OPS-04 | Phase 23 | Pending |
 | OPS-05 | Phase 23 | Pending |
-| COMP-01 | Phase 22 | Pending |
-| COMP-02 | Phase 22 | Pending |
-| COMP-03 | Phase 22 | Pending |
+| COMP-01 | Phase 22 | Complete |
+| COMP-02 | Phase 22 | Complete |
+| COMP-03 | Phase 22 | Complete |
 | COMP-04 | Phase 23 | Pending |
 | COMP-05 | Phase 23 | Pending |
 

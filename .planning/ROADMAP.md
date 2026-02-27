@@ -12,7 +12,7 @@ Milestone v2.0 delivers a backend-only global coordinate map engine that replace
 
 - [x] **Phase 20: Global Coordinate Data Contract** - Establish one-row-per-user global coordinate semantics with secure, versioned persistence. (completed 2026-02-26)
 - [x] **Phase 21: Compute Engine and Publish Validation** - Build scalable profile+interaction global embedding with fail-closed publish gates. (completed 2026-02-26)
-- [ ] **Phase 22: Ego Map API and Compatibility Serving** - Serve requester-centered mutual-friend maps and bounded suggestions without frontend changes.
+- [x] **Phase 22: Ego Map API and Compatibility Serving** - Serve requester-centered mutual-friend maps and bounded suggestions without frontend changes. (completed 2026-02-27)
 - [ ] **Phase 23: Scheduler Operations and Safe Rollout** - Run daily compute + local warm operations with duplicate protection and rollback safety.
 
 ## Phase Details
@@ -84,5 +84,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 20. Global Coordinate Data Contract | 3/3 | Complete   | 2026-02-26 |
 | 21. Compute Engine and Publish Validation | 2/2 | Complete   | 2026-02-26 |
-| 22. Ego Map API and Compatibility Serving | 0/TBD | Not started | - |
+| 22. Ego Map API and Compatibility Serving | 3/3 | Complete   | 2026-02-27 |
 | 23. Scheduler Operations and Safe Rollout | 0/TBD | Not started | - |

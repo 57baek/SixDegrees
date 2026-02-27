@@ -3,13 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-02-26T23:27:12.000Z"
+last_updated: "2026-02-27T00:37:42.450Z"
 progress:
-  total_phases: 4
-  completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_phases: 3
+  completed_phases: 3
+  total_plans: 8
+  completed_plans: 8
 ---
 
 # Project State
@@ -19,14 +18,14 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-02-26)
 
 **Core value:** A user opens the People Map and immediately sees meaningful nearby people around themselves at (0,0), with stable, explainable positions that update daily.
-**Current focus:** Phase 22 - Ego Map API and Compatibility Serving
+**Current focus:** Phase 23 - Scheduler Operations and Safe Rollout
 
 ## Current Position
 
-Phase: 3 of 4 (Phase 22 - Ego Map API and Compatibility Serving)
+Phase: 4 of 4 (Phase 23 - Scheduler Operations and Safe Rollout)
 Plan: 0 of TBD in current phase
 Status: Ready for planning
-Last activity: 2026-02-26 - Completed 21-02 publish validation gates and diagnostics persistence.
+Last activity: 2026-02-26 - Completed 22-03 ego map route integration and compatibility regressions.
 
 Progress: [██████████] 100%
 
@@ -50,6 +49,9 @@ Progress: [██████████] 100%
 | Phase 20 P03 | 2 min | 2 tasks | 3 files |
 | Phase 21 P01 | 5min | 3 tasks | 8 files |
 | Phase 21 P02 | 5min | 3 tasks | 9 files |
+| Phase 22 P01 | 1min | 2 tasks | 2 files |
+| Phase 22 P02 | 2min | 3 tasks | 3 files |
+| Phase 22 P03 | 1min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -76,6 +78,10 @@ Recent decisions affecting current work:
 - [Phase 21]: Use a two-step validation model: pre-publish input/embedding gates and post-publish persistence coherence checks.
 - [Phase 21]: Persist diagnostics through a secured service-role RPC so map serving stays read-compatible while compute runs remain auditable.
 - [Phase 21]: Keep map response contract unchanged by confining publish gating to pipeline orchestration and tests.
+- [Phase 22]: Expose only id, nickname, and friends in get_ego_map_profiles for serving-safe projection.
+- [Phase 22]: Keep build_ego_map pure and deterministic with no Supabase I/O.
+- [Phase 22]: Select fallback suggestions by translated-distance then user_id for stable ordering.
+- [Phase 22]: Enforce self-only GET /map access and keep response shape backward-compatible with additive is_suggestion metadata.
 
 ### Pending Todos
 
@@ -88,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-26T23:27:12Z
-Stopped at: Completed 21-02-PLAN.md
+Last session: 2026-02-27T00:37:42Z
+Stopped at: Completed 22-03-PLAN.md
 Resume file: None
