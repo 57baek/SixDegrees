@@ -73,8 +73,8 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **PROF-01**: Convergence path B is executed staging-first: legacy map rows are reset and one fresh global coordinate version is republished before production promotion.
 - [x] **PROF-02**: Backend DB/runtime contracts operate against `profiles` only, with zero runtime dependency on `user_profiles`.
 - [x] **PROF-03**: Migration path for dropping `public.user_profiles` is fail-closed and blocks on dependency/preflight violations.
-- [ ] **PROF-04**: Demo sensitivity modes are selectable as `natural`, `strong-bounded`, and `uncapped`, with `natural` preserving current bounded defaults.
-- [ ] **PROF-05**: CLI exposes tunable amplification and sensitivity knobs, and exports metadata that allows observing Eleanor/Winston distance and rank changes.
+- [x] **PROF-04**: Demo sensitivity modes are selectable as `natural`, `strong-bounded`, and `uncapped`, with `natural` preserving current bounded defaults.
+- [x] **PROF-05**: CLI exposes tunable amplification and sensitivity knobs, and exports metadata that allows observing Eleanor/Winston distance and rank changes.
 - [ ] **PROF-06**: Verification proves monotonic movement improvements in demo modes and no regressions in natural mode.
 
 ## Future Requirements

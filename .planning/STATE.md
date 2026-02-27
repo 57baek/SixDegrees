@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-02-27T18:50:19.132Z"
+last_updated: "2026-02-27T20:47:28.163Z"
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 20
-  completed_plans: 18
+  completed_plans: 19
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: `.planning/PROJECT.md` (updated 2026-02-26)
 ## Current Position
 
 Phase: 7 of 7 (Phase 26 - Profiles-Only Convergence and Sensitivity Modes)
-Plan: 1 of 3 in current phase
-Status: Plan 26-01 executed and summarized
-Last activity: 2026-02-27 - Executed 26-01 migration, tests, and staging-first runbook updates.
+Plan: 2 of 3 in current phase
+Status: Plan 26-02 executed and summarized
+Last activity: 2026-02-27 - Executed 26-02 sensitivity mode wiring, CLI tuning, and deterministic regressions.
 
-Progress: [█████████░] 90%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [█████████░] 90%
 | Phase 25 P02 | 3min | 2 tasks | 5 files |
 | Phase 25-interaction-sensitivity-and-dynamic-distance-tuning P03 | 3min | 2 tasks | 4 files |
 | Phase 26 P01 | 2 min | 2 tasks | 3 files |
+| Phase 26 P02 | 2 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,8 @@ Recent decisions affecting current work:
 - [Phase 26]: Use public.phase26_profiles_only_preflight as a fail-closed gate before reset and drop.
 - [Phase 26]: Enforce migration ordering preflight -> map reset -> legacy drop to prevent partial destructive execution.
 - [Phase 26]: Use authenticated /map/trigger/{user_id} plus SQL metadata checks as staging republish verification.
+- [Phase 26]: Natural mode remains default-safe while strong-bounded and uncapped are explicit opt-in presets.
+- [Phase 26]: Sensitivity tuning is exposed as optional CLI overrides layered onto mode presets for reproducible sweeps without code edits.
 
 ### Pending Todos
 
@@ -125,6 +128,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-27T18:50:19Z
-Stopped at: Completed 26-01-PLAN.md
-Resume file: .planning/phases/26-profiles-only-convergence-and-sensitivity-modes/26-02-PLAN.md
+Last session: 2026-02-27T20:46:31Z
+Stopped at: Completed 26-02-PLAN.md
+Resume file: .planning/phases/26-profiles-only-convergence-and-sensitivity-modes/26-03-PLAN.md

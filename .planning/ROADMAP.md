@@ -147,4 +147,4 @@ Plans:
 | 23. Scheduler Operations and Safe Rollout | 3/3 | Complete   | 2026-02-27 |
 | 24. Clustering and Dimensionality Reduction Demo Notebook | 3/3 | Complete   | 2026-02-27 |
 | 25. Interaction Sensitivity and Dynamic Distance Tuning | 3/3 | Complete   | 2026-02-27 |
-| 26. Profiles-Only Convergence and Sensitivity Modes | 1/3 | In Progress|  |
+| 26. Profiles-Only Convergence and Sensitivity Modes | 2/3 | In Progress|  |
