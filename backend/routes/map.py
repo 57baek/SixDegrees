@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from config.supabase import get_supabase_client
@@ -9,16 +9,20 @@ from services.map_pipeline.ego_map import build_ego_map
 router = APIRouter(prefix="/map", tags=["map"])
 
 
+def _rows_from_rpc(data: object) -> list[dict[str, Any]]:
+    if not isinstance(data, list):
+        return []
+    return [row for row in data if isinstance(row, dict)]
+
+
 def _fetch_map_response(user_id: str) -> dict:
     """Shared helper: fetch global rows and build requester-centered ego map."""
     sb = get_supabase_client()
-    rows = cast(
-        list[dict[str, Any]],
+    rows = _rows_from_rpc(
         sb.rpc(
             "get_global_map_coordinates",
             {"p_user_ids": None, "p_version_date": None},
         ).execute().data
-        or [],
     )
 
     required_fields = {"user_id", "x", "y", "computed_at", "version_date"}
@@ -27,11 +31,25 @@ def _fetch_map_response(user_id: str) -> dict:
     if not valid_rows:
         raise HTTPException(status_code=404, detail="Map not yet computed for this user")
 
-    profile_ids = [r["user_id"] for r in valid_rows]
-    profiles = cast(
-        list[dict[str, Any]],
-        sb.rpc("get_ego_map_profiles", {"p_user_ids": profile_ids}).execute().data or [],
+    profile_ids = [str(r["user_id"]) for r in valid_rows]
+    profiles = _rows_from_rpc(
+        sb.rpc("get_ego_map_profiles", {"p_user_ids": profile_ids}).execute().data
     )
+    profile_id_set = {
+        str(row["id"])
+        for row in profiles
+        if "id" in row and row.get("id") is not None
+    }
+
+    missing_profile_ids = sorted(set(profile_ids) - profile_id_set)
+    if missing_profile_ids:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Map profile projection is incomplete for current coordinate batch; "
+                f"missing profiles for {len(missing_profile_ids)} user(s)"
+            ),
+        )
 
     try:
         nodes = build_ego_map(

@@ -47,11 +47,20 @@ def _select_global_compute_user_id() -> str | None:
     sb = get_supabase_client()
     rows = _rows_list(sb.rpc("get_all_profiles", {}).execute().data)
     user_ids: list[str] = []
+    invalid_rows = 0
     for row in rows:
         raw_user_id = row.get("id")
         if raw_user_id is None:
+            invalid_rows += 1
             continue
         user_ids.append(str(raw_user_id))
+    if invalid_rows and not user_ids:
+        raise RuntimeError("get_all_profiles returned no usable profile ids for scheduler")
+    if invalid_rows:
+        logger.warning(
+            "Scheduler: get_all_profiles returned %d row(s) without profile id; using valid rows",
+            invalid_rows,
+        )
     if not user_ids:
         return None
     return sorted(user_ids)[0]

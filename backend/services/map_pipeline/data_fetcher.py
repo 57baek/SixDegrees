@@ -17,6 +17,26 @@ from models.user import UserProfile
 from services.map_pipeline.contracts import RawInteractionCounts
 
 
+def _require_str(row: dict[str, Any], key: str, context: str) -> str:
+    value = row.get(key)
+    if value is None:
+        raise ValueError(f"{context} missing required field '{key}'")
+    text = str(value).strip()
+    if not text:
+        raise ValueError(f"{context} has empty required field '{key}'")
+    return text
+
+
+def _coerce_int(row: dict[str, Any], key: str, context: str) -> int:
+    value = row.get(key)
+    if value is None:
+        return 0
+    try:
+        return int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{context} has invalid integer field '{key}'") from exc
+
+
 def fetch_all() -> Tuple[list[UserProfile], RawInteractionCounts]:
     """Fetch all profiles and interaction counts from Supabase.
 
@@ -38,12 +58,13 @@ def fetch_all() -> Tuple[list[UserProfile], RawInteractionCounts]:
 
     users: list[UserProfile] = []
     profile_rows = profile_response.data if isinstance(profile_response.data, list) else []
-    for row in profile_rows:
+    for index, row in enumerate(profile_rows):
         if not isinstance(row, dict):
             continue
+        context = f"profiles row #{index}"
         users.append(
             UserProfile(
-                id=row["id"],
+                id=_require_str(row, "id", context),
                 nickname=row.get("nickname") or "",
                 city=row.get("city") or "",
                 state=row.get("state") or "",
@@ -64,18 +85,22 @@ def fetch_all() -> Tuple[list[UserProfile], RawInteractionCounts]:
     interaction_rows = (
         interaction_response.data if isinstance(interaction_response.data, list) else []
     )
-    for row in interaction_rows:
+    for index, row in enumerate(interaction_rows):
         if not isinstance(row, dict):
             continue
+        context = f"interactions row #{index}"
         # Keys MUST be Python tuples (not lists) — run_pipeline() uses them as dict keys.
         # DB already enforces canonical order (user_id_a < user_id_b).
-        pair_key: tuple[str, str] = (row["user_id_a"], row["user_id_b"])
+        pair_key: tuple[str, str] = (
+            _require_str(row, "user_id_a", context),
+            _require_str(row, "user_id_b", context),
+        )
 
         # Value keys MUST match INTERACTION_WEIGHTS in config/algorithm.py.
         raw_interaction_counts[pair_key] = {
-            "likes":    row["likes_count"],
-            "comments": row["comments_count"],
-            "dms":      row.get("dm_count", 0),
+            "likes": _coerce_int(row, "likes_count", context),
+            "comments": _coerce_int(row, "comments_count", context),
+            "dms": _coerce_int(row, "dm_count", context),
         }
 
     return (users, raw_interaction_counts)

@@ -4,7 +4,7 @@ These tests document the API contract each endpoint must honor so future changes
 can be verified automatically. They run against a mocked Supabase client so no
 real database or network calls are made.
 """
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -51,6 +51,44 @@ def test_get_map_requester_origin_and_mutual_primarys(client):
     suggestion_nodes = [row for row in data["coordinates"] if row["is_suggestion"]]
     assert suggestion_nodes
     assert all(node["user_id"] != "test-user-uuid" for node in suggestion_nodes)
+
+
+def test_map_contract_profiles_only(client, mock_sb):
+    """GET /map/{user_id} uses only profiles-era RPCs (no legacy user_profiles reads)."""
+    response = client.get("/map/test-user-uuid")
+    assert response.status_code == 200
+
+    rpc_names = [call.args[0] for call in mock_sb.rpc.call_args_list if call.args]
+    assert "get_global_map_coordinates" in rpc_names
+    assert "get_ego_map_profiles" in rpc_names
+    assert "get_profile" not in rpc_names
+    assert all("user_profiles" not in str(call) for call in mock_sb.rpc.call_args_list)
+
+
+def test_get_map_returns_503_when_profile_projection_missing(client, mock_sb):
+    """GET /map/{user_id} fails closed when coordinate users lack profile projection rows."""
+
+    original_side_effect = mock_sb.rpc.side_effect
+    incomplete_projection = MagicMock()
+    incomplete_projection.execute.return_value.data = [
+        {
+            "id": "test-user-uuid",
+            "nickname": "Test User",
+            "friends": ["mutual-user-uuid"],
+        }
+    ]
+
+    def _rpc_side_effect(name, *args, **kwargs):
+        if name == "get_ego_map_profiles":
+            return incomplete_projection
+        return original_side_effect(name, *args, **kwargs)
+
+    # Keep coordinate rows from fixture defaults and return incomplete profile projection.
+    mock_sb.rpc.side_effect = _rpc_side_effect
+
+    response = client.get("/map/test-user-uuid")
+    assert response.status_code == 503
+    assert "profile projection is incomplete" in response.json()["detail"]
 
 
 def test_get_map_no_jwt_returns_401(client_no_auth):
