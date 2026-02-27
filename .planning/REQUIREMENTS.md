@@ -39,7 +39,7 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **OPS-01**: User global coordinates are recomputed by one daily batch schedule at fixed UTC time.
 - [x] **OPS-02**: User 7pm local-time jobs perform delivery/cache warm only and never trigger global recompute.
 - [x] **OPS-03**: User scheduler runtime prevents duplicate compute execution from multi-worker or restart conditions.
-- [ ] **OPS-04**: User cache warm path (if enabled) is version-aware and invalidates stale payloads safely.
+- [x] **OPS-04**: User cache warm path (if enabled) is version-aware and invalidates stale payloads safely.
 - [ ] **OPS-05**: User likes/comments triggers are validated end-to-end so interaction counters remain correct on insert/delete paths.
 
 ### Compatibility + Security
@@ -47,7 +47,7 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **COMP-01**: User map endpoints enforce authenticated access and prevent unauthorized cross-user map reads.
 - [x] **COMP-02**: User suggestion payload excludes sensitive profile fields beyond allowed API contract.
 - [x] **COMP-03**: User milestone rollout preserves existing frontend behavior without frontend code changes.
-- [ ] **COMP-04**: User migration and rollout path includes safe fallback/rollback behavior if v2 validation fails.
+- [x] **COMP-04**: User migration and rollout path includes safe fallback/rollback behavior if v2 validation fails.
 - [ ] **COMP-05**: User milestone completion requires zero runtime and zero DB dependency on `user_profiles`.
 
 ## Future Requirements
@@ -105,12 +105,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OPS-01 | Phase 23 | Complete |
 | OPS-02 | Phase 23 | Complete |
 | OPS-03 | Phase 23 | Complete |
-| OPS-04 | Phase 23 | Pending |
+| OPS-04 | Phase 23 | Complete |
 | OPS-05 | Phase 23 | Pending |
 | COMP-01 | Phase 22 | Complete |
 | COMP-02 | Phase 22 | Complete |
 | COMP-03 | Phase 22 | Complete |
-| COMP-04 | Phase 23 | Pending |
+| COMP-04 | Phase 23 | Complete |
 | COMP-05 | Phase 23 | Pending |
 
 **Coverage:**
