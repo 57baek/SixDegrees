@@ -40,7 +40,7 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **OPS-02**: User 7pm local-time jobs perform delivery/cache warm only and never trigger global recompute.
 - [x] **OPS-03**: User scheduler runtime prevents duplicate compute execution from multi-worker or restart conditions.
 - [x] **OPS-04**: User cache warm path (if enabled) is version-aware and invalidates stale payloads safely.
-- [ ] **OPS-05**: User likes/comments triggers are validated end-to-end so interaction counters remain correct on insert/delete paths.
+- [x] **OPS-05**: User likes/comments triggers are validated end-to-end so interaction counters remain correct on insert/delete paths.
 
 ### Compatibility + Security
 
@@ -48,7 +48,7 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **COMP-02**: User suggestion payload excludes sensitive profile fields beyond allowed API contract.
 - [x] **COMP-03**: User milestone rollout preserves existing frontend behavior without frontend code changes.
 - [x] **COMP-04**: User migration and rollout path includes safe fallback/rollback behavior if v2 validation fails.
-- [ ] **COMP-05**: User milestone completion requires zero runtime and zero DB dependency on `user_profiles`.
+- [x] **COMP-05**: User milestone completion requires zero runtime and zero DB dependency on `user_profiles`.
 
 ## Future Requirements
 
@@ -106,12 +106,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OPS-02 | Phase 23 | Complete |
 | OPS-03 | Phase 23 | Complete |
 | OPS-04 | Phase 23 | Complete |
-| OPS-05 | Phase 23 | Pending |
+| OPS-05 | Phase 23 | Complete |
 | COMP-01 | Phase 22 | Complete |
 | COMP-02 | Phase 22 | Complete |
 | COMP-03 | Phase 22 | Complete |
 | COMP-04 | Phase 23 | Complete |
-| COMP-05 | Phase 23 | Pending |
+| COMP-05 | Phase 23 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 28 total
