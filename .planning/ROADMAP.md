@@ -17,6 +17,7 @@ Milestone v2.0 delivers a backend-only global coordinate map engine that replace
 - [x] **Phase 23: Scheduler Operations and Safe Rollout** - Run daily compute + local warm operations with duplicate protection and rollback safety. (completed 2026-02-27)
 - [x] **Phase 24: Clustering and Dimensionality Reduction Demo Notebook** - Build deterministic demo data + pipeline artifacts and notebook visuals for global/ego/centered before-after analysis. (completed 2026-02-27)
 - [x] **Phase 25: Interaction Sensitivity and Dynamic Distance Tuning** - Increase interaction-to-distance responsiveness so strong amplification produces visible, explainable proximity changes. (completed 2026-02-27)
+- [ ] **Phase 26: Profiles-Only Convergence and Sensitivity Modes** - Execute staging-first convergence path B, finalize profiles-only contracts, and add demo-selectable sensitivity modes with verification gates.
 
 ## Phase Details
 
@@ -119,6 +120,23 @@ Plans:
 - [ ] 25-02-PLAN.md - Add sensitivity diagnostics exports (distance curve, rank curve, force metadata) and stable parameter presets.
 - [ ] 25-03-PLAN.md - Update demo notebook/README to showcase clearly visible dynamic changes with side-by-side evidence.
 
+### Phase 26: Profiles-Only Convergence and Sensitivity Modes
+**Goal**: Safely finish profiles-only DB/runtime convergence on staging first, while adding selectable sensitivity modes and verification proofs for demo behavior.
+**Depends on**: Phase 25
+**Requirements**: PROF-01, PROF-02, PROF-03, PROF-04, PROF-05, PROF-06
+**Success Criteria** (what must be TRUE):
+  1. Staging/dev branch execution validates path-B reset-and-republish flow before any production migration run.
+  2. Drop path for `public.user_profiles` is fail-closed and blocked when dependency preflight checks fail.
+  3. Backend DB/runtime contract is fully profiles-only with no serving or scheduler regressions.
+  4. Demo supports three selectable sensitivity modes (`natural`, `strong-bounded`, `uncapped`) with natural as the default-safe mode.
+  5. CLI exposes amplification and sensitivity knobs so operators can observe Eleanor/Winston distance and rank movement.
+  6. Verification artifacts prove monotonic movement trends in demo modes and no regressions in natural mode.
+**Plans**: 3 plans
+Plans:
+- [ ] 26-01-PLAN.md - Add staging-first path-B migration with fail-closed preflight and safe legacy-drop gating.
+- [ ] 26-02-PLAN.md - Implement dynamic sensitivity modes and CLI tuning knobs for demo and diagnostics flows.
+- [ ] 26-03-PLAN.md - Complete profiles-only runtime sweep and record monotonicity/regression verification evidence.
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -129,3 +147,4 @@ Plans:
 | 23. Scheduler Operations and Safe Rollout | 3/3 | Complete   | 2026-02-27 |
 | 24. Clustering and Dimensionality Reduction Demo Notebook | 3/3 | Complete   | 2026-02-27 |
 | 25. Interaction Sensitivity and Dynamic Distance Tuning | 3/3 | Complete   | 2026-02-27 |
+| 26. Profiles-Only Convergence and Sensitivity Modes | 1/3 | In Progress|  |

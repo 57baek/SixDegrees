@@ -68,6 +68,15 @@ Requirements for milestone v2.0 Global Coordinate Map Engine.
 - [x] **DYN-05**: Demo artifacts include force/edge diagnostics that explain observed geometric movement.
 - [x] **DYN-06**: Notebook and README communicate dynamic tuning behavior, limits, and recommended presets for clear stakeholder demos.
 
+### Profiles-Only Convergence and Sensitivity Modes (Phase 26)
+
+- [x] **PROF-01**: Convergence path B is executed staging-first: legacy map rows are reset and one fresh global coordinate version is republished before production promotion.
+- [x] **PROF-02**: Backend DB/runtime contracts operate against `profiles` only, with zero runtime dependency on `user_profiles`.
+- [x] **PROF-03**: Migration path for dropping `public.user_profiles` is fail-closed and blocks on dependency/preflight violations.
+- [ ] **PROF-04**: Demo sensitivity modes are selectable as `natural`, `strong-bounded`, and `uncapped`, with `natural` preserving current bounded defaults.
+- [ ] **PROF-05**: CLI exposes tunable amplification and sensitivity knobs, and exports metadata that allows observing Eleanor/Winston distance and rank changes.
+- [ ] **PROF-06**: Verification proves monotonic movement improvements in demo modes and no regressions in natural mode.
+
 ## Future Requirements
 
 Deferred to future milestones.
@@ -142,12 +151,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DYN-04 | Phase 25 | Planned |
 | DYN-05 | Phase 25 | Planned |
 | DYN-06 | Phase 25 | Planned |
+| PROF-01 | Phase 26 | Planned |
+| PROF-02 | Phase 26 | Planned |
+| PROF-03 | Phase 26 | Planned |
+| PROF-04 | Phase 26 | Planned |
+| PROF-05 | Phase 26 | Planned |
+| PROF-06 | Phase 26 | Planned |
 
 **Coverage:**
-- Total requirements: 40
-- Mapped to phases: 40
+- Total requirements: 46
+- Mapped to phases: 46
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-27 after adding Phase 25 dynamic sensitivity requirements*
+*Last updated: 2026-02-27 after adding Phase 26 profiles-only convergence and sensitivity-mode requirements*
