@@ -1,6 +1,7 @@
 import numpy as np
 
 from models.user import UserProfile
+from scripts.run_phase24_demo_pipeline import _build_distance_curve_rows
 from services.map_pipeline.contracts import (
     InteractionSensitivity,
     RefinementInput,
@@ -159,3 +160,31 @@ def test_pipeline_clips_movement_under_stronger_sensitivity(monkeypatch):
 
     clipped_deltas = np.linalg.norm(result["raw_coords"], axis=1)
     assert np.max(clipped_deltas) <= max_movement_delta + 1e-8
+
+
+def test_demo_distance_curve_rank_and_force_diagnostics_trend(tmp_path):
+    rows = _build_distance_curve_rows(
+        output_dir=str(tmp_path),
+        use_fixture_data=True,
+        max_likes=1200,
+        max_comments=800,
+    )
+
+    assert len(rows) >= 5
+    distances = [float(row["euclidean_distance"]) for row in rows]
+    ranks = [int(row["nearest_neighbor_rank"]) for row in rows]
+    weighted_interactions = [float(row["weighted_interactions"]) for row in rows]
+
+    assert all(curr <= prev + 1e-6 for prev, curr in zip(distances, distances[1:]))
+
+    upward_rank_steps = [
+        curr - prev for prev, curr in zip(ranks, ranks[1:]) if curr > prev
+    ]
+    assert len(upward_rank_steps) <= 1
+    assert all(step <= 1 for step in upward_rank_steps)
+
+    assert all(
+        curr >= prev - 1e-9
+        for prev, curr in zip(weighted_interactions, weighted_interactions[1:])
+    )
+    assert all("movement_explanation" in row for row in rows)

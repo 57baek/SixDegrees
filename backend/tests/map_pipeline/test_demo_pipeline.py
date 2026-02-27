@@ -53,6 +53,15 @@ def test_run_phase24_demo_baseline_returns_expected_shapes():
     assert len(result["baseline"]["global_points"]) == 100
     assert len(result["baseline"]["translated_points"]) == 100
     assert len(result["baseline"]["interactions"]) > 0
+    baseline_edges = result["baseline"]["diagnostics"]["interaction_edges"]
+    assert len(baseline_edges) > 0
+    assert {
+        "interaction_weight",
+        "final_weight",
+        "weighted_interactions",
+        "sensitivity_multiplier",
+        "effective_pull",
+    }.issubset(set(baseline_edges[0].keys()))
 
 
 def test_run_phase24_demo_amplified_increases_eleanor_winston_counts():
@@ -81,6 +90,7 @@ def test_run_phase24_demo_artifacts_writes_expected_files(tmp_path):
         "phase24_eleanor_ego_before.csv",
         "phase24_eleanor_ego_after.csv",
         "phase24_eleanor_shift.csv",
+        "phase24_eleanor_winston_distance_curve.csv",
         "phase24_eleanor_side_by_side.json",
     }
     assert set(summary["generated_files"]) == expected_files
@@ -98,6 +108,23 @@ def test_run_phase24_demo_artifacts_writes_expected_files(tmp_path):
     side_by_side = json.loads((tmp_path / "phase24_eleanor_side_by_side.json").read_text())
     assert len(side_by_side["before"]) == 21
     assert len(side_by_side["after"]) == 21
+
+    distance_curve_rows = list(
+        csv.DictReader((tmp_path / "phase24_eleanor_winston_distance_curve.csv").read_text().splitlines())
+    )
+    assert len(distance_curve_rows) >= 5
+    assert "euclidean_distance" in distance_curve_rows[0]
+    assert {
+        "nearest_neighbor_rank",
+        "distance_delta_from_baseline",
+        "rank_delta_from_baseline",
+        "interaction_weight",
+        "final_weight",
+        "weighted_interactions",
+        "sensitivity_multiplier",
+        "effective_pull",
+        "movement_explanation",
+    }.issubset(set(distance_curve_rows[0].keys()))
 
 
 def test_run_phase24_demo_runner_executes_from_repo_root(tmp_path):
