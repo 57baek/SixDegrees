@@ -16,7 +16,7 @@ Milestone v2.0 delivers a backend-only global coordinate map engine that replace
 - [x] **Phase 22: Ego Map API and Compatibility Serving** - Serve requester-centered mutual-friend maps and bounded suggestions without frontend changes. (completed 2026-02-27)
 - [x] **Phase 23: Scheduler Operations and Safe Rollout** - Run daily compute + local warm operations with duplicate protection and rollback safety. (completed 2026-02-27)
 - [x] **Phase 24: Clustering and Dimensionality Reduction Demo Notebook** - Build deterministic demo data + pipeline artifacts and notebook visuals for global/ego/centered before-after analysis. (completed 2026-02-27)
-- [ ] **Phase 25: Interaction Sensitivity and Dynamic Distance Tuning** - Increase interaction-to-distance responsiveness so strong amplification produces visible, explainable proximity changes.
+- [x] **Phase 25: Interaction Sensitivity and Dynamic Distance Tuning** - Increase interaction-to-distance responsiveness so strong amplification produces visible, explainable proximity changes. (completed 2026-02-27)
 
 ## Phase Details
 
@@ -128,4 +128,4 @@ Plans:
 | 22. Ego Map API and Compatibility Serving | 3/3 | Complete   | 2026-02-27 |
 | 23. Scheduler Operations and Safe Rollout | 3/3 | Complete   | 2026-02-27 |
 | 24. Clustering and Dimensionality Reduction Demo Notebook | 3/3 | Complete   | 2026-02-27 |
-| 25. Interaction Sensitivity and Dynamic Distance Tuning | 2/3 | In Progress|  |
+| 25. Interaction Sensitivity and Dynamic Distance Tuning | 3/3 | Complete   | 2026-02-27 |
