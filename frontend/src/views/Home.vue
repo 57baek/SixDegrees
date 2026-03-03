@@ -1,9 +1,10 @@
 <template>
 <div class="home">
     <div class="container">
-      <header class="page-header">
+      <<header class="page-header">
         <h1>Your Feed</h1>
         <nav class="nav-buttons">
+          <button @click="router.push('/map')" class="nav-btn map-btn"> People Map</button>
           <button @click="router.push('/profile')" class="nav-btn">Profile</button>
           <button @click="handleLogout" class="logout-btn">Logout</button>
         </nav>
@@ -249,6 +250,21 @@ const goToProfile = (userId) => {
 .nav-button:hover {
   background: #0CC6C6;
   transform: translateY(-1px);
+}
+
+.map-btn {
+  background: linear-gradient(135deg, #a78bfa 0%, #60d4f7 100%);
+  color: #0a0c18;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 0 10px rgba(96, 212, 247, 0.2);
+}
+
+.map-btn:hover {
+  background: linear-gradient(135deg, #b89cff 0%, #71e5ff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(96, 212, 247, 0.4);
+  color: #000;
 }
 
 .logout-btn {

@@ -3,6 +3,7 @@ import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import SignUp from '../views/SignUp.vue'
 import ProfileSetup from '../views/ProfileSetup.vue'
+import PeopleMap from '../views/PeopleMap.vue'
 
 const routes = [
   {
@@ -32,7 +33,13 @@ const routes = [
     name: 'ProfileSetup',
     component: ProfileSetup,
     meta: { requiresAuth: true }
-  }
+  },
+  {
+    path: '/map',
+    name: 'PeopleMap',
+    component: PeopleMap,
+    //meta: { requiresAuth: true }
+}
 ]
 
 const router = createRouter({
