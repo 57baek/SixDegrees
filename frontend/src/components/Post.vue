@@ -2,8 +2,12 @@
   <div class="post-card">
     <div class="post-header">
       <div class="user-info">
-        <div class="avatar">{{ userInitial }}</div>
-        <div>
+      <div 
+        class="avatar" 
+        @click="router.push(`/profile/${post.user_id}`)"
+        style="cursor:pointer"
+      >{{ userInitial }}</div>        
+      <div>
           <div class="nickname">{{ post.nickname || 'Unknown User' }}</div>
           <div class="post-meta">
             <span class="timestamp">{{ formatDate(post.created_at) }}</span>
@@ -60,6 +64,8 @@
 import { ref, computed, onMounted} from 'vue'
 import { supabase } from '../lib/supabase'
 import { Heart, MessageCircle, Lock, Users, Globe } from 'lucide-vue-next' 
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 // post data passed from parent
 const props = defineProps({
