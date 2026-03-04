@@ -39,7 +39,13 @@ const routes = [
     name: 'PeopleMap',
     component: PeopleMap,
     //meta: { requiresAuth: true }
-}
+  },
+  {
+    path: '/friends',
+    name: 'Friends',
+    component: () => import('../views/Friends.vue'),
+    meta: { requiresAuth: true }
+  }
 ]
 
 const router = createRouter({
