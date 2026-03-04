@@ -360,7 +360,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
   font-family: 'Playfair Display', serif;
   font-size: clamp(2rem, 5vw, 3.2rem);
   font-weight: 700;
-  background: linear-gradient(135deg, #c5e4ff 0%, #a78bfa 55%, #60d4f7 100%);
+  background: #c5e4ff 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
