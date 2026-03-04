@@ -1,0 +1,8 @@
+amplification_likes,amplification_comments,sensitivity_mode,euclidean_distance,nearest_neighbor_rank,distance_delta_from_baseline,rank_delta_from_baseline,interaction_weight,final_weight,weighted_interactions,sensitivity_multiplier,effective_pull,final_weight_delta_from_baseline,effective_pull_delta_from_baseline,movement_explanation
+0,0,natural,0.057813272486118984,17,0.0,0,0.92,0.92,11.899999999999999,1.808198098157519,0.0736,0.0,0.0,distance=stable; rank=unchanged; final_weight_delta=0.000000; pull_delta=0.000000
+24,16,natural,0.057813272486118984,17,0.0,0,0.92,0.92,27.1,2.614816002516067,0.0736,0.0,0.0,distance=stable; rank=unchanged; final_weight_delta=0.000000; pull_delta=0.000000
+60,40,natural,0.057813272486118984,17,0.0,0,0.92,0.92,49.9,3.6202000903388645,0.0736,0.0,0.0,distance=stable; rank=unchanged; final_weight_delta=0.000000; pull_delta=0.000000
+120,80,natural,0.057813272486118984,17,0.0,0,0.92,0.92,87.9,5.025434340530371,0.0736,0.0,0.0,distance=stable; rank=unchanged; final_weight_delta=0.000000; pull_delta=0.000000
+300,200,natural,0.057813272486118984,17,0.0,0,0.92,0.92,201.89999999999998,8.36179649155737,0.0736,0.0,0.0,distance=stable; rank=unchanged; final_weight_delta=0.000000; pull_delta=0.000000
+600,400,natural,0.057813272486118984,17,0.0,0,0.92,0.92,391.9,12.713347593992161,0.0736,0.0,0.0,distance=stable; rank=unchanged; final_weight_delta=0.000000; pull_delta=0.000000
+1200,800,natural,0.057813272486118984,17,0.0,0,0.92,0.92,771.9,19.625322703560357,0.0736,0.0,0.0,distance=stable; rank=unchanged; final_weight_delta=0.000000; pull_delta=0.000000

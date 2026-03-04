@@ -2,8 +2,7 @@
 -- Created: 2026-02-25
 -- Purpose: profiles table lacks a timezone column. Backend scheduler uses timezone
 --          to determine active hours per user. Adding timezone (TEXT NOT NULL DEFAULT 'UTC')
---          allows the scheduler to read from profiles.timezone after the user_profiles
---          → profiles migration is complete.
+--          allows the scheduler to read from profiles.timezone.
 -- Migration name: add_timezone_to_profiles
 -- Safe to re-run (ADD COLUMN IF NOT EXISTS)
 

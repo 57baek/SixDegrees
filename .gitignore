@@ -44,6 +44,8 @@ CLAUDE.md
 .claude/
 .playwright
 .playwright-cli
+opencode.json
+AGENTS.md
 
 # Python test cache
 .pytest_cache/

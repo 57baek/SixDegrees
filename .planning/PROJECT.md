@@ -25,6 +25,7 @@ A user opens the People Map and immediately sees meaningful nearby people around
 - [ ] Replace per-viewer map storage with one global coordinate row per user
 - [ ] Rebuild map compute pipeline for sparse/scalable global embedding + interaction refinement
 - [ ] Serve request-time ego maps using mutual friends from `profiles.friends` and origin translation
+- [ ] Rebuild/reconcile interactions from `posts`/`likes`/`comments` for existing `profiles` users and repoint interactions FKs to `profiles(id)`
 - [ ] Add robust algorithm/data/API validation so every run is auditable and safe to roll forward
 - [ ] Keep compatibility for existing frontend behavior without frontend code changes
 
@@ -33,6 +34,7 @@ A user opens the People Map and immediately sees meaningful nearby people around
 - Frontend code changes in `frontend/` - explicitly excluded for v2.0
 - `profiles` schema changes - explicitly excluded for v2.0
 - `pending_requests` table changes - explicitly excluded for v2.0
+- Migrating legacy `user_profiles` users into `profiles` - explicitly excluded for v2.0
 - New notification/push infrastructure - defer until after stable v2.0 map backend
 - Unrelated product features (admin, moderation, OAuth, chat)
 

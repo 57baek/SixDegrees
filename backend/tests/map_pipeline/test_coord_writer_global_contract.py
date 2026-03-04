@@ -90,14 +90,50 @@ def test_run_pipeline_for_user_passes_global_write_signature(monkeypatch):
         "translated_results": [
             {"user_id": "u-1", "x": 0.0, "y": 0.0, "tier": 1},
             {"user_id": "u-2", "x": 1.0, "y": 2.0, "tier": 2},
-        ]
+        ],
+        "user_ids": ["u-1", "u-2"],
+        "raw_coords": [[0.0, 0.0], [1.0, 2.0]],
     }
 
     mock_write = MagicMock()
     monkeypatch.setattr("services.map_pipeline.fetch_all", lambda: (users, interactions))
+    monkeypatch.setattr("services.map_pipeline.fetch_prior_coordinates", lambda: {})
+    monkeypatch.setattr("services.map_pipeline.fetch_global_coordinate_rows", lambda: [
+        {
+            "user_id": "u-1",
+            "x": 0.0,
+            "y": 0.0,
+            "computed_at": "2026-01-01T00:00:00+00:00",
+            "version_date": "2026-01-01",
+        },
+        {
+            "user_id": "u-2",
+            "x": 1.0,
+            "y": 2.0,
+            "computed_at": "2026-01-01T00:00:00+00:00",
+            "version_date": "2026-01-01",
+        },
+    ])
+    monkeypatch.setattr(
+        "services.map_pipeline.validate_candidate_publish",
+        lambda **kwargs: type(
+            "_Result",
+            (),
+            {
+                "publish_allowed": True,
+                "publish_block_reason": None,
+                "gate_input_passed": True,
+                "gate_embedding_passed": True,
+                "gate_persistence_passed": True,
+                "quality_metrics": {},
+                "gate_details": {},
+            },
+        )(),
+    )
+    monkeypatch.setattr("services.map_pipeline.record_compute_run", lambda **kwargs: None)
     monkeypatch.setattr(
         "services.map_pipeline.run_pipeline",
-        lambda fetched_users, fetched_interactions, requesting_user_id: pipeline_result,
+        lambda fetched_users, fetched_interactions, requesting_user_id, prior_coordinates=None: pipeline_result,
     )
     monkeypatch.setattr("services.map_pipeline.write_coordinates", mock_write)
 

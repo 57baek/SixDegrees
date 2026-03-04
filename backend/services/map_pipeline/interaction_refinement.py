@@ -69,6 +69,7 @@ def _build_interaction_edges(
 ) -> list[SparseEdge]:
     user_set = set(user_ids)
     edges: list[SparseEdge] = []
+    max_weight = float(interaction_sensitivity.max_weight or 1.0)
 
     for (uid_a, uid_b), counts in raw_interaction_counts.items():
         if uid_a not in user_set or uid_b not in user_set:
@@ -81,7 +82,8 @@ def _build_interaction_edges(
             continue
 
         recency_weight = _recency_weight(counts)
-        final_weight = float(np.clip(interaction_weight * recency_weight, 0.0, 1.0))
+        final_weight_cap = max(max_weight, 1.0)
+        final_weight = float(np.clip(interaction_weight * recency_weight, 0.0, final_weight_cap))
 
         if final_weight <= 0.0:
             continue
@@ -112,16 +114,28 @@ def _interaction_weight(
     if weighted_sum <= 0.0:
         return (0.0, 0.0, 0.0)
 
-    normalizer = max(interaction_sensitivity.normalizer, 1e-6)
+    strength_scale = float(interaction_sensitivity.strength_scale or 1.0)
+    curve_exponent = float(interaction_sensitivity.curve_exponent or 1.0)
+    max_weight = float(interaction_sensitivity.max_weight or 1.0)
+    normalizer = max(float(interaction_sensitivity.normalizer or 1.0), 1e-6)
     normalized_signal = weighted_sum / normalizer
-    sensitivity_multiplier = interaction_sensitivity.strength_scale * math.pow(
+    sensitivity_multiplier = strength_scale * math.pow(
         1.0 + normalized_signal,
-        interaction_sensitivity.curve_exponent,
+        curve_exponent,
     )
-    interaction_weight = 1.0 - math.exp(-normalized_signal * sensitivity_multiplier)
-    interaction_weight = float(
-        np.clip(interaction_weight, 0.0, interaction_sensitivity.max_weight)
-    )
+    base_weight = 1.0 - math.exp(-normalized_signal * sensitivity_multiplier)
+    if max_weight <= 1.0:
+        interaction_weight = float(
+            np.clip(base_weight, 0.0, max_weight)
+        )
+    else:
+        interaction_weight = float(
+            np.clip(
+                base_weight * max_weight,
+                0.0,
+                max_weight,
+            )
+        )
     return (interaction_weight, weighted_sum, float(sensitivity_multiplier))
 
 

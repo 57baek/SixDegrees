@@ -1,33 +1,33 @@
 -- v1.1 Phase 6: RLS Policy Definitions
 -- Created: 2026-02-23
--- Tables: user_profiles, posts, likes, comments, interactions, map_coordinates
+-- Tables: profiles, posts, likes, comments, interactions, map_coordinates
 -- Architecture: Frontend hits Supabase directly (RLS-protected) for content reads/writes.
 --               FastAPI uses service role key (bypasses RLS) for profile writes and algorithm ops.
 -- Safe to re-run: DROP POLICY IF EXISTS before each CREATE POLICY.
 
 
 -- ============================================================
--- Table 1: user_profiles
+-- Table 1: profiles
 -- All rows readable by anyone (anon + authenticated).
 -- Only own row insertable/updatable. No delete policy.
 -- ============================================================
 
-ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "user_profiles_select_all" ON public.user_profiles;
-CREATE POLICY "user_profiles_select_all"
-    ON public.user_profiles FOR SELECT
+DROP POLICY IF EXISTS "profiles_select_all" ON public.profiles;
+CREATE POLICY "profiles_select_all"
+    ON public.profiles FOR SELECT
     USING (true);
 
-DROP POLICY IF EXISTS "user_profiles_insert_own" ON public.user_profiles;
-CREATE POLICY "user_profiles_insert_own"
-    ON public.user_profiles FOR INSERT
-    WITH CHECK (user_id = auth.uid());
+DROP POLICY IF EXISTS "profiles_insert_own" ON public.profiles;
+CREATE POLICY "profiles_insert_own"
+    ON public.profiles FOR INSERT
+    WITH CHECK (id = auth.uid());
 
-DROP POLICY IF EXISTS "user_profiles_update_own" ON public.user_profiles;
-CREATE POLICY "user_profiles_update_own"
-    ON public.user_profiles FOR UPDATE
-    USING (user_id = auth.uid());
+DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
+CREATE POLICY "profiles_update_own"
+    ON public.profiles FOR UPDATE
+    USING (id = auth.uid());
 
 
 -- ============================================================
