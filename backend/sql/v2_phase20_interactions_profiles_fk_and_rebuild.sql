@@ -35,70 +35,106 @@ END $$;
 
 TRUNCATE TABLE public.interactions;
 
-WITH profile_users AS (
-    SELECT id
-    FROM public.profiles
-),
-eligible_posts AS (
-    SELECT p.id, p.user_id AS author_id
-    FROM public.posts p
-    JOIN profile_users pu ON pu.id = p.user_id
-),
-like_events AS (
-    SELECT
-        LEAST(l.user_id, ep.author_id) AS user_id_a,
-        GREATEST(l.user_id, ep.author_id) AS user_id_b,
-        1::INTEGER AS likes_count,
-        0::INTEGER AS comments_count,
-        0::INTEGER AS dm_count
-    FROM public.likes l
-    JOIN eligible_posts ep ON ep.id = l.post_id
-    JOIN profile_users actor ON actor.id = l.user_id
-    WHERE l.user_id <> ep.author_id
-),
-comment_events AS (
-    SELECT
-        LEAST(c.user_id, ep.author_id) AS user_id_a,
-        GREATEST(c.user_id, ep.author_id) AS user_id_b,
-        0::INTEGER AS likes_count,
-        1::INTEGER AS comments_count,
-        0::INTEGER AS dm_count
-    FROM public.comments c
-    JOIN eligible_posts ep ON ep.id = c.post_id
-    JOIN profile_users actor ON actor.id = c.user_id
-    WHERE c.user_id <> ep.author_id
-),
-aggregated AS (
-    SELECT
-        user_id_a,
-        user_id_b,
-        SUM(likes_count)::INTEGER AS likes_count,
-        SUM(comments_count)::INTEGER AS comments_count,
-        SUM(dm_count)::INTEGER AS dm_count
-    FROM (
-        SELECT * FROM like_events
-        UNION ALL
-        SELECT * FROM comment_events
-    ) source_events
-    GROUP BY user_id_a, user_id_b
-)
-INSERT INTO public.interactions (
-    user_id_a,
-    user_id_b,
-    likes_count,
-    comments_count,
-    dm_count,
-    last_updated
-)
-SELECT
-    a.user_id_a,
-    a.user_id_b,
-    a.likes_count,
-    a.comments_count,
-    a.dm_count,
-    now()
-FROM aggregated a
-WHERE a.user_id_a < a.user_id_b;
+DO $$
+DECLARE
+    posts_schema TEXT;
+    likes_schema TEXT;
+    comments_schema TEXT;
+BEGIN
+    -- Canonical source tables remain posts/likes/comments.
+    -- Kept for contract visibility: FROM public.posts / FROM public.likes / FROM public.comments.
+    posts_schema := CASE
+        WHEN to_regclass('public.posts') IS NOT NULL THEN 'public'
+        WHEN to_regclass('private.posts') IS NOT NULL THEN 'private'
+        ELSE NULL
+    END;
+    likes_schema := CASE
+        WHEN to_regclass('public.likes') IS NOT NULL THEN 'public'
+        WHEN to_regclass('private.likes') IS NOT NULL THEN 'private'
+        ELSE NULL
+    END;
+    comments_schema := CASE
+        WHEN to_regclass('public.comments') IS NOT NULL THEN 'public'
+        WHEN to_regclass('private.comments') IS NOT NULL THEN 'private'
+        ELSE NULL
+    END;
+
+    IF posts_schema IS NULL OR likes_schema IS NULL OR comments_schema IS NULL THEN
+        RAISE EXCEPTION 'Missing posts/likes/comments tables in public or private schema';
+    END IF;
+
+    EXECUTE format(
+        $sql$
+        WITH profile_users AS (
+            SELECT id
+            FROM public.profiles
+        ),
+        eligible_posts AS (
+            SELECT p.id, p.user_id AS author_id
+            FROM %I.posts p
+            JOIN profile_users pu ON pu.id = p.user_id
+        ),
+        like_events AS (
+            SELECT
+                LEAST(l.user_id, ep.author_id) AS user_id_a,
+                GREATEST(l.user_id, ep.author_id) AS user_id_b,
+                1::INTEGER AS likes_count,
+                0::INTEGER AS comments_count,
+                0::INTEGER AS dm_count
+            FROM %I.likes l
+            JOIN eligible_posts ep ON ep.id = l.post_id
+            JOIN profile_users actor ON actor.id = l.user_id
+            WHERE l.user_id <> ep.author_id
+        ),
+        comment_events AS (
+            SELECT
+                LEAST(c.user_id, ep.author_id) AS user_id_a,
+                GREATEST(c.user_id, ep.author_id) AS user_id_b,
+                0::INTEGER AS likes_count,
+                1::INTEGER AS comments_count,
+                0::INTEGER AS dm_count
+            FROM %I.comments c
+            JOIN eligible_posts ep ON ep.id = c.post_id
+            JOIN profile_users actor ON actor.id = c.user_id
+            WHERE c.user_id <> ep.author_id
+        ),
+        aggregated AS (
+            SELECT
+                user_id_a,
+                user_id_b,
+                SUM(likes_count)::INTEGER AS likes_count,
+                SUM(comments_count)::INTEGER AS comments_count,
+                SUM(dm_count)::INTEGER AS dm_count
+            FROM (
+                SELECT * FROM like_events
+                UNION ALL
+                SELECT * FROM comment_events
+            ) source_events
+            GROUP BY user_id_a, user_id_b
+        )
+        INSERT INTO public.interactions (
+            user_id_a,
+            user_id_b,
+            likes_count,
+            comments_count,
+            dm_count,
+            last_updated
+        )
+        SELECT
+            a.user_id_a,
+            a.user_id_b,
+            a.likes_count,
+            a.comments_count,
+            a.dm_count,
+            now()
+        FROM aggregated a
+        WHERE a.user_id_a < a.user_id_b;
+        $sql$,
+        posts_schema,
+        likes_schema,
+        comments_schema
+    );
+END $$;
 
 DO $$
 BEGIN

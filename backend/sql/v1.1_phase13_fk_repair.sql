@@ -1,9 +1,9 @@
 -- v1.1 Phase 13: FK Repair — posts.user_id and comments.user_id
 -- Created: 2026-02-24
--- Purpose: Drop stale FK constraints on posts and comments that reference the
---          dead `profiles` table, then add correct FKs targeting user_profiles.user_id.
+-- Purpose: Drop stale FK constraints on posts and comments, then add
+--          correct FKs targeting profiles.id.
 --          PostgREST resolves embedded joins by following FK relationships; without
---          correct FKs pointing to user_profiles, joins like user_profiles(display_name)
+--          correct FKs pointing to profiles, joins like profiles(display_name)
 --          return null — causing 'Unknown User' / 'Unknown' in the UI.
 -- Requirements covered: FEND-04 (post author names), FEND-05 (comment author names)
 -- Safe to re-run (idempotent throughout — all changes guarded by IF (NOT) EXISTS checks)
@@ -38,20 +38,20 @@ END $$;
 
 
 -- ============================================================
--- Section 2: Add correct FK on posts → user_profiles
+-- Section 2: Add correct FK on posts → profiles
 -- ============================================================
 
 DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints
-        WHERE constraint_name = 'fk_posts_user_profiles'
+        WHERE constraint_name = 'fk_posts_profiles'
           AND table_name = 'posts'
           AND table_schema = 'public'
     ) THEN
         ALTER TABLE public.posts
-            ADD CONSTRAINT fk_posts_user_profiles
-            FOREIGN KEY (user_id) REFERENCES public.user_profiles(user_id);
+            ADD CONSTRAINT fk_posts_profiles
+            FOREIGN KEY (user_id) REFERENCES public.profiles(id);
     END IF;
 END $$;
 
@@ -85,20 +85,20 @@ END $$;
 
 
 -- ============================================================
--- Section 4: Add correct FK on comments → user_profiles
+-- Section 4: Add correct FK on comments → profiles
 -- ============================================================
 
 DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints
-        WHERE constraint_name = 'fk_comments_user_profiles'
+        WHERE constraint_name = 'fk_comments_profiles'
           AND table_name = 'comments'
           AND table_schema = 'public'
     ) THEN
         ALTER TABLE public.comments
-            ADD CONSTRAINT fk_comments_user_profiles
-            FOREIGN KEY (user_id) REFERENCES public.user_profiles(user_id);
+            ADD CONSTRAINT fk_comments_profiles
+            FOREIGN KEY (user_id) REFERENCES public.profiles(id);
     END IF;
 END $$;
 
@@ -106,7 +106,7 @@ END $$;
 -- ============================================================
 -- Section 5: Verification query
 -- Shows both new FK constraints with their referencing and referenced tables.
--- Expected: 2 rows — posts → user_profiles and comments → user_profiles.
+-- Expected: 2 rows — posts → profiles and comments → profiles.
 -- ============================================================
 
 SELECT
@@ -121,5 +121,5 @@ JOIN information_schema.key_column_usage kcu
 JOIN information_schema.constraint_column_usage ccu
     ON rc.unique_constraint_name = ccu.constraint_name
    AND ccu.table_schema = 'public'
-WHERE rc.constraint_name IN ('fk_posts_user_profiles', 'fk_comments_user_profiles')
+WHERE rc.constraint_name IN ('fk_posts_profiles', 'fk_comments_profiles')
 ORDER BY kcu.table_name;

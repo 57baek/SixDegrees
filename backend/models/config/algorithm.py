@@ -23,18 +23,21 @@ INTERACTION_SENSITIVITY_BASELINE: dict[str, float] = {
 }
 
 INTERACTION_SENSITIVITY_DEMO_STRONG: dict[str, float] = {
-    "strength_scale": 1.8,
-    "curve_exponent": 0.82,
-    "normalizer": 7.0,
-    "max_weight": 0.97,
+    "strength_scale": 1.0,
+    "curve_exponent": 1.0,
+    "normalizer": 30.0,
+    "max_weight": 0.99,
 }
 
 INTERACTION_SENSITIVITY_MODES: dict[str, dict[str, float]] = {
     "natural": dict(INTERACTION_SENSITIVITY_BASELINE),
-    "strong-bounded": dict(INTERACTION_SENSITIVITY_DEMO_STRONG),
+    "strong-bounded": {
+        **INTERACTION_SENSITIVITY_DEMO_STRONG,
+        "max_weight": 0.99,
+    },
     "uncapped": {
         **INTERACTION_SENSITIVITY_DEMO_STRONG,
-        "max_weight": 1.0,
+        "max_weight": 1.5,
     },
 }
 

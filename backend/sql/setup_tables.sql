@@ -1,11 +1,11 @@
 -- SixDegrees: Database Foundation
 -- Run once in Supabase Dashboard > SQL Editor
 -- Safe to re-run (IF NOT EXISTS on all statements)
--- Tables: user_profiles, interactions, map_coordinates
+-- Tables: profiles, interactions, map_coordinates
 -- Index: idx_map_coordinates_center_is_current
 
-CREATE TABLE IF NOT EXISTS public.user_profiles (
-    user_id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     display_name   TEXT NOT NULL,
     interests      TEXT[] NOT NULL DEFAULT '{}',
     location_city  TEXT NOT NULL DEFAULT '',
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS public.map_coordinates (
 CREATE INDEX IF NOT EXISTS idx_map_coordinates_center_is_current
     ON public.map_coordinates (center_user_id, is_current);
 
-ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.interactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.map_coordinates ENABLE ROW LEVEL SECURITY;
 
@@ -56,7 +56,7 @@ BEGIN
     ) THEN
         ALTER TABLE public.interactions
             ADD CONSTRAINT fk_interactions_user_a
-            FOREIGN KEY (user_id_a) REFERENCES public.user_profiles(user_id);
+            FOREIGN KEY (user_id_a) REFERENCES public.profiles(id);
     END IF;
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints
@@ -64,6 +64,6 @@ BEGIN
     ) THEN
         ALTER TABLE public.interactions
             ADD CONSTRAINT fk_interactions_user_b
-            FOREIGN KEY (user_id_b) REFERENCES public.user_profiles(user_id);
+            FOREIGN KEY (user_id_b) REFERENCES public.profiles(id);
     END IF;
 END $$;

@@ -55,6 +55,9 @@ ALTER TABLE public.map_coordinates
     ALTER COLUMN version_date SET NOT NULL;
 
 ALTER TABLE public.map_coordinates
+    DROP CONSTRAINT IF EXISTS map_coordinates_pkey;
+
+ALTER TABLE public.map_coordinates
     DROP COLUMN IF EXISTS center_user_id,
     DROP COLUMN IF EXISTS other_user_id,
     DROP COLUMN IF EXISTS tier,

@@ -1,0 +1,354 @@
+{
+  "after": [
+    {
+      "nickname": "Morgan Anderson",
+      "tier": 2,
+      "user_id": "0f6e6d6a-57cc-59a2-bff6-eded84aaaf6b",
+      "x": -0.004396766405749669,
+      "y": -0.023233073077439475
+    },
+    {
+      "nickname": "Avery Cruz",
+      "tier": 3,
+      "user_id": "121617c2-0282-5301-8765-d8ced248013f",
+      "x": 0.014983621360625478,
+      "y": 0.09668167752618106
+    },
+    {
+      "nickname": "Taylor Bennett",
+      "tier": 2,
+      "user_id": "1bda4f83-cd2b-5b51-af26-4351be39a8c8",
+      "x": 0.001909699927620045,
+      "y": 0.004373504190041316
+    },
+    {
+      "nickname": "Cameron Bennett",
+      "tier": 2,
+      "user_id": "2078af1e-32a3-5bf2-a0bd-2cfc10823f94",
+      "x": 0.0035693712660639187,
+      "y": 0.02461852197628696
+    },
+    {
+      "nickname": "Taylor Anderson",
+      "tier": 2,
+      "user_id": "3581f35d-13ce-599a-8f9f-1dc5d5efdb96",
+      "x": -0.0011171106061244698,
+      "y": -0.009481302710312079
+    },
+    {
+      "nickname": "Hayden Anderson",
+      "tier": 2,
+      "user_id": "42f0f3e8-82ac-5f87-a6d6-f331685ce6a6",
+      "x": 0.0012708920722291216,
+      "y": -0.0046119640003488595
+    },
+    {
+      "nickname": "Avery Bennett",
+      "tier": 2,
+      "user_id": "444ed63f-9d51-525e-9c20-733736857f14",
+      "x": 0.004327180948283056,
+      "y": 0.009136583034951554
+    },
+    {
+      "nickname": "Riley Anderson",
+      "tier": 2,
+      "user_id": "4d4b993d-461b-52be-8dd6-a2393412bcc2",
+      "x": 0.0004788757782434442,
+      "y": -0.007065805441755735
+    },
+    {
+      "nickname": "Cameron Anderson",
+      "tier": 1,
+      "user_id": "6c1411a1-3757-57b6-a182-c3b4b92e0c0c",
+      "x": 0.0025373435760074254,
+      "y": -0.00011923031971083762
+    },
+    {
+      "nickname": "Jordan Bennett",
+      "tier": 1,
+      "user_id": "78e94451-849b-57f7-b6ab-8e7f270cfaf9",
+      "x": 0.0023383027950350755,
+      "y": -0.002371684722287065
+    },
+    {
+      "nickname": "Jordan Anderson",
+      "tier": 3,
+      "user_id": "882dbcc3-9834-59c0-a0b7-c543eb198815",
+      "x": -0.012002606351548253,
+      "y": -0.04660152380120005
+    },
+    {
+      "nickname": "Parker Bennett",
+      "tier": 2,
+      "user_id": "8c77f4a2-6777-538d-98d5-19bb2d30b117",
+      "x": 0.0015364804492538167,
+      "y": -0.006000377343730161
+    },
+    {
+      "nickname": "Reese Anderson",
+      "tier": 1,
+      "user_id": "9373b144-fbea-5b24-b746-1b5a15185ac4",
+      "x": 0.0019297659428870193,
+      "y": -0.003205771733295358
+    },
+    {
+      "nickname": "Reese Bennett",
+      "tier": 3,
+      "user_id": "99a0666d-8865-5d73-8e3b-27fe3aea0414",
+      "x": 0.005590347992599034,
+      "y": 0.03800005231465723
+    },
+    {
+      "nickname": "Quinn Bennett",
+      "tier": 2,
+      "user_id": "9e7e1a77-773e-5937-9347-1c1ca11c6ae8",
+      "x": 0.0014623501916627138,
+      "y": -0.00533611366574924
+    },
+    {
+      "nickname": "Eleanor Colvin",
+      "tier": 1,
+      "user_id": "aa834b27-6e25-52c6-86de-e105a0bfc2f1",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "nickname": "Winston Churchill",
+      "tier": 3,
+      "user_id": "afec5144-e6a3-511f-9dc2-02f8ec57d8ac",
+      "x": -0.015338952794624489,
+      "y": -0.0443732840785879
+    },
+    {
+      "nickname": "Morgan Bennett",
+      "tier": 1,
+      "user_id": "bc9258dd-04e9-5352-a83b-d42f9761894e",
+      "x": 0.0015005769853458704,
+      "y": -0.003395786609500162
+    },
+    {
+      "nickname": "Riley Bennett",
+      "tier": 1,
+      "user_id": "cf21953c-e290-5735-9949-985ff0748943",
+      "x": 0.0012923242851279005,
+      "y": 0.0029451311959561204
+    },
+    {
+      "nickname": "Quinn Anderson",
+      "tier": 3,
+      "user_id": "df33a880-7249-57ce-9eee-b8404eb97297",
+      "x": -0.008114851794365708,
+      "y": -0.029026622620094093
+    },
+    {
+      "nickname": "Hayden Bennett",
+      "tier": 2,
+      "user_id": "eae30cde-7e83-5fce-9c05-6632671368c0",
+      "x": 0.0016789767675120366,
+      "y": 0.01058680139035907
+    }
+  ],
+  "before": [
+    {
+      "nickname": "Morgan Anderson",
+      "tier": 2,
+      "user_id": "0f6e6d6a-57cc-59a2-bff6-eded84aaaf6b",
+      "x": -0.004398347473015846,
+      "y": -0.023237857541125836
+    },
+    {
+      "nickname": "Avery Cruz",
+      "tier": 3,
+      "user_id": "121617c2-0282-5301-8765-d8ced248013f",
+      "x": 0.014984147901285045,
+      "y": 0.09668281867310836
+    },
+    {
+      "nickname": "Taylor Bennett",
+      "tier": 2,
+      "user_id": "1bda4f83-cd2b-5b51-af26-4351be39a8c8",
+      "x": 0.0019101274254072066,
+      "y": 0.004374408729761473
+    },
+    {
+      "nickname": "Cameron Bennett",
+      "tier": 2,
+      "user_id": "2078af1e-32a3-5bf2-a0bd-2cfc10823f94",
+      "x": 0.0035698918270701046,
+      "y": 0.02461963082942183
+    },
+    {
+      "nickname": "Taylor Anderson",
+      "tier": 2,
+      "user_id": "3581f35d-13ce-599a-8f9f-1dc5d5efdb96",
+      "x": -0.0011178048859172398,
+      "y": -0.009483639306974373
+    },
+    {
+      "nickname": "Hayden Anderson",
+      "tier": 2,
+      "user_id": "42f0f3e8-82ac-5f87-a6d6-f331685ce6a6",
+      "x": 0.00127109848742512,
+      "y": -0.0046117876399113305
+    },
+    {
+      "nickname": "Avery Bennett",
+      "tier": 2,
+      "user_id": "444ed63f-9d51-525e-9c20-733736857f14",
+      "x": 0.004327583843550106,
+      "y": 0.009137408576392909
+    },
+    {
+      "nickname": "Riley Anderson",
+      "tier": 2,
+      "user_id": "4d4b993d-461b-52be-8dd6-a2393412bcc2",
+      "x": 0.00047886907222111845,
+      "y": -0.00706626558588895
+    },
+    {
+      "nickname": "Cameron Anderson",
+      "tier": 1,
+      "user_id": "6c1411a1-3757-57b6-a182-c3b4b92e0c0c",
+      "x": 0.0025377134518272592,
+      "y": -0.00011856432141033483
+    },
+    {
+      "nickname": "Jordan Bennett",
+      "tier": 1,
+      "user_id": "78e94451-849b-57f7-b6ab-8e7f270cfaf9",
+      "x": 0.0023387034495378455,
+      "y": -0.002370860589619647
+    },
+    {
+      "nickname": "Jordan Anderson",
+      "tier": 3,
+      "user_id": "882dbcc3-9834-59c0-a0b7-c543eb198815",
+      "x": -0.01200738347976426,
+      "y": -0.04661451952731091
+    },
+    {
+      "nickname": "Parker Bennett",
+      "tier": 2,
+      "user_id": "8c77f4a2-6777-538d-98d5-19bb2d30b117",
+      "x": 0.0015368737792105368,
+      "y": -0.005999567764638471
+    },
+    {
+      "nickname": "Reese Anderson",
+      "tier": 1,
+      "user_id": "9373b144-fbea-5b24-b746-1b5a15185ac4",
+      "x": 0.0019301637326286612,
+      "y": -0.0032049881720667217
+    },
+    {
+      "nickname": "Reese Bennett",
+      "tier": 3,
+      "user_id": "99a0666d-8865-5d73-8e3b-27fe3aea0414",
+      "x": 0.005590890413554821,
+      "y": 0.03800120833485032
+    },
+    {
+      "nickname": "Quinn Bennett",
+      "tier": 2,
+      "user_id": "9e7e1a77-773e-5937-9347-1c1ca11c6ae8",
+      "x": 0.0014627402973594228,
+      "y": -0.005335299432045653
+    },
+    {
+      "nickname": "Eleanor Colvin",
+      "tier": 1,
+      "user_id": "aa834b27-6e25-52c6-86de-e105a0bfc2f1",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "nickname": "Winston Churchill",
+      "tier": 3,
+      "user_id": "afec5144-e6a3-511f-9dc2-02f8ec57d8ac",
+      "x": -0.015352392684850726,
+      "y": -0.04440810016180102
+    },
+    {
+      "nickname": "Morgan Bennett",
+      "tier": 1,
+      "user_id": "bc9258dd-04e9-5352-a83b-d42f9761894e",
+      "x": 0.0015010036616072676,
+      "y": -0.0033948982573202024
+    },
+    {
+      "nickname": "Riley Bennett",
+      "tier": 1,
+      "user_id": "cf21953c-e290-5735-9949-985ff0748943",
+      "x": 0.001292792981762882,
+      "y": 0.0029461218743664815
+    },
+    {
+      "nickname": "Quinn Anderson",
+      "tier": 3,
+      "user_id": "df33a880-7249-57ce-9eee-b8404eb97297",
+      "x": -0.008118866395684524,
+      "y": -0.029037493906191952
+    },
+    {
+      "nickname": "Hayden Bennett",
+      "tier": 2,
+      "user_id": "eae30cde-7e83-5fce-9c05-6632671368c0",
+      "x": 0.0016794793201758986,
+      "y": 0.010587873262695523
+    }
+  ],
+  "comparison": {
+    "amplified": {
+      "comments": 4011,
+      "dms": 5,
+      "likes": 5018
+    },
+    "baseline": {
+      "comments": 11,
+      "dms": 5,
+      "likes": 18
+    },
+    "pair": {
+      "user_id_a": "aa834b27-6e25-52c6-86de-e105a0bfc2f1",
+      "user_id_b": "afec5144-e6a3-511f-9dc2-02f8ec57d8ac"
+    }
+  },
+  "metadata": {
+    "amplification_comments": 4000,
+    "amplification_likes": 5000,
+    "eleanor_friend_ids": [
+      "0f6e6d6a-57cc-59a2-bff6-eded84aaaf6b",
+      "121617c2-0282-5301-8765-d8ced248013f",
+      "1bda4f83-cd2b-5b51-af26-4351be39a8c8",
+      "2078af1e-32a3-5bf2-a0bd-2cfc10823f94",
+      "3581f35d-13ce-599a-8f9f-1dc5d5efdb96",
+      "42f0f3e8-82ac-5f87-a6d6-f331685ce6a6",
+      "444ed63f-9d51-525e-9c20-733736857f14",
+      "4d4b993d-461b-52be-8dd6-a2393412bcc2",
+      "6c1411a1-3757-57b6-a182-c3b4b92e0c0c",
+      "78e94451-849b-57f7-b6ab-8e7f270cfaf9",
+      "882dbcc3-9834-59c0-a0b7-c543eb198815",
+      "8c77f4a2-6777-538d-98d5-19bb2d30b117",
+      "9373b144-fbea-5b24-b746-1b5a15185ac4",
+      "99a0666d-8865-5d73-8e3b-27fe3aea0414",
+      "9e7e1a77-773e-5937-9347-1c1ca11c6ae8",
+      "afec5144-e6a3-511f-9dc2-02f8ec57d8ac",
+      "bc9258dd-04e9-5352-a83b-d42f9761894e",
+      "cf21953c-e290-5735-9949-985ff0748943",
+      "df33a880-7249-57ce-9eee-b8404eb97297",
+      "eae30cde-7e83-5fce-9c05-6632671368c0"
+    ],
+    "eleanor_id": "aa834b27-6e25-52c6-86de-e105a0bfc2f1",
+    "interaction_sensitivity": {
+      "curve_exponent": 0.82,
+      "max_weight": 1.0,
+      "normalizer": 7.0,
+      "strength_scale": 1.8
+    },
+    "output_dir": "/Users/BAEK/Code/sixDegrees/demo/data",
+    "requesting_user_id": "aa834b27-6e25-52c6-86de-e105a0bfc2f1",
+    "sensitivity_mode": "uncapped",
+    "user_count": 100,
+    "winston_id": "afec5144-e6a3-511f-9dc2-02f8ec57d8ac"
+  }
+}
