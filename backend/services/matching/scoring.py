@@ -4,7 +4,6 @@ from services.matching.similarity import (
     jaccard,
     tiered_location,
     tiered_categorical,
-    binary_match,
     inverse_distance_age,
     FIELD_OF_STUDY_CATEGORIES,
     INDUSTRY_CATEGORIES,
@@ -13,13 +12,12 @@ from services.matching.similarity import (
 # Tunable weights. Must sum to 1.0.
 # Interests are the highest-signal field, so they get the most weight.
 DEFAULT_WEIGHTS: dict[str, float] = {
-    "interests":       0.35,
-    "location":        0.20,
-    "languages":       0.15,
-    "field_of_study":  0.10,
-    "industry":        0.10,
-    "education_level": 0.05,
-    "age":             0.05,
+    "interests":  0.40,
+    "location":   0.20,
+    "languages":  0.15,
+    "education":  0.10,
+    "industry":   0.10,
+    "age":        0.05,
 }
 
 # Column index for each feature dimension
@@ -32,9 +30,8 @@ def _similarity_vector(u1: UserProfile, u2: UserProfile) -> list[float]:
         jaccard(u1.interests, u2.interests),
         tiered_location(u1.city, u1.state, u2.city, u2.state),
         jaccard(u1.languages, u2.languages),
-        tiered_categorical(u1.field_of_study, u2.field_of_study, FIELD_OF_STUDY_CATEGORIES),
+        tiered_categorical(u1.education, u2.education, FIELD_OF_STUDY_CATEGORIES),
         tiered_categorical(u1.industry, u2.industry, INDUSTRY_CATEGORIES),
-        binary_match(u1.education_level, u2.education_level),
         inverse_distance_age(u1.age, u2.age),
     ]
 

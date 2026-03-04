@@ -10,15 +10,16 @@ def make_users(n: int) -> list[UserProfile]:
     return [
         UserProfile(
             id=f"u{i}",
+            nickname=f"User{i}",
             interests=["coding", "music"] if i % 2 == 0 else ["sports", "cooking"],
             languages=["English"],
             city="San Francisco",
             state="CA",
-            education_level="bachelors",
-            field_of_study="Computer Science",
+            education="Computer Science",
             occupation="Engineer",
             industry="Technology",
             age=25 + i,
+            timezone="UTC",
         )
         for i in range(n)
     ]

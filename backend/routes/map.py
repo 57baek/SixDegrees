@@ -1,46 +1,83 @@
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from config.supabase import get_supabase_client
 from routes.deps import get_current_user
 from services.map_pipeline import run_pipeline_for_user
+from services.map_pipeline.ego_map import build_ego_map
 
 router = APIRouter(prefix="/map", tags=["map"])
 
 
-def _fetch_map_response(user_id: str) -> dict:
-    """Shared helper: fetch current map_coordinates + display_names for a user."""
-    sb = get_supabase_client()
-    rows = (
-        sb.table("map_coordinates")
-        .select("other_user_id, x, y, tier, computed_at")
-        .eq("center_user_id", user_id)
-        .eq("is_current", True)
-        .execute()
-    ).data
+def _rows_from_rpc(data: object) -> list[dict[str, Any]]:
+    if not isinstance(data, list):
+        return []
+    return [row for row in data if isinstance(row, dict)]
 
-    if not rows:
+
+def _fetch_map_response(user_id: str) -> dict:
+    """Shared helper: fetch global rows and build requester-centered ego map."""
+    sb = get_supabase_client()
+    rows = _rows_from_rpc(
+        sb.rpc(
+            "get_global_map_coordinates",
+            {"p_user_ids": None, "p_version_date": None},
+        ).execute().data
+    )
+
+    required_fields = {"user_id", "x", "y", "computed_at", "version_date"}
+    valid_rows = [r for r in rows if required_fields.issubset(r)]
+
+    if not valid_rows:
         raise HTTPException(status_code=404, detail="Map not yet computed for this user")
 
-    other_ids = [r["other_user_id"] for r in rows]
-    profiles = (
-        sb.table("user_profiles")
-        .select("user_id, display_name")
-        .in_("user_id", other_ids)
-        .execute()
-    ).data
-    name_map = {p["user_id"]: p["display_name"] for p in profiles}
+    profile_ids = [str(r["user_id"]) for r in valid_rows]
+    profiles = _rows_from_rpc(
+        sb.rpc("get_ego_map_profiles", {"p_user_ids": profile_ids}).execute().data
+    )
+    profile_id_set = {
+        str(row["id"])
+        for row in profiles
+        if "id" in row and row.get("id") is not None
+    }
+
+    missing_profile_ids = sorted(set(profile_ids) - profile_id_set)
+    if missing_profile_ids:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Map profile projection is incomplete for current coordinate batch; "
+                f"missing profiles for {len(missing_profile_ids)} user(s)"
+            ),
+        )
+
+    try:
+        nodes = build_ego_map(
+            requesting_user_id=user_id,
+            coordinate_rows=valid_rows,
+            profile_rows=profiles,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+    requester_row = next((row for row in valid_rows if row["user_id"] == user_id), None)
+    if requester_row is None:
+        raise HTTPException(status_code=404, detail="Map not yet computed for this user")
 
     return {
         "user_id": user_id,
-        "computed_at": rows[0]["computed_at"],
+        "version_date": requester_row["version_date"],
+        "computed_at": requester_row["computed_at"],
         "coordinates": [
             {
-                "user_id": r["other_user_id"],
-                "x": r["x"],
-                "y": r["y"],
-                "tier": r["tier"],
-                "display_name": name_map.get(r["other_user_id"], ""),
+                "user_id": node.user_id,
+                "x": node.x,
+                "y": node.y,
+                "tier": node.tier,
+                "nickname": node.nickname,
+                "is_suggestion": node.is_suggestion,
             }
-            for r in rows
+            for node in nodes
         ],
     }
 
@@ -50,6 +87,8 @@ async def get_map(
     user_id: str,
     acting_user_id: str = Depends(get_current_user),
 ):
+    if acting_user_id != user_id:
+        raise HTTPException(status_code=403, detail="You may only view your own map")
     return _fetch_map_response(user_id)
 
 

@@ -1,7 +1,7 @@
 """Profile write endpoint.
 
 Requires a valid Supabase JWT. User can only update their own profile row.
-Creates the row if it does not exist (upsert on user_id PK).
+Creates the row if it does not exist (upsert on id PK).
 """
 
 from typing import Optional, List
@@ -14,30 +14,24 @@ router = APIRouter(prefix="/profile", tags=["profile"])
 
 
 class ProfileBody(BaseModel):
-    user_id: Optional[str] = None
-    display_name: Optional[str] = None
-    interests: Optional[List[str]] = None
-    location_city: Optional[str] = None
-    location_state: Optional[str] = None
-    age: Optional[int] = None
-    languages: Optional[List[str]] = None
-    field_of_study: Optional[str] = None
-    industry: Optional[str] = None
-    education_level: Optional[str] = None
+    nickname: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    education: Optional[str] = None
+    occupation: Optional[str] = None
     timezone: Optional[str] = None
+    interests: Optional[List[str]] = None
+    languages: Optional[List[str]] = None
+    industry: Optional[str] = None
+    age: Optional[int] = None
+    is_onboarded: Optional[bool] = None
 
 
 @router.get("")
 def get_profile(
     acting_user_id: str = Depends(get_current_user),
 ):
-    result = (
-        get_supabase_client()
-        .table("user_profiles")
-        .select("*")
-        .eq("user_id", acting_user_id)
-        .execute()
-    )
+    result = get_supabase_client().rpc("get_profile", {"p_id": acting_user_id}).execute()
     if not result.data:
         raise HTTPException(status_code=404, detail="Profile not found")
     return result.data[0]
@@ -48,23 +42,15 @@ def update_profile(
     body: ProfileBody,
     acting_user_id: str = Depends(get_current_user),
 ):
-    # 403 guard: user cannot write another user's profile
-    if body.user_id is not None and body.user_id != acting_user_id:
-        raise HTTPException(status_code=403, detail="Cannot update another user's profile")
-
-    # Build update payload from non-None fields only; always set user_id from JWT
-    payload = {"user_id": acting_user_id}
+    payload = {"id": acting_user_id}
     payload.update({
         k: v
         for k, v in body.model_dump().items()
-        if v is not None and k != "user_id"
+        if v is not None
     })
-    payload["is_onboarded"] = True  # Always set on successful profile write
-    # display_name is NOT NULL — default to empty string on first insert if not supplied
-    payload.setdefault("display_name", "")
+    payload["is_onboarded"] = True
 
-    get_supabase_client().table("user_profiles").upsert(
-        payload, on_conflict="user_id"
-    ).execute()
+    p_data = {k: v for k, v in payload.items() if k != "id"}
+    get_supabase_client().rpc("upsert_profile", {"p_id": acting_user_id, "p_data": p_data}).execute()
 
     return {"detail": "Profile updated"}

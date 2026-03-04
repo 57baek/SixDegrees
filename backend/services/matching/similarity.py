@@ -128,14 +128,6 @@ def tiered_categorical(a: str, b: str, category_map: dict[str, str]) -> float:
     return 0.0
 
 
-def binary_match(a: str, b: str) -> float:
-    """Exact string match returning 1.0 or 0.0.
-
-    Used for: education_level (bachelors / masters / phd).
-    """
-    return 1.0 if a.lower().strip() == b.lower().strip() else 0.0
-
-
 def inverse_distance_age(a: int, b: int) -> float:
     """Inverse distance similarity for age.
 

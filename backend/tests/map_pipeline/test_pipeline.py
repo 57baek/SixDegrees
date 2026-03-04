@@ -18,15 +18,16 @@ from services.map_pipeline.pipeline import run_pipeline
 def make_user(uid: str, interests: list[str], age: int = 25) -> UserProfile:
     return UserProfile(
         id=uid,
+        nickname=uid,
         interests=interests,
         languages=["English"],
         city="San Francisco",
         state="CA",
-        education_level="bachelors",
-        field_of_study="Computer Science",
+        education="Computer Science",
         occupation="Engineer",
         industry="Technology",
         age=age,
+        timezone="UTC",
     )
 
 
@@ -168,7 +169,7 @@ def test_high_interaction_users_appear_closer():
 def test_new_interaction_type_requires_only_config_change():
     """SC-1: Adding a new interaction type to INTERACTION_WEIGHTS dict flows through
     with zero logic changes — no code modification required."""
-    import config.algorithm as cfg
+    from models.config import algorithm as cfg
     original_weights = dict(cfg.INTERACTION_WEIGHTS)
 
     try:

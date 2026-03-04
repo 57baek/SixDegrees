@@ -7,7 +7,7 @@
 
 
 -- ============================================================
--- Section 1: Add is_onboarded to user_profiles (DBCL-03)
+-- Section 1: Add is_onboarded to profiles (DBCL-03)
 -- ============================================================
 
 DO $$
@@ -15,10 +15,10 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_schema = 'public'
-          AND table_name = 'user_profiles'
+          AND table_name = 'profiles'
           AND column_name = 'is_onboarded'
     ) THEN
-        ALTER TABLE public.user_profiles
+        ALTER TABLE public.profiles
             ADD COLUMN is_onboarded BOOLEAN NOT NULL DEFAULT false;
     END IF;
 END $$;
