@@ -83,7 +83,7 @@
 
 <script setup>
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import CreatePost from '../components/CreatePost.vue'
@@ -168,10 +168,16 @@ const posts = ref([])
 
 // loading state while fetching posts
 const loading = ref(false)
+const pollInterval = ref(null)
 
 onMounted(() => {
   fetchIncomingRequests()
-   loadPosts()
+  loadPosts()
+  pollInterval.value = setInterval(loadPosts, 30000) // auto-refresh every 30s
+})
+
+onUnmounted(() => {
+  clearInterval(pollInterval.value)
 })
 
 /** Function to fetch posts from the database w/ user info, like count, comment count
