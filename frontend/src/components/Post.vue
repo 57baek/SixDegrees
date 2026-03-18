@@ -65,6 +65,8 @@ import { ref, computed, onMounted} from 'vue'
 import { supabase } from '../lib/supabase'
 import { Heart, MessageCircle, Lock, Users, Globe } from 'lucide-vue-next' 
 import { useRouter } from 'vue-router'
+import { formatDate, tierLabel} from '../utils.js'
+
 const router = useRouter()
 
 // post data passed from parent
@@ -89,34 +91,6 @@ const userInitial = computed(() => {
   const nickname = props.post.nickname || 'U'
   return nickname.charAt(0).toUpperCase()
 })
-
-/**
- * Formats post timestamp to relative time 
- * @param dateString ISO date string
- */
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInHours = (now - date) / (1000 * 60 * 60)
-  
-  if (diffInHours < 1) return 'Just now'
-  if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`
-  if (diffInHours < 48) return 'Yesterday'
-  return date.toLocaleDateString()
-}
-
-/**
- * Returns label for a visibility tier
- * @param tier tier value from db (1, 2, 3)
- */
-function tierLabel(tier) {
-  const labels = {
-    1: 'Inner Circle',
-    2: '2nd Degree',
-    3: 'All Friends'
-  }
-  return labels[tier] || tier
-}
 
 /**
  * returns icon component for a visibility tier

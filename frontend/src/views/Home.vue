@@ -88,6 +88,7 @@ import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import CreatePost from '../components/CreatePost.vue'
 import Post from '../components/Post.vue'
+import { filterPostsByTier, tierFilterLabel } from '../utils.js'
 
 const router = useRouter()
 
@@ -217,13 +218,7 @@ const goToProfile = (userId) => {
   // computing filtered posts based on selected tier filter
   const selectedTierFilter = ref(3)
 
-  function tierFilterLabel(tier) {
-    return { 1: 'Inner Circle', 2: '+ 2nd Degree', 3: 'All Friends' }[tier]
-  }
-
-  const filteredPosts = computed(() => {
-    return posts.value.filter(p => p.tier <= selectedTierFilter.value)
-  })
+  const filteredPosts = computed(() => filterPostsByTier(posts.value, selectedTierFilter.value))
 </script>
 
 <style scoped>
