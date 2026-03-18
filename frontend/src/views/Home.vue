@@ -1,7 +1,7 @@
 <template>
 <div class="home">
     <div class="container">
-      <<header class="page-header">
+      <header class="page-header">
         <h1>Your Feed</h1>
         <nav class="nav-buttons">
           <button @click="router.push('/map')" class="nav-btn map-btn"> People Map</button>
@@ -55,6 +55,13 @@
         </button>
       </div>
 
+      <div class="tier-filter">
+        <span class="filter-label">Showing:</span>
+        <button v-for="tier in [1, 2, 3]" :key="tier" @click="selectedTierFilter= tier" :class="['filter-btn', { active: selectedTierFilter === tier }]">
+          {{ tierFilterLabel(tier) }}
+        </button>
+      </div>
+
       <CreatePost @post-created="loadPosts" />
 
       <div v-if="loading" class="loading">Loading posts...</div>
@@ -65,7 +72,7 @@
 
       <div v-else class="feed">
         <Post
-          v-for="post in posts"
+          v-for="post in filteredPosts"
           :key="post.id"
           :post="post"
         />
@@ -76,7 +83,7 @@
 
 <script setup>
 
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import CreatePost from '../components/CreatePost.vue'
@@ -200,6 +207,17 @@ const goToProfile = (userId) => {
     localStorage.removeItem('supabase_token')
     router.push('/login')
   }
+
+  // computing filtered posts based on selected tier filter
+  const selectedTierFilter = ref(3)
+
+  function tierFilterLabel(tier) {
+    return { 1: 'Inner Circle', 2: '+ 2nd Degree', 3: 'All Friends' }[tier]
+  }
+
+  const filteredPosts = computed(() => {
+    return posts.value.filter(p => p.tier <= selectedTierFilter.value)
+  })
 </script>
 
 <style scoped>
@@ -407,5 +425,41 @@ const goToProfile = (userId) => {
   color: white;
   font-size: 1.2rem;
   flex-shrink: 0;
+}
+
+.tier-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-label {
+  color: #888;
+  font-size: 0.85rem;
+  margin-right: 0.25rem;
+}
+
+.filter-btn {
+  padding: 0.4rem 1rem;
+  background: #2d2d2d;
+  color: #b0b0b0;
+  border: 1px solid #444;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  border-color: #088F8F;
+  color: white;
+}
+
+.filter-btn.active {
+  background: #088F8F;
+  border-color: #088F8F;
+  color: white;
 }
 </style>
