@@ -145,7 +145,6 @@
         <div class="map-footer">
           <span>{{ nodes.length }} connection{{ nodes.length !== 1 ? 's' : '' }}</span>
           <span v-if="computedAt"> · Updated {{ timeAgo(computedAt) }}</span>
-          <span class="demo-badge">✦ Demo Mode</span>
         </div>
       </div>
       <div v-else class="canvas-wrap">
