@@ -21,7 +21,7 @@
             @click="activeView = 'closeness'"
           >Closeness</button>
         </div>
-        <button class="refresh-btn" @click="triggerAndReload" :disabled="loading || triggering">
+        <button v-if="activeView === 'connections'" class="refresh-btn" @click="triggerAndReload" :disabled="loading || triggering">
           <span v-if="triggering" class="spinner" />
           <span v-else>↻</span>
           {{ triggering ? 'Computing…' : 'Refresh Map' }}
