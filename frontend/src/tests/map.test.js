@@ -67,3 +67,47 @@ describe('ClosenessMap', () => {
     })).not.toThrow()
   })
 })
+
+import PeopleMap from '../views/PeopleMap.vue'
+
+describe('PeopleMap toggle', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  function mountWithFetch(responseOverride = {}) {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue({
+        coordinates: [],
+        computed_at: new Date().toISOString(),
+        ...responseOverride,
+      }),
+    }))
+    return mount(PeopleMap)
+  }
+
+  async function flush() {
+    await new Promise(r => setTimeout(r, 1100))
+  }
+
+  it('shows Connections view by default (ClosenessMap not rendered)', async () => {
+    const wrapper = mountWithFetch()
+    await flush()
+    expect(wrapper.findComponent(ClosenessMap).exists()).toBe(false)
+  })
+
+  it('shows ClosenessMap after clicking Closeness button', async () => {
+    const wrapper = mountWithFetch()
+    await flush()
+    await wrapper.find('[data-view="closeness"]').trigger('click')
+    expect(wrapper.findComponent(ClosenessMap).exists()).toBe(true)
+  })
+
+  it('hides ClosenessMap after switching back to Connections', async () => {
+    const wrapper = mountWithFetch()
+    await flush()
+    await wrapper.find('[data-view="closeness"]').trigger('click')
+    await wrapper.find('[data-view="connections"]').trigger('click')
+    expect(wrapper.findComponent(ClosenessMap).exists()).toBe(false)
+  })
+})

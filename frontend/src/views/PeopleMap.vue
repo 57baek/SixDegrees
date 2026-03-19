@@ -6,14 +6,30 @@
     <div class="map-header">
       <h1 class="map-title">People Map</h1>
       <p class="map-subtitle">Your Social Map</p>
-      <button class="refresh-btn" @click="triggerAndReload" :disabled="loading || triggering">
-        <span v-if="triggering" class="spinner" />
-        <span v-else>↻</span>
-        {{ triggering ? 'Computing…' : 'Refresh Map' }}
-      </button>
+      <div class="view-controls">
+        <div class="toggle-group">
+          <button
+            class="toggle-btn"
+            :class="{ active: activeView === 'connections' }"
+            data-view="connections"
+            @click="activeView = 'connections'"
+          >Connections</button>
+          <button
+            class="toggle-btn"
+            :class="{ active: activeView === 'closeness' }"
+            data-view="closeness"
+            @click="activeView = 'closeness'"
+          >Closeness</button>
+        </div>
+        <button class="refresh-btn" @click="triggerAndReload" :disabled="loading || triggering">
+          <span v-if="triggering" class="spinner" />
+          <span v-else>↻</span>
+          {{ triggering ? 'Computing…' : 'Refresh Map' }}
+        </button>
+      </div>
     </div>
 
-    <div class="legend">
+    <div class="legend" v-if="activeView === 'connections'">
       <div v-for="t in visibleTiers" :key="t" class="legend-item">
         <span class="legend-dot" :style="{ background: tierColor(t) }" />
         <span>{{ tierLabel(t) }}</span>
@@ -38,105 +54,120 @@
       <p>No connections yet. Add friends to build your map!</p>
     </div>
 
-    <div v-else class="canvas-wrap" ref="canvasWrap">
-      <svg ref="svgEl" class="map-svg" :viewBox="`0 0 ${svgW} ${svgH}`" :width="svgW" :height="svgH">
-        <defs>
-          <filter v-for="t in [0,1,2,3,4]" :key="'f'+t" :id="'glow-'+t" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur :stdDeviation="t === 0 ? 6 : 3" result="blur" />
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <filter id="glow-center" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="10" result="blur" />
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <radialGradient id="bg-grad" cx="50%" cy="50%" r="60%">
-            <stop offset="0%" stop-color="#1a1f3a" />
-            <stop offset="100%" stop-color="#0a0c18" />
-          </radialGradient>
-        </defs>
+    <template v-else>
+      <div v-if="activeView === 'connections'" class="canvas-wrap" ref="canvasWrap">
+        <svg ref="svgEl" class="map-svg" :viewBox="`0 0 ${svgW} ${svgH}`" :width="svgW" :height="svgH">
+          <defs>
+            <filter v-for="t in [0,1,2,3,4]" :key="'f'+t" :id="'glow-'+t" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur :stdDeviation="t === 0 ? 6 : 3" result="blur" />
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow-center" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="10" result="blur" />
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <radialGradient id="bg-grad" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stop-color="#1a1f3a" />
+              <stop offset="100%" stop-color="#0a0c18" />
+            </radialGradient>
+          </defs>
 
-        <rect width="100%" height="100%" fill="url(#bg-grad)" rx="16" />
+          <rect width="100%" height="100%" fill="url(#bg-grad)" rx="16" />
 
-        <circle
-          v-for="s in stars" :key="s.id"
-          :cx="s.x * svgW" :cy="s.y * svgH" :r="s.r"
-          :fill="`rgba(255,255,255,${s.o})`"
-        />
-
-        <circle
-          v-for="t in visibleTiers" :key="'ring'+t"
-          :cx="cx" :cy="cy" :r="ringRadiusForTier(t)"
-          fill="none" :stroke="tierColor(t)"
-          stroke-opacity="0.08" stroke-dasharray="4 6" stroke-width="1"
-        />
-
-        <line
-          v-for="n in nodes" :key="'edge-'+n.user_id"
-          :x1="cx" :y1="cy" :x2="n.px" :y2="n.py"
-          :stroke="tierColor(n.tier)"
-          :stroke-opacity="hoveredId && hoveredId !== n.user_id ? 0.05 : 0.28"
-          :stroke-width="hoveredId === n.user_id ? 1.8 : 0.8"
-          stroke-linecap="round"
-        />
-        <g
-            v-for="n in nodes" :key="'node-'+n.user_id"
-            :transform="`translate(${n.px}, ${n.py}) scale(${hoveredId === n.user_id ? 1.3 : 1})`"
-            class="node-group"
-            @mouseenter="hoveredId = n.user_id"
-            @mouseleave="hoveredId = null"
-            @click="goToProfile(n.user_id)"
-            style="cursor:pointer"
-        >
-          <circle v-if="n.tier === 0" r="20" :fill="tierColor(0)" fill-opacity="0.12" filter="url(#glow-0)" class="pulse-node" />
           <circle
-            :r="nodeRadius(n.tier)"
-            :fill="tierColor(n.tier)"
-            :fill-opacity="hoveredId === n.user_id ? 1 : 0.85"
-            :filter="`url(#glow-${Math.min(n.tier,4)})`"
+            v-for="s in stars" :key="s.id"
+            :cx="s.x * svgW" :cy="s.y * svgH" :r="s.r"
+            :fill="`rgba(255,255,255,${s.o})`"
           />
-          <text
-            text-anchor="middle" dominant-baseline="central"
-            :font-size="n.tier === 0 ? 9 : 7"
-            fill="white" font-weight="700" font-family="monospace"
-            style="pointer-events:none;user-select:none"
-          >{{ initials(n.display_name) }}</text>
-        </g>
 
-        <!-- ✅ FIX: tooltip has :transform so it follows the node -->
-        <g
-          v-if="hoveredNode"
-          style="pointer-events: none"
-          :transform="`translate(${tooltipX(hoveredNode)}, ${tooltipY(hoveredNode)})`"
-        >
-          <rect :x="-70" y="-40" width="140" height="36" rx="8" fill="#1e2540" stroke="#ffffff20" stroke-width="1" />
-          <text text-anchor="middle" y="-26" font-size="11" fill="white" font-family="monospace" font-weight="600">
-            {{ hoveredNode.display_name || 'Unknown' }}
-          </text>
-          <text text-anchor="middle" y="-12" font-size="9" :fill="tierColor(hoveredNode.tier)" font-family="monospace">
-            {{ tierLabel(hoveredNode.tier) }}
-          </text>
-        </g>
+          <circle
+            v-for="t in visibleTiers" :key="'ring'+t"
+            :cx="cx" :cy="cy" :r="ringRadiusForTier(t)"
+            fill="none" :stroke="tierColor(t)"
+            stroke-opacity="0.08" stroke-dasharray="4 6" stroke-width="1"
+          />
 
-        <g :transform="`translate(${cx}, ${cy})`">
-          <circle r="34" fill="#ffffff" fill-opacity="0.03" filter="url(#glow-center)" class="pulse-node" />
-          <circle r="22" fill="#e8f4ff" filter="url(#glow-center)" />
-          <circle r="17" fill="#c5e4ff" />
-          <text text-anchor="middle" dominant-baseline="central" font-size="8" fill="#0a1628" font-weight="800" font-family="monospace" style="pointer-events:none">YOU</text>
-        </g>
-      </svg>
+          <line
+            v-for="n in nodes" :key="'edge-'+n.user_id"
+            :x1="cx" :y1="cy" :x2="n.px" :y2="n.py"
+            :stroke="tierColor(n.tier)"
+            :stroke-opacity="hoveredId && hoveredId !== n.user_id ? 0.05 : 0.28"
+            :stroke-width="hoveredId === n.user_id ? 1.8 : 0.8"
+            stroke-linecap="round"
+          />
+          <g
+              v-for="n in nodes" :key="'node-'+n.user_id"
+              :transform="`translate(${n.px}, ${n.py}) scale(${hoveredId === n.user_id ? 1.3 : 1})`"
+              class="node-group"
+              @mouseenter="hoveredId = n.user_id"
+              @mouseleave="hoveredId = null"
+              @click="goToProfile(n.user_id)"
+              style="cursor:pointer"
+          >
+            <circle v-if="n.tier === 0" r="20" :fill="tierColor(0)" fill-opacity="0.12" filter="url(#glow-0)" class="pulse-node" />
+            <circle
+              :r="nodeRadius(n.tier)"
+              :fill="tierColor(n.tier)"
+              :fill-opacity="hoveredId === n.user_id ? 1 : 0.85"
+              :filter="`url(#glow-${Math.min(n.tier,4)})`"
+            />
+            <text
+              text-anchor="middle" dominant-baseline="central"
+              :font-size="n.tier === 0 ? 9 : 7"
+              fill="white" font-weight="700" font-family="monospace"
+              style="pointer-events:none;user-select:none"
+            >{{ initials(n.display_name) }}</text>
+          </g>
 
-      <div class="map-footer">
-        <span>{{ nodes.length }} connection{{ nodes.length !== 1 ? 's' : '' }}</span>
-        <span v-if="computedAt"> · Updated {{ timeAgo(computedAt) }}</span>
-        <span class="demo-badge">✦ Demo Mode</span>
+          <!-- ✅ FIX: tooltip has :transform so it follows the node -->
+          <g
+            v-if="hoveredNode"
+            style="pointer-events: none"
+            :transform="`translate(${tooltipX(hoveredNode)}, ${tooltipY(hoveredNode)})`"
+          >
+            <rect :x="-70" y="-40" width="140" height="36" rx="8" fill="#1e2540" stroke="#ffffff20" stroke-width="1" />
+            <text text-anchor="middle" y="-26" font-size="11" fill="white" font-family="monospace" font-weight="600">
+              {{ hoveredNode.display_name || 'Unknown' }}
+            </text>
+            <text text-anchor="middle" y="-12" font-size="9" :fill="tierColor(hoveredNode.tier)" font-family="monospace">
+              {{ tierLabel(hoveredNode.tier) }}
+            </text>
+          </g>
+
+          <g :transform="`translate(${cx}, ${cy})`">
+            <circle r="34" fill="#ffffff" fill-opacity="0.03" filter="url(#glow-center)" class="pulse-node" />
+            <circle r="22" fill="#e8f4ff" filter="url(#glow-center)" />
+            <circle r="17" fill="#c5e4ff" />
+            <text text-anchor="middle" dominant-baseline="central" font-size="8" fill="#0a1628" font-weight="800" font-family="monospace" style="pointer-events:none">YOU</text>
+          </g>
+        </svg>
+
+        <div class="map-footer">
+          <span>{{ nodes.length }} connection{{ nodes.length !== 1 ? 's' : '' }}</span>
+          <span v-if="computedAt"> · Updated {{ timeAgo(computedAt) }}</span>
+          <span class="demo-badge">✦ Demo Mode</span>
+        </div>
       </div>
-    </div>
+      <div v-else class="canvas-wrap">
+        <ClosenessMap
+          :rawCoordinates="rawCoordinates"
+          :svgW="svgW"
+          :svgH="svgH"
+        />
+        <div class="map-footer">
+          <span>{{ rawCoordinates.length > 0 ? rawCoordinates.length - 1 : 0 }} connection{{ rawCoordinates.length - 1 !== 1 ? 's' : '' }}</span>
+          <span v-if="computedAt"> · Updated {{ timeAgo(computedAt) }}</span>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import ClosenessMap from '../components/ClosenessMap.vue'
+import { supabase } from '../lib/supabase.js'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -163,6 +194,7 @@ const loading = ref(true)
 const triggering = ref(false)
 const error = ref(null)
 const hoveredId = ref(null)
+const activeView = ref('connections')
 const svgW = ref(800)
 const svgH = ref(560)
 const isMobile = ref(false)
@@ -538,4 +570,43 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
   animation: spin 0.6s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.view-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.toggle-group {
+  display: flex;
+  border: 1px solid #252b50;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  padding: 0.5rem 1.25rem;
+  background: transparent;
+  color: #8090b4;
+  border: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.76rem;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  transition: background 0.2s, color 0.2s;
+}
+
+.toggle-btn.active {
+  background: #60d4f7;
+  color: #0a0c18;
+  font-weight: 600;
+}
+
+.toggle-btn:not(.active):hover {
+  color: #60d4f7;
+  background: rgba(96, 212, 247, 0.07);
+}
 </style>
