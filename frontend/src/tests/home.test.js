@@ -6,6 +6,7 @@
 
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import Post from '../components/Post.vue'
 
 const mockPush = vi.fn()
 
@@ -139,6 +140,7 @@ describe('Home tier filter', () => {
 // ─── Tests friend requests ────────────────────────────────────────────────────
 describe('Home friend requests', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     vi.stubGlobal('alert', vi.fn())
     setupDefaultMocks()
   })
@@ -176,6 +178,7 @@ describe('Home friend requests', () => {
     expect(supabase.rpc).toHaveBeenCalledWith('accept_friend', { friend_nickname: 'Dave' })
   })
 
+  
   it('calls reject_friend RPC when Reject is clicked', async () => {
     const wrapper = mount(Home)
     await flushPromises()
@@ -200,6 +203,12 @@ describe('Home friend requests', () => {
     await wrapper.find('.reject-btn').trigger('click')
     await flushPromises()
     expect(supabase.rpc).toHaveBeenCalledWith('friend_requests')
+  })
+  it('navigates to user profile when clicking the request item', async () => {
+    const wrapper = mount(Home)
+    await flushPromises()
+        await wrapper.find('.request-item').trigger('click')    
+    expect(mockPush).toHaveBeenCalledWith('/profile/req-1')
   })
 })
 
@@ -269,8 +278,70 @@ describe('Home logout', () => {
     removeItemSpy.mockRestore()
   })
 })
-// ─── Tests Auto-refresh ───────────────────────────────────────────────────────
-describe('Home auto-refresh', () => {
+// ─── Tests Post Deletion ──────────────────────────────────────────────────────
+describe('Home post deletion', () => {
+  beforeEach(() => {
+    vi.stubGlobal('alert', vi.fn())
+    vi.stubGlobal('confirm', vi.fn(() => true)) 
+    setupDefaultMocks()
+  })
+
+  it('calls delete_post RPC and removes post from list on success', async () => {
+    const wrapper = mount(Home)
+    await flushPromises()
+    
+    supabase.rpc.mockImplementation((fnName) => {
+      if (fnName === 'delete_post') return Promise.resolve({ data: true, error: null })
+      return Promise.resolve({ data: mockPosts, error: null })
+    })
+
+    const firstPost = wrapper.findComponent(Post)
+    await firstPost.vm.$emit('delete-post', '1')
+    await flushPromises()
+
+    expect(supabase.rpc).toHaveBeenCalledWith('delete_post', { post_id: '1' })
+    expect(wrapper.findAllComponents(Post).length).toBe(2) 
+  })
+
+  it('shows alert if user does not have permission to delete', async () => {
+    supabase.rpc.mockImplementation((fnName) => {
+      if (fnName === 'delete_post') return Promise.resolve({ data: false, error: null })
+      return Promise.resolve({ data: mockPosts, error: null })
+    })
+
+    const wrapper = mount(Home)
+    await flushPromises()
+    
+    await wrapper.findComponent(Post).vm.$emit('delete-post', '1')
+    await flushPromises()
+
+    expect(window.alert).toHaveBeenCalledWith('You do not have permission to delete this post.')
+  })
+})
+
+// ─── Tests Error Handling ─────────────────────────────────────────────────────
+describe('Home error handling', () => {
+  beforeEach(() => {
+    vi.clearAllMocks() // This wipes the "Number of calls: 21" back to 0
+    setupDefaultMocks()
+  })
+
+  it('prevents adding friend with empty nickname', async () => {
+    vi.stubGlobal('alert', vi.fn())
+    const wrapper = mount(Home)
+    
+    // Ensure input is empty
+    await wrapper.find('.test-input').setValue('')
+    await wrapper.find('.test-btn').trigger('click')
+    
+    expect(window.alert).toHaveBeenCalledWith('Please enter a nickname')
+    // Now this will correctly be 0 calls
+    expect(supabase.rpc).not.toHaveBeenCalledWith('request_friend', expect.anything())
+  })
+})
+
+// ─── Tests Auto-Refresh Polling ──────────────────────────────────────────────
+describe('Home auto-refresh polling', () => {
   beforeEach(() => {
     vi.useFakeTimers() 
     setupDefaultMocks()
@@ -282,13 +353,11 @@ describe('Home auto-refresh', () => {
   it('polls load_posts every 30 seconds', async () => {
     const wrapper = mount(Home)
     await flushPromises()
-
     supabase.rpc.mockClear()
 
     vi.advanceTimersByTime(30000)
 
     expect(supabase.rpc).toHaveBeenCalledWith('load_posts')
-
-    wrapper.unmount()
+    wrapper.unmount() 
   })
 })

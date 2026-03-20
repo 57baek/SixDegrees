@@ -48,7 +48,7 @@
         @click="emitDelete"
         title="Delete Post"
       >
-        <Trash2 :size="18" />
+        <Trash2  :size="18" />
       </button>
     </div>
     
@@ -65,17 +65,34 @@
       </div>
       
       <div v-for="comment in comments" :key="comment.id" class="comment">
-        <strong>{{ comment.nickname || 'Unknown' }}</strong>
-        <span>{{ comment.content }}</span>
+        <div class="comment-main-content">
+          <strong 
+            class="comment-author" 
+            @click="router.push(`/profile/${comment.user_id}`)"
+          >
+            {{ comment.nickname || 'Unknown' }}
+          </strong>
+          <span class="comment-text">{{ comment.content }}</span>
+        </div>
+        
+        <button 
+          v-if="currentUserId && comment.user_id === currentUserId" 
+          class="delete-comment-btn"
+          @click="handleDeleteComment(comment.id)"
+          title="Archive Comment"
+        >
+          <Archive :size="16" />
+        </button>
+        </div>
       </div>
     </div>
-  </div>
-</template>
+  </template>
+
 
 <script setup>
 import { ref, computed, onMounted} from 'vue'
 import { supabase } from '../lib/supabase'
-import { Heart, MessageCircle, Lock, Users, Globe, Trash2 } from 'lucide-vue-next'
+import { Heart, MessageCircle, Lock, Users, Globe, Archive, Trash2 } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { formatDate, tierLabel} from '../utils.js'
 
@@ -84,14 +101,7 @@ const router = useRouter()
 const emit = defineEmits(['delete-post'])
 const currentUserId = ref(null)
 
-onMounted(async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) currentUserId.value = user.id
-  
-  await fetchUserLike()
-  const { data , error } = await supabase.rpc('like_count', { post_id: props.post.id })
-  if (!error) likeCount.value = data
-})
+
 
 const isOwnPost = computed(() => {
   return currentUserId.value && props.post.user_id === currentUserId.value
@@ -136,6 +146,7 @@ function tierIcon(tier) {
   }[tier] || Lock
 }
 
+
 /**
  * Handles liking/unliking a post. 
  * Checks if user is authenticated, then toggles like state in db and updates local state for instant UI feedback.
@@ -178,16 +189,22 @@ async function fetchUserLike() {
   }
 }
 
-// On component mount, check if user has liked the post and fetch latest like count
 onMounted(async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) { 
+    currentUserId.value = user.id 
+    console.log("Current User ID:", currentUserId.value)
+  }
+  
   await fetchUserLike()
-
-  // refresh like count from DB
-  const { data , error } = await supabase.rpc('like_count', {
-    post_id: props.post.id
+  
+  const { data, error } = await supabase.rpc('like_count', { 
+    post_id: props.post.id 
   })
-
-  if (!error) likeCount.value = data
+  
+  if (!error && data !== null) {
+    likeCount.value = data
+  }
 })
 
 /**
@@ -224,14 +241,40 @@ async function handleComment() {
     })
     
     if (error) throw error
+
+    const newAddedComment = {
+      ...data[0],
+      user_id: user.id 
+    }
     
-    comments.value.push(data[0])
+    comments.value.push(newAddedComment)
     commentCount.value++
     newComment.value = ''
   } catch (err) {
     console.error('Comment error:', err)
   }
 }
+
+async function handleDeleteComment(commentId) {
+  if (!confirm('Are you sure you want to delete this comment?')) return
+  
+  try {
+    const { data, error } = await supabase.rpc('delete_comment', { 
+      comment_id: commentId 
+    })
+
+    if (error) throw error 
+    if (data) {
+      comments.value = comments.value.filter(c => c.id !== commentId)
+      if (commentCount.value > 0) {
+        commentCount.value--
+      }
+    }
+  } catch (err) {
+    console.error('Delete comment error:', err)
+  }
+}
+
 </script>
 
 <style scoped>
@@ -329,7 +372,7 @@ async function handleComment() {
 
 .post-actions-wrapper {
   display: flex;
-  justify-content: space-between; /* 關鍵：讓互動按鈕和垃圾桶一左一右 */
+  justify-content: space-between;
   align-items: center;
   padding-top: 1rem;
   border-top: 1px solid #444;
@@ -424,6 +467,8 @@ async function handleComment() {
   border-radius: 4px;
   margin-bottom: 0.5rem;
   color: #e0e0e0;
+  display: flex; 
+  justify-content: space-between; 
 }
 
 .comment strong {
@@ -438,5 +483,40 @@ async function handleComment() {
   display: flex;
   align-items: center;
   gap: 0.25rem;  /* Add this */
+}
+
+.delete-comment-btn {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.delete-comment-btn:hover {
+  color: #ff4444;
+}
+
+
+.delete-comment-btn {
+  background: transparent;
+  border: none;
+  color: #555; 
+  cursor: pointer;
+  padding: 6px; 
+  border-radius: 50%; 
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; 
+  margin-top: -5px;
+}
+
+.delete-comment-btn:hover {
+  background: rgba(255, 68, 68, 0.1); 
+  color: #ff6b6b; 
+  transform: scale(1.1); 
 }
 </style>

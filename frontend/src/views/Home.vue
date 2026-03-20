@@ -1,71 +1,82 @@
 <template>
-  <div class="post-card">
-    <div class="post-header">
-      <div class="user-info">
-        <div 
-          class="avatar" 
-          @click="router.push(`/profile/${post.user_id}`)"
-          style="cursor:pointer"
-        >{{ userInitial }}</div>        
-        <div>
-            <div class="nickname">{{ post.nickname || 'Unknown User' }}</div>
-            <div class="post-meta">
-              <span class="timestamp">{{ formatDate(post.created_at) }}</span>
-              <span class="tier-badge" :class="`tier-${post.tier}`">
-                <component :is="tierIcon(post.tier)" :size="12" />
-                {{ tierLabel(post.tier) }}
-              </span>
-            </div>
-        </div> 
-      </div>
-    </div>
-  
-    <div class="post-content">
-      {{ post.content }}
-    </div>
-    
-    <div class="post-actions-wrapper">
-      <div class="post-actions">
-        <button 
-          @click="handleLike" 
-          :class="{ liked: isLiked }"
-          class="action-btn"
-        >
-          <Heart :size="18" :fill="isLiked ? 'currentColor' : 'none'" />
-          {{ likeCount }}
-        </button>
-        
-        <button @click="toggleComments" class="action-btn">
-          <MessageCircle :size="18"/>
-          {{ commentCount }}
-        </button>
-      </div>
+<div class="home">
+    <div class="container">
+      <header class="page-header">
+        <h1>Your Feed</h1>
+        <nav class="nav-buttons">
+          <button @click="router.push('/map')" class="nav-btn map-btn"> People Map</button>
+          <button @click="router.push('/profile')" class="nav-btn">Profile</button>
+          <button @click="handleLogout" class="logout-btn">Logout</button>
+        </nav>
+      </header>
 
-      <button 
-        v-if="isOwnPost" 
-        class="delete-icon-btn" 
-        @click="emitDelete"
-        title="Delete Post"
-      >
-        <Trash2 :size="18" />
-      </button>
-    </div>
-    
-    <div v-if="showComments" class="comments-section">
-      <div class="comment-input">
+      <!-- Add Friend Test Box -->
+      <div class="test-box add-friend-box">
+        <h3 class="test-title">Add Friend</h3>
         <input 
-          v-model="newComment"
-          placeholder="Write a comment..."
-          @keyup.enter="handleComment"
+          v-model="testNickname" 
+          placeholder="Enter an existing nickname" 
+          class="test-input"
         />
-        <button @click="handleComment" :disabled="!newComment.trim()">
-          Send
+        <button @click="testAddFriend" class="test-btn">
+          Send Friend Request
         </button>
       </div>
       
-      <div v-for="comment in comments" :key="comment.id" class="comment">
-        <strong>{{ comment.nickname || 'Unknown' }}</strong>
-        <span>{{ comment.content }}</span>
+      <!-- Friend Requests Box -->
+      <div class="test-box friend-requests-box">
+        <h3 class="test-title">Pending Friend Requests</h3>
+        
+        <div v-if="incomingRequests.length === 0" class="no-requests">
+          No pending requests.
+        </div>
+        
+        <ul v-else class="requests-list">
+          <li v-for="user in incomingRequests" :key="user.id" class="request-item" @click="goToProfile(user.id)">
+          
+          <div class="request-user">
+            <div class="avatar-small">{{ user.nickname.charAt(0).toUpperCase() }}</div>
+            <span class="request-text"><strong>{{ user.nickname }}</strong> wants to be friends!</span>
+          </div>
+          
+          <div class="request-buttons">
+            <button @click.stop="handleAccept(user.nickname)" class="accept-btn">
+              Accept
+            </button>
+
+            <button @click.stop="handleReject(user.nickname)" class="reject-btn">
+              Reject
+            </button>
+          </div>
+          </li>
+        </ul>
+        <button @click="fetchIncomingRequests" class="refresh-btn">
+          Refresh
+        </button>
+      </div>
+
+      <div class="tier-filter">
+        <span class="filter-label">Showing:</span>
+        <button v-for="tier in [1, 2, 3]" :key="tier" @click="selectedTierFilter= tier" :class="['filter-btn', { active: selectedTierFilter === tier }]">
+          {{ tierFilterLabel(tier) }}
+        </button>
+      </div>
+
+      <CreatePost @post-created="loadPosts" />
+
+      <div v-if="loading" class="loading">Loading posts...</div>
+
+      <div v-else-if="posts.length === 0" class="no-posts">
+        <p>No posts yet. Be the first to share something!</p>
+      </div>
+
+      <div v-else class="feed">
+        <Post
+          v-for="post in filteredPosts"
+          :key="post.id"
+          :post="post"
+          @delete-post="handleDeletePost"
+        />
       </div>
     </div>
   </div>
@@ -164,11 +175,13 @@ const pollInterval = ref(null)
 onMounted(() => {
   fetchIncomingRequests()
   loadPosts()
-  pollInterval.value = setInterval(loadPosts, 30000) // auto-refresh every 30s
+  pollInterval.value = setInterval(loadPosts, 30000)
 })
 
 onUnmounted(() => {
-  clearInterval(pollInterval.value)
+  if (pollInterval.value) {
+    clearInterval(pollInterval.value)
+  }
 })
 
 /** Function to fetch posts from the database w/ user info, like count, comment count
