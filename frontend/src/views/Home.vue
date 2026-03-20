@@ -280,7 +280,7 @@ const goToProfile = (userId) => {
 }
 
 .map-btn:hover {
-  background: linear-gradient(135deg, #b89cff 0%, #71e5ff 100%);
+  background: #71e5ff 100%;
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(96, 212, 247, 0.4);
   color: #000;

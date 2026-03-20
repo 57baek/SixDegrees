@@ -119,7 +119,6 @@
             >{{ initials(n.display_name) }}</text>
           </g>
 
-          <!-- ✅ FIX: tooltip has :transform so it follows the node -->
           <g
             v-if="hoveredNode"
             style="pointer-events: none"
@@ -242,6 +241,7 @@ const nodes = computed(() => {
       result.push({
         ...c,
         tier,
+        display_name: c.nickname || c.display_name || '',
         px: cx.value + ringR * Math.cos(angle),
         py: cy.value + ringR * Math.sin(angle),
       })
