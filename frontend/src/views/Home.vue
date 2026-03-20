@@ -272,7 +272,7 @@ const goToProfile = (userId) => {
 }
 
 .map-btn {
-  background: linear-gradient(135deg, #a78bfa 0%, #60d4f7 100%);
+  background: #788ac5 100%;
   color: #0a0c18;
   font-weight: 700;
   border: none;
@@ -280,7 +280,7 @@ const goToProfile = (userId) => {
 }
 
 .map-btn:hover {
-  background: #71e5ff 100%;
+  background: linear-gradient(135deg, #a78bfa 0%, #60d4f7 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(96, 212, 247, 0.4);
   color: #000;

@@ -144,3 +144,100 @@ describe('PeopleMap API wiring', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 })
+describe('PeopleMap loading state', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('shows loading ring on mount before fetch resolves', () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+    const wrapper = mount(PeopleMap)
+    expect(wrapper.find('.loading-ring').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Loading')
+  })
+
+  it('hides loading ring after fetch completes', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true, status: 200,
+      json: vi.fn().mockResolvedValue({ coordinates: [], computed_at: new Date().toISOString() }),
+    }))
+    const wrapper = mount(PeopleMap)
+    await new Promise(r => setTimeout(r, 50))
+    expect(wrapper.find('.loading-ring').exists()).toBe(false)
+  })
+})
+
+describe('PeopleMap rendering', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('shows empty state when coordinates array is empty', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true, status: 200,
+      json: vi.fn().mockResolvedValue({ coordinates: [], computed_at: new Date().toISOString() }),
+    }))
+    const wrapper = mount(PeopleMap)
+    await new Promise(r => setTimeout(r, 50))
+    expect(wrapper.text()).toContain('No connections yet')
+  })
+
+  it('shows correct connection count in footer', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true, status: 200,
+      json: vi.fn().mockResolvedValue({
+        coordinates: [
+          { user_id: 'u1', x: 0.1, y: 0.2, tier: 1, display_name: 'Alice', nickname: 'Alice' },
+          { user_id: 'u2', x: -0.3, y: 0.4, tier: 2, display_name: 'Bob', nickname: 'Bob' },
+        ],
+        computed_at: new Date().toISOString(),
+      }),
+    }))
+    const wrapper = mount(PeopleMap)
+    await new Promise(r => setTimeout(r, 50))
+    expect(wrapper.text()).toContain('2 connections')
+  })
+})
+
+describe('PeopleMap error state', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('shows error message when fetch returns 500', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false, status: 500,
+      json: vi.fn().mockResolvedValue({}),
+    }))
+    const wrapper = mount(PeopleMap)
+    await new Promise(r => setTimeout(r, 50))
+    expect(wrapper.find('.state-box').exists()).toBe(true)
+    expect(wrapper.text()).toContain("map hasn't been built yet")
+  })
+})
+
+describe('PeopleMap mobile warning', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('shows mobile warning when window width is under 600px', async () => {
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 400 })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true, status: 200,
+      json: vi.fn().mockResolvedValue({
+        coordinates: [{ user_id: 'u1', x: 0.1, y: 0.2, tier: 1, display_name: 'Alice', nickname: 'Alice' }],
+        computed_at: new Date().toISOString(),
+      }),
+    }))
+    const wrapper = mount(PeopleMap)
+    await new Promise(r => setTimeout(r, 50))
+    expect(wrapper.find('.mobile-warn').exists()).toBe(true)
+  })
+
+  it('does not show mobile warning on desktop width', async () => {
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1280 })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true, status: 200,
+      json: vi.fn().mockResolvedValue({
+        coordinates: [{ user_id: 'u1', x: 0.1, y: 0.2, tier: 1, display_name: 'Alice', nickname: 'Alice' }],
+        computed_at: new Date().toISOString(),
+      }),
+    }))
+    const wrapper = mount(PeopleMap)
+    await new Promise(r => setTimeout(r, 50))
+    expect(wrapper.find('.mobile-warn').exists()).toBe(false)
+  })
+})
