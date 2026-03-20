@@ -2,41 +2,53 @@
   <div class="post-card">
     <div class="post-header">
       <div class="user-info">
-      <div 
-        class="avatar" 
-        @click="router.push(`/profile/${post.user_id}`)"
-        style="cursor:pointer"
-      >{{ userInitial }}</div>        
-      <div>
-          <div class="nickname">{{ post.nickname || 'Unknown User' }}</div>
-          <div class="post-meta">
-            <span class="timestamp">{{ formatDate(post.created_at) }}</span>
-            <span class="tier-badge" :class="`tier-${post.tier}`">
-              <component :is="tierIcon(post.tier)" :size="12" />
-              {{ tierLabel(post.tier) }}
-            </span>
-          </div>
-        </div>
+        <div 
+          class="avatar" 
+          @click="router.push(`/profile/${post.user_id}`)"
+          style="cursor:pointer"
+        >{{ userInitial }}</div>        
+        <div>
+            <div class="nickname">{{ post.nickname || 'Unknown User' }}</div>
+            <div class="post-meta">
+              <span class="timestamp">{{ formatDate(post.created_at) }}</span>
+              <span class="tier-badge" :class="`tier-${post.tier}`">
+                <component :is="tierIcon(post.tier)" :size="12" />
+                {{ tierLabel(post.tier) }}
+              </span>
+            </div>
+        </div> 
       </div>
     </div>
-    
+  
+   
     <div class="post-content">
       {{ post.content }}
     </div>
     
-    <div class="post-actions">
+    <div class="post-actions-wrapper">
+      <div class="post-actions">
+        <button 
+          @click="handleLike" 
+          :class="{ liked: isLiked }"
+          class="action-btn"
+        >
+          <Heart :size="18" :fill="isLiked ? 'currentColor' : 'none'" />
+          {{ likeCount }}
+        </button>
+        
+        <button @click="toggleComments" class="action-btn">
+          <MessageCircle :size="18"/>
+          {{ commentCount }}
+        </button>
+      </div>
+
       <button 
-        @click="handleLike" 
-        :class="{ liked: isLiked }"
-        class="action-btn"
+        v-if="isOwnPost" 
+        class="delete-icon-btn" 
+        @click="emitDelete"
+        title="Delete Post"
       >
-        <Heart :size="18" :fill="isLiked ? 'currentColor' : 'none'" />
-        {{ likeCount }}
-      </button>
-      
-      <button @click="toggleComments" class="action-btn">
-        <MessageCircle :size="18"/>
-        {{ commentCount }}
+        <Trash2 :size="18" />
       </button>
     </div>
     
@@ -63,11 +75,31 @@
 <script setup>
 import { ref, computed, onMounted} from 'vue'
 import { supabase } from '../lib/supabase'
-import { Heart, MessageCircle, Lock, Users, Globe } from 'lucide-vue-next' 
+import { Heart, MessageCircle, Lock, Users, Globe, Trash2 } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { formatDate, tierLabel} from '../utils.js'
 
+
 const router = useRouter()
+const emit = defineEmits(['delete-post'])
+const currentUserId = ref(null)
+
+onMounted(async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) currentUserId.value = user.id
+  
+  await fetchUserLike()
+  const { data , error } = await supabase.rpc('like_count', { post_id: props.post.id })
+  if (!error) likeCount.value = data
+})
+
+const isOwnPost = computed(() => {
+  return currentUserId.value && props.post.user_id === currentUserId.value
+})
+
+function emitDelete() {
+  emit('delete-post', props.post.id)
+}
 
 // post data passed from parent
 const props = defineProps({
@@ -210,6 +242,23 @@ async function handleComment() {
   margin-bottom: 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
+.delete-btn {
+  background: transparent;
+  color: #888;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: fit-content;
+}
+
+.delete-btn:hover {
+  background: #ff444422;
+  color: #ff4444;
+  border-color: #ff4444;
+}
 
 .post-header {
   display: flex;
@@ -278,11 +327,35 @@ async function handleComment() {
   word-wrap: break-word;
 }
 
+.post-actions-wrapper {
+  display: flex;
+  justify-content: space-between; /* 關鍵：讓互動按鈕和垃圾桶一左一右 */
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #444;
+}
+
 .post-actions {
   display: flex;
   gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #444;
+}
+
+.delete-icon-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-icon-btn:hover {
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
 }
 
 .action-btn {
