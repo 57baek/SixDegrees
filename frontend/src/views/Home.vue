@@ -35,7 +35,10 @@
           <li v-for="user in incomingRequests" :key="user.id" class="request-item" @click="goToProfile(user.id)">
           
           <div class="request-user">
-            <div class="avatar-small">{{ user.nickname.charAt(0).toUpperCase() }}</div>
+            <div class="avatar-small">
+              <img v-if="user.avatar_url" :src="user.avatar_url" class="avatar-img" />
+              <span v-else>{{ user.nickname.charAt(0).toUpperCase() }}</span>
+            </div>
             <span class="request-text"><strong>{{ user.nickname }}</strong> wants to be friends!</span>
           </div>
           
@@ -92,6 +95,22 @@ import Post from '../components/Post.vue'
 import { filterPostsByTier, tierFilterLabel } from '../utils.js'
 
 const router = useRouter()
+
+// ------------------------
+// Auth redirect
+// ------------------------
+const session = ref(null)
+
+onMounted(async () => {
+  const { data } = await supabase.auth.getSession()
+  session.value = data.session
+  if (!session.value) router.push('/login')
+})
+
+supabase.auth.onAuthStateChange((_event, newSession) => {
+  session.value = newSession
+  if (!newSession) router.push('/login')
+})
 
 // ===== Add Friend Test Function =====
 const testNickname = ref('')
@@ -172,16 +191,21 @@ const posts = ref([])
 const loading = ref(false)
 const pollInterval = ref(null)
 
-onMounted(() => {
+onMounted(async () => {
+  // Get session
+  const { data } = await supabase.auth.getSession()
+  session.value = data.session
+  if (!session.value) {
+    router.push('/login')
+    return
+  }
+
+  // Fetch initial data
   fetchIncomingRequests()
   loadPosts()
+  
+  // Poll posts every 30s
   pollInterval.value = setInterval(loadPosts, 30000)
-})
-
-onUnmounted(() => {
-  if (pollInterval.value) {
-    clearInterval(pollInterval.value)
-  }
 })
 
 /** Function to fetch posts from the database w/ user info, like count, comment count
@@ -452,6 +476,14 @@ const goToProfile = (userId) => {
   color: white;
   font-size: 1.2rem;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .tier-filter {

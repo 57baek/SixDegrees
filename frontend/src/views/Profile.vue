@@ -7,9 +7,12 @@
 
     <div id="main-profile-box">
       <div class="profile-picture-container">
-        <div class="profile-pic-circle">
-          {{ userInitial }}
-        </div>
+        <div class="profile-pic-circle" :class="{ 'no-bg': profile.avatar_url }" @click="isOwnProfile && isEditing &&triggerUpload()">
+        <img v-if="profile.avatar_url" :src="profile.avatar_url" class="avatar-img" />
+        <span v-else>{{ userInitial }}</span>
+        <div v-if="isOwnProfile && isEditing" class="avatar-overlay">Change</div>
+        <input ref="fileInput" type="file" accept="image/*" hidden @change="uploadAvatar" />
+      </div>
         <button v-if="isOwnProfile" type="button" id="friends-btn" @click="router.push('/friends')">
           Friends ({{ friendCount }})
         </button>
@@ -139,6 +142,9 @@ const error = ref('')
 const isFriend = ref(false)
 const hasPendingRequest = ref(false)
 
+const fileInput = ref(null)
+const uploading = ref(false)
+
 const editForm = ref({
   nickname: '',
   bio: '',
@@ -264,7 +270,8 @@ async function saveProfile() {
         occupation: editForm.value.occupation,
         industry: editForm.value.industry,
         interests,
-        languages
+        languages,
+        avatar_url: profile.value.avatar_url || null
     })
     
     if (updateError) throw updateError
@@ -279,25 +286,75 @@ async function saveProfile() {
   }
 }
 
-  // direct friend requesting from profile
-  const requestSent = ref(false)
-  const requesting = ref(false)
+// direct friend requesting from profile
+const requestSent = ref(false)
+const requesting = ref(false)
 
-  async function sendFriendRequest() {
-    requesting.value = true
-    try {
-      const { data, error } = await supabase.rpc('request_friend', {
-        friend_nickname: profile.value.nickname
-      })
-      if (error) throw error
-      if (data) requestSent.value = true
-      else alert('Could not send request — you may already be friends or have a pending request.')
-    } catch (err) {
-      console.error('Error sending friend request:', err)
-    } finally {
-      requesting.value = false
-    }
+async function sendFriendRequest() {
+  requesting.value = true
+  try {
+    const { data, error } = await supabase.rpc('request_friend', {
+      friend_nickname: profile.value.nickname
+    })
+    if (error) throw error
+    if (data) requestSent.value = true
+    else alert('Could not send request — you may already be friends or have a pending request.')
+  } catch (err) {
+    console.error('Error sending friend request:', err)
+  } finally {
+    requesting.value = false
   }
+
+}
+
+function triggerUpload() {
+  fileInput.value.click()
+}
+
+async function uploadAvatar(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) return alert('Max file size is 2MB')
+  if (!file.type.startsWith('image/')) return alert('Please upload an image')
+
+  uploading.value = true
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    const ext = file.name.split('.').pop()
+    const path = `${user.id}/avatar.${ext}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true })
+    if (uploadError) throw uploadError
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(path)
+
+    const { error: updateError } = await supabase.rpc('update_profile', {
+      nickname: profile.value.nickname,
+      bio: profile.value.bio,
+      age: profile.value.age,
+      city: profile.value.city,
+      state: profile.value.state,
+      education: profile.value.education,
+      occupation: profile.value.occupation,
+      industry: profile.value.industry,
+      interests: profile.value.interests || [],
+      languages: profile.value.languages || [],
+      avatar_url: publicUrl
+    })
+    if (updateError) throw updateError
+
+    profile.value.avatar_url = publicUrl
+  } catch (err) {
+    console.error('Avatar upload failed:', err)
+    alert(err.message || 'Upload failed')
+  } finally {
+    uploading.value = false
+  }
+}
 
 onMounted(() => {
   loadProfile()
@@ -375,6 +432,38 @@ onMounted(() => {
   font-size: 4rem;
   font-weight: bold;
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-pic-circle.no-bg {
+  background: transparent;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  text-align: center;
+  padding: 0.4rem;
+  font-size: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.profile-pic-circle:hover .avatar-overlay {
+  opacity: 1;
+  cursor: pointer;
 }
 
 #friends-btn {

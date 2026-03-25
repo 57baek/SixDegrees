@@ -6,17 +6,18 @@
           class="avatar" 
           @click="router.push(`/profile/${post.user_id}`)"
           style="cursor:pointer"
-        >{{ userInitial }}</div>        
-        <div>
-            <div class="nickname">{{ post.nickname || 'Unknown User' }}</div>
-            <div class="post-meta">
-              <span class="timestamp">{{ formatDate(post.created_at) }}</span>
-              <span class="tier-badge" :class="`tier-${post.tier}`">
-                <component :is="tierIcon(post.tier)" :size="12" />
-                {{ tierLabel(post.tier) }}
-              </span>
-            </div>
-        </div> 
+        >
+          <img v-if="post.avatar_url" :src="post.avatar_url" class="avatar-img" />
+          <span v-else>{{ userInitial }}</span>
+        </div>
+        <div class="nickname">{{ post.nickname || 'Unknown User' }}</div>
+        <div class="post-meta">
+          <span class="timestamp">{{ formatDate(post.created_at) }}</span>
+          <span class="tier-badge" :class="`tier-${post.tier}`">
+            <component :is="tierIcon(post.tier)" :size="12" />
+            {{ tierLabel(post.tier) }}
+          </span>
+        </div>
       </div>
     </div>
   
@@ -83,10 +84,10 @@
         >
           <Archive :size="16" />
         </button>
-        </div>
       </div>
     </div>
-  </template>
+  </div>
+</template>
 
 
 <script setup>
@@ -278,6 +279,15 @@ async function handleDeleteComment(commentId) {
 </script>
 
 <style scoped>
+.avatar {
+  overflow: hidden;
+}
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 .post-card {
   background: #2d2d2d;
   border-radius: 8px;
