@@ -7,6 +7,16 @@
       <br />
       <form @submit.prevent="handleSubmit">
         
+        <div class="form-group avatar-upload-group">
+          <label>Profile Photo (optional)</label>
+          <div class="avatar-preview" @click="triggerUpload">
+            <img v-if="avatarPreview" :src="avatarPreview" class="avatar-preview-img" />
+            <div v-else class="avatar-placeholder">+</div>
+            <input ref="fileInput" type="file" accept="image/*" hidden @change="handleAvatarChange" />
+          </div>
+          <small>Click to upload a photo</small>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>City</label>
@@ -78,6 +88,10 @@ const error = ref("");
 const interestsInput = ref("");
 const languagesInput = ref("");
 
+const fileInput = ref(null)
+const avatarFile = ref(null)
+const avatarPreview = ref(null)
+
 const form = ref({
   city: "",
   state: "",
@@ -102,6 +116,24 @@ const handleSubmit = async () => {
       .map(s => s.trim())
       .filter(Boolean);
 
+    let uploadedAvatarUrl = null
+
+    if(avatarFile.value){
+      const ext = avatarFile.value.name.split('.').pop()
+      const path = `${user.id}/avatar.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, avatarFile.value, { upsert: true })
+      if(uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(path)
+
+      uploadedAvatarUrl = publicUrl
+    }
+
     const { error: profileError } = await supabase.rpc('create_profile', {
         bio: '',
         age: parseInt(form.value.age),
@@ -112,7 +144,8 @@ const handleSubmit = async () => {
         industry: form.value.industry,
         interests: interestsArray,
         languages: languagesArray,
-        profile_tier: 6 //visible to everyone, can change later
+        profile_tier: 6, //visible to everyone, can change later
+        avatar_url: uploadedAvatarUrl
     });
 
     if (profileError) throw profileError;
@@ -124,6 +157,19 @@ const handleSubmit = async () => {
     console.error(err);
   }
 };
+
+function triggerUpload() {
+  fileInput.value.click()
+}
+
+function handleAvatarChange(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) return alert('Max file size is 2MB')
+  if (!file.type.startsWith('image/')) return alert('Please upload an image')
+  avatarFile.value = file
+  avatarPreview.value = URL.createObjectURL(file)
+}
 </script>
 
 
@@ -183,5 +229,41 @@ input {
 small {
     color: #666;
     font-size: 0.8rem;
+}
+.avatar-upload-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.avatar-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  border: 2px dashed #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.avatar-preview:hover {
+  border-color: #088F8F;
+}
+
+.avatar-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar-placeholder {
+  font-size: 2rem;
+  color: #444;
 }
 </style>

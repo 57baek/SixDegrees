@@ -10,7 +10,7 @@ def _migration_sql() -> str:
     return sql_path.read_text(encoding="utf-8")
 
 
-def test_phase23_warm_cache_rpc_contract_exists():
+def test_warm_cache_rpc_contract_exists():
     sql = _migration_sql()
 
     assert "CREATE OR REPLACE FUNCTION public.upsert_warm_map_payload" in sql
@@ -21,7 +21,7 @@ def test_phase23_warm_cache_rpc_contract_exists():
     assert "SET search_path = public" in sql
 
 
-def test_phase23_warm_cache_tables_have_required_metadata_fields():
+def test_warm_cache_tables_have_required_metadata_fields():
     sql = _migration_sql()
 
     assert "CREATE TABLE IF NOT EXISTS public.map_warm_payloads" in sql
@@ -36,7 +36,7 @@ def test_phase23_warm_cache_tables_have_required_metadata_fields():
     assert "recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()" in sql
 
 
-def test_phase23_warm_cache_grants_follow_service_write_authenticated_read_scope():
+def test_warm_cache_grants_follow_service_write_authenticated_read_scope():
     sql = _migration_sql()
 
     assert (

@@ -155,6 +155,7 @@ def test_dedupe_skips_global_compute_when_lock_not_acquired(monkeypatch):
 
 
 def test_dedupe_releases_lock_on_global_compute_error(monkeypatch):
+    monkeypatch.setattr("services.map_pipeline.scheduler.GLOBAL_COMPUTE_ENABLED", True)
     monkeypatch.setattr(
         "services.map_pipeline.scheduler.acquire_global_compute_lock",
         lambda ttl_seconds=DEFAULT_LOCK_TTL_SECONDS: (True, "owner-y"),

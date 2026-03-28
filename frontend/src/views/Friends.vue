@@ -21,7 +21,8 @@
           @click="router.push(`/profile/${friend.id}`)"
         >
           <div class="friend-avatar">
-            {{ friend.nickname.charAt(0).toUpperCase() }}
+            <img v-if="friend.avatar_url" :src="friend.avatar_url" class="avatar-img" />
+            <span v-else>{{ friend.nickname.charAt(0).toUpperCase() }}</span>
           </div>
 
           <div class="friend-info">
@@ -167,6 +168,14 @@ onMounted(() => {
   font-weight: bold;
   color: white;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .friend-info {

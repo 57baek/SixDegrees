@@ -19,7 +19,7 @@ SIGNUP PAGE - form users see when creating a new account
                     />
                   <div v-if="showValidation" class="pw-checklist" aria-live="polite">
                     <ul>
-                      <li :class="{valid: uniqueUser && !emptyUser, invalid: !uniqueUser}">
+                      <li :class="{valid: uniqueUser && !emptyUser, invalid: !uniqueUser || emptyUser}">
                         <span class="dot">{{ emptyUser ? '✕' : (uniqueUser ? '✓' : '✕') }}</span>
                         {{ emptyUser ? 'Enter a valid nickname' : (uniqueUser ? 'Nickname is available' : 'Nickname is not available') }}
                       </li>

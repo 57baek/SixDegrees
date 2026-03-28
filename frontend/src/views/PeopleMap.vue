@@ -113,10 +113,10 @@
             />
             <text
               text-anchor="middle" dominant-baseline="central"
-              :font-size="n.tier === 0 ? 9 : 7"
+              :font-size="n.tier === 0 ? 7 : 6"
               fill="white" font-weight="700" font-family="monospace"
               style="pointer-events:none;user-select:none"
-            >{{ initials(n.display_name) }}</text>
+            >{{ n.display_name?.length > 4 ? n.display_name.slice(0, 4) + '…' : n.display_name }}</text>
           </g>
 
           <g

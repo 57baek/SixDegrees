@@ -54,9 +54,9 @@
         <circle r="17" :fill="n.color" :fill-opacity="hoveredId === n.user_id ? 1 : 0.85" />
         <text
           text-anchor="middle" dominant-baseline="central"
-          font-size="9" fill="white" font-weight="700" font-family="monospace"
+          font-size="7" fill="white" font-weight="700" font-family="monospace"
           style="pointer-events:none;user-select:none"
-        >{{ initials(n.display_name) }}</text>
+        >{{ n.display_name?.length > 4 ? n.display_name.slice(0, 4) + '…' : n.display_name }}</text>
       </g>
 
       <!-- YOU — position follows zoom/pan but size stays constant -->

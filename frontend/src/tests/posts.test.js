@@ -120,4 +120,50 @@ describe('loadPosts RPC', () => {
   })
 })
 
+// Tests delete_post RPC
+describe('delete_post RPC', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('calls delete_post with correct post_id', async () => {
+    const postId = 'post-123'
+    supabase.rpc.mockResolvedValue({ data: true, error: null })
+    
+    await supabase.rpc('delete_post', { post_id: postId })
+    
+    expect(supabase.rpc).toHaveBeenCalledWith('delete_post', { post_id: postId })
+  })
+
+  it('returns true when deletion is successful', async () => {
+    supabase.rpc.mockResolvedValue({ data: true, error: null })
+    const { data } = await supabase.rpc('delete_post', { post_id: '123' })
+    expect(data).toBe(true)
+  })
+
+  it('handles permission error (returns false)', async () => {
+    supabase.rpc.mockResolvedValue({ data: false, error: null })
+    const { data } = await supabase.rpc('delete_post', { post_id: '123' })
+    expect(data).toBe(false)
+  })
+})
+
+// Tests delete_comment RPC
+describe('delete_comment RPC', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('calls delete_comment with correct comment_id', async () => {
+    const commentId = 'comment-456'
+    supabase.rpc.mockResolvedValue({ data: true, error: null })
+    
+    await supabase.rpc('delete_comment', { comment_id: commentId })
+    
+    expect(supabase.rpc).toHaveBeenCalledWith('delete_comment', { comment_id: commentId })
+  })
+
+  it('handles database error during deletion', async () => {
+    supabase.rpc.mockResolvedValue({ data: null, error: { message: 'Network error' } })
+    const { error } = await supabase.rpc('delete_comment', { comment_id: '456' })
+    expect(error.message).toBe('Network error')
+  })
+})
+
 

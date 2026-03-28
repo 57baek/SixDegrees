@@ -35,7 +35,10 @@
           <li v-for="user in incomingRequests" :key="user.id" class="request-item" @click="goToProfile(user.id)">
           
           <div class="request-user">
-            <div class="avatar-small">{{ user.nickname.charAt(0).toUpperCase() }}</div>
+            <div class="avatar-small">
+              <img v-if="user.avatar_url" :src="user.avatar_url" class="avatar-img" />
+              <span v-else>{{ user.nickname.charAt(0).toUpperCase() }}</span>
+            </div>
             <span class="request-text"><strong>{{ user.nickname }}</strong> wants to be friends!</span>
           </div>
           
@@ -75,6 +78,7 @@
           v-for="post in filteredPosts"
           :key="post.id"
           :post="post"
+          @delete-post="handleDeletePost"
         />
       </div>
     </div>
@@ -91,6 +95,22 @@ import Post from '../components/Post.vue'
 import { filterPostsByTier, tierFilterLabel } from '../utils.js'
 
 const router = useRouter()
+
+// ------------------------
+// Auth redirect
+// ------------------------
+const session = ref(null)
+
+onMounted(async () => {
+  const { data } = await supabase.auth.getSession()
+  session.value = data.session
+  if (!session.value) router.push('/login')
+})
+
+supabase.auth.onAuthStateChange((_event, newSession) => {
+  session.value = newSession
+  if (!newSession) router.push('/login')
+})
 
 // ===== Add Friend Test Function =====
 const testNickname = ref('')
@@ -171,14 +191,21 @@ const posts = ref([])
 const loading = ref(false)
 const pollInterval = ref(null)
 
-onMounted(() => {
+onMounted(async () => {
+  // Get session
+  const { data } = await supabase.auth.getSession()
+  session.value = data.session
+  if (!session.value) {
+    router.push('/login')
+    return
+  }
+
+  // Fetch initial data
   fetchIncomingRequests()
   loadPosts()
-  pollInterval.value = setInterval(loadPosts, 30000) // auto-refresh every 30s
-})
-
-onUnmounted(() => {
-  clearInterval(pollInterval.value)
+  
+  // Poll posts every 30s
+  pollInterval.value = setInterval(loadPosts, 30000)
 })
 
 /** Function to fetch posts from the database w/ user info, like count, comment count
@@ -219,6 +246,29 @@ const goToProfile = (userId) => {
   const selectedTierFilter = ref(3)
 
   const filteredPosts = computed(() => filterPostsByTier(posts.value, selectedTierFilter.value))
+  // Delete posts
+  async function handleDeletePost(postId) {
+    if (!confirm('Are you sure you want to delete this post?')) return
+
+    try {
+      const { data, error } = await supabase.rpc('delete_post', { 
+        post_id: postId 
+      })
+
+      if (error) throw error
+
+      if (data) {
+        posts.value = posts.value.filter(p => p.id !== postId)
+        alert('Post deleted successfully.')
+      } else {
+        alert('You do not have permission to delete this post.')
+      }
+
+    } catch (err) {
+      console.error('Error deleting post:', err)
+      alert('Failed to delete post: ' + err.message)
+    }
+  }
 </script>
 
 <style scoped>
@@ -272,7 +322,7 @@ const goToProfile = (userId) => {
 }
 
 .map-btn {
-  background: linear-gradient(135deg, #a78bfa 0%, #60d4f7 100%);
+  background: #788ac5 100%;
   color: #0a0c18;
   font-weight: 700;
   border: none;
@@ -280,7 +330,7 @@ const goToProfile = (userId) => {
 }
 
 .map-btn:hover {
-  background: #71e5ff 100%;
+  background: linear-gradient(135deg, #a78bfa 0%, #60d4f7 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(96, 212, 247, 0.4);
   color: #000;
@@ -426,6 +476,14 @@ const goToProfile = (userId) => {
   color: white;
   font-size: 1.2rem;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .tier-filter {
