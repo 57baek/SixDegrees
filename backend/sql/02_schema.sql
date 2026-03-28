@@ -1,80 +1,71 @@
-CREATE TABLE profiles (
-  id            UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  nickname      TEXT UNIQUE NOT NULL,
-  bio           TEXT,
-  avatar_url    TEXT,
-  age           INTEGER,
-  city          TEXT,
-  state         TEXT,
-  education     TEXT,
-  occupation    TEXT,
-  industry      TEXT,
-  interests     TEXT[],
-  languages     TEXT[],
-  profile_tier  INTEGER DEFAULT 6,
-  is_admin      BOOLEAN DEFAULT false,
-  created_at    TIMESTAMPTZ DEFAULT now(),
-  updated_at    TIMESTAMPTZ DEFAULT now()
-);
+-- profiles, posts, likes, comments, friend_requests, reports are owned by the
+-- DB/frontend team and live in the private schema. Do not create them here.
+--
+-- The backend reads profiles via a public view + writable INSTEAD OF trigger:
 
+CREATE OR REPLACE VIEW public.profiles AS
+SELECT id, nickname, bio, avatar_url, age, city, state,
+       education, occupation, industry, interests, languages,
+       profile_tier, is_admin, timezone, is_onboarded, created_at
+FROM private.profiles;
+
+CREATE OR REPLACE FUNCTION public.profiles_view_upsert()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO private.profiles (
+    id, nickname, bio, avatar_url, age, city, state,
+    education, occupation, industry, interests, languages,
+    profile_tier, is_admin, timezone
+  )
+  VALUES (
+    NEW.id, NEW.nickname, NEW.bio, NEW.avatar_url, NEW.age,
+    NEW.city, NEW.state, NEW.education, NEW.occupation, NEW.industry,
+    NEW.interests, NEW.languages,
+    COALESCE(NEW.profile_tier, 6),
+    COALESCE(NEW.is_admin, false),
+    COALESCE(NEW.timezone, 'UTC')
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    nickname     = EXCLUDED.nickname,
+    bio          = EXCLUDED.bio,
+    avatar_url   = EXCLUDED.avatar_url,
+    age          = EXCLUDED.age,
+    city         = EXCLUDED.city,
+    state        = EXCLUDED.state,
+    education    = EXCLUDED.education,
+    occupation   = EXCLUDED.occupation,
+    industry     = EXCLUDED.industry,
+    interests    = EXCLUDED.interests,
+    languages    = EXCLUDED.languages,
+    profile_tier = EXCLUDED.profile_tier,
+    is_admin     = EXCLUDED.is_admin,
+    timezone     = EXCLUDED.timezone;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER profiles_view_insert_trigger
+INSTEAD OF INSERT ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION public.profiles_view_upsert();
+
+-- interactions: public table with FKs to private.profiles
 CREATE TABLE interactions (
-  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id_a           UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  user_id_b           UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  like_count          INTEGER DEFAULT 0,
-  comment_count       INTEGER DEFAULT 0,
-  dm_count            INTEGER DEFAULT 0,
-  last_interaction_at TIMESTAMPTZ,
-  UNIQUE(user_id_a, user_id_b),
+  user_id_a      UUID NOT NULL REFERENCES private.profiles(id) ON DELETE CASCADE,
+  user_id_b      UUID NOT NULL REFERENCES private.profiles(id) ON DELETE CASCADE,
+  likes_count    INTEGER DEFAULT 0,
+  comments_count INTEGER DEFAULT 0,
+  dm_count       INTEGER DEFAULT 0,
+  last_updated   TIMESTAMPTZ DEFAULT now(),
+  PRIMARY KEY (user_id_a, user_id_b),
   CHECK (user_id_a < user_id_b)
 );
 
+-- backend-owned tables
 CREATE TABLE user_positions (
-  user_id     UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id     UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   x           FLOAT NOT NULL,
   y           FLOAT NOT NULL,
   computed_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE posts (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id    UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  content    TEXT NOT NULL,
-  tier       INTEGER NOT NULL CHECK (tier BETWEEN 1 AND 3),
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE likes (
-  id      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  UNIQUE(post_id, user_id)
-);
-
-CREATE TABLE comments (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id    UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-  user_id    UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  content    TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE friend_requests (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  sender_id   UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  receiver_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  status      TEXT NOT NULL DEFAULT 'pending'
-                CHECK (status IN ('pending', 'accepted', 'rejected')),
-  created_at  TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(sender_id, receiver_id)
-);
-
-CREATE TABLE reports (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id    UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-  user_id    UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(post_id, user_id)
 );
 
 CREATE TABLE pipeline_runs (

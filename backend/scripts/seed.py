@@ -122,8 +122,8 @@ def _build_interactions(profiles: list[dict]) -> list[dict]:
         interactions.append({
             "user_id_a": uid_a,
             "user_id_b": uid_b,
-            "like_count": 30,
-            "comment_count": 20,
+            "likes_count": 30,
+            "comments_count": 20,
             "dm_count": 10,
         })
 
@@ -146,8 +146,8 @@ def _build_interactions(profiles: list[dict]) -> list[dict]:
         interactions.append({
             "user_id_a": key[0],
             "user_id_b": key[1],
-            "like_count": rng.randint(0, 15),
-            "comment_count": rng.randint(0, 10),
+            "likes_count": rng.randint(0, 15),
+            "comments_count": rng.randint(0, 10),
             "dm_count": rng.randint(0, 5),
         })
 
@@ -160,7 +160,7 @@ def seed(sb=None) -> dict:
     profiles = _build_profiles()
     interactions = _build_interactions(profiles)
 
-    sb.table("profiles").upsert(profiles, on_conflict="id").execute()
+    sb.table("profiles").insert(profiles).execute()
     sb.table("interactions").upsert(interactions, on_conflict="user_id_a,user_id_b").execute()
 
     return {"profiles": len(profiles), "interactions": len(interactions)}
