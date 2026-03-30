@@ -21,14 +21,18 @@
         </button>
 
         <div v-if="!isOwnProfile" class="friendship-status">
-          <div v-if="isFriend" class="friend-badge">✓ Friends</div>
-          <template v-else>
-            <button v-if="!isOwnProfile && !requestSent" type="button"
-            class="add-friend-btn" @click="sendFriendRequest" :disabled="requesting">
-            {{ requesting ? 'Sending...' : '+ Add Friend' }}
+          <div v-if="!isOwnProfile" class="friendship-status">
+            <button class="addOrRemoveFriend-btn"
+              type="button"
+              :class="isFriend ? 'remove-friend-btn' : requestSent ? 'pending-friend-btn' : 'add-friend-btn'"
+              @click="isFriend ? removeFriend() : !requestSent && sendFriendRequest()"
+              :disabled="requesting || requestSent">
+              <template v-if="requesting">Loading...</template>
+              <template v-else-if="isFriend"><UserMinus :size="16" /> Remove Friend</template>
+              <template v-else-if="requestSent"><Clock :size="16" /> Pending</template>
+              <template v-else><UserPlus :size="16" /> Add Friend</template>
             </button>
-            <div v-else class="friend-requested">✓ Request Sent</div>
-          </template>
+          </div>
         </div>
       </div>
 
@@ -130,6 +134,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '../lib/supabase'
+import { UserPlus, UserMinus, Clock } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -304,7 +309,21 @@ async function sendFriendRequest() {
   } finally {
     requesting.value = false
   }
+}
 
+async function removeFriend() {
+  requesting.value = true
+  try {
+    const { error } = await supabase.rpc('remove_friend', {
+      friend_nickname: profile.value.nickname
+    })
+    if (error) throw error
+    isFriend.value = false
+  } catch (err) {
+    console.error('Error removing friend:', err)
+  } finally {
+    requesting.value = false
+  }
 }
 
 function triggerUpload() {
@@ -698,5 +717,46 @@ li {
   border-radius: 6px;
   font-size: 0.95rem;
   text-align: center;
+}
+
+.remove-friend-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.remove-friend-btn:hover:not(:disabled) {
+  background: #ff6b6b;
+  color: white;
+}
+
+.remove-friend-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pending-friend-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  color: #f0a500;
+  border: 1px solid #f0a500;
+  border-radius: 6px;
+  cursor: not-allowed;
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.addOrRemoveFriend-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
 }
 </style>
