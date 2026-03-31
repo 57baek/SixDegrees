@@ -89,3 +89,37 @@ def test_cosine_sim_result_clipped():
     b = np.array([-1.0, 0.0])   # raw cosine = -1.0 → must clip to 0.0
     result = cosine_sim(a, b)
     assert result == 0.0
+
+
+# --- embed_profiles (uses real model — sentence-transformers must be installed) ---
+
+def test_embed_profiles_shape():
+    """N profiles → output shape (N, 384)."""
+    from services.matching.embedder import embed_profiles
+    profiles = [
+        _profile(id="u1", interests=["hiking"], bio="outdoor person"),
+        _profile(id="u2", interests=["coding"], bio="software engineer"),
+        _profile(id="u3", interests=[], bio=None),
+    ]
+    result = embed_profiles(profiles)
+    assert result.shape == (3, 384)
+
+
+def test_embed_profiles_empty_profile_is_zero():
+    """Profile with no text gets a zero vector."""
+    from services.matching.embedder import embed_profiles
+    profiles = [_profile(id="u1", interests=[], bio=None)]
+    result = embed_profiles(profiles)
+    assert np.all(result[0] == 0.0)
+
+
+def test_embed_profiles_identical_profiles_cosine_one():
+    """Same profile text twice → cosine sim = 1.0."""
+    from services.matching.embedder import embed_profiles
+    profiles = [
+        _profile(id="u1", interests=["hiking", "camping"], bio="I love nature"),
+        _profile(id="u2", interests=["hiking", "camping"], bio="I love nature"),
+    ]
+    result = embed_profiles(profiles)
+    sim = cosine_sim(result[0], result[1])
+    assert sim == pytest.approx(1.0, abs=1e-5)
