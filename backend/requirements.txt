@@ -7,6 +7,7 @@ pydantic
 numpy>=1.26
 scikit-learn>=1.4
 umap-learn>=0.5
+sentence-transformers>=3.0,<4.0
 apscheduler>=3.10,<4
 
 matplotlib>=3.10

@@ -48,3 +48,12 @@ MAX_POSITION_DELTA: float = 0.35
 # --- Ego map tier thresholds ---
 TIER1_K: int = 5
 TIER2_K: int = 15
+
+# --- Embeddings ---
+# Fields whose similarity is computed via sentence-transformer embeddings.
+# Replaces hand-crafted counterparts in the weighted profile score.
+# Set to [] to disable embeddings and fall back to hand-crafted methods.
+EMBEDDING_FIELDS: list[str] = ["interests", "bio"]
+
+# Sentence-transformers model — downloads once on first run (~90MB)
+EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
