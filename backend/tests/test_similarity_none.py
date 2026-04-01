@@ -3,6 +3,8 @@
 import sys
 import os
 
+import numpy as np
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services.matching.similarity import (
@@ -54,6 +56,10 @@ def test_profile_similarity_all_none_optionals():
     """UserProfile with all None optional fields must not crash _profile_similarity."""
     u1 = UserProfile(id="u1", nickname="Alice")
     u2 = UserProfile(id="u2", nickname="Bob")
-    score = _profile_similarity(u1, u2)
+    embeddings = {
+        "u1": np.zeros(384, dtype=np.float32),
+        "u2": np.zeros(384, dtype=np.float32),
+    }
+    score = _profile_similarity(u1, u2, embeddings)
     assert isinstance(score, float)
     assert 0.0 <= score <= 1.0
