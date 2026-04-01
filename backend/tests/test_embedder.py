@@ -33,7 +33,7 @@ def test_build_profile_text_interests_only():
 def test_build_profile_text_bio_only():
     """EMBEDDING_FIELDS=['bio'] → bio text only, no leading separator."""
     p = _profile(interests=["hiking"], bio="I love the outdoors")
-    with patch("services.matching.embedder.EMBEDDING_FIELDS", ["bio"]):
+    with patch("config.settings.EMBEDDING_FIELDS", ["bio"]):
         result = build_profile_text(p)
     assert result == "I love the outdoors"
 

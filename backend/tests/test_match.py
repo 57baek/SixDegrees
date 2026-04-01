@@ -174,7 +174,7 @@ def _user(uid: str, interests: list[str], bio: str | None = None) -> UserProfile
 def test_embedding_fields_config_fallback_to_jaccard(monkeypatch):
     """When EMBEDDING_FIELDS=[], get_top_matches uses Jaccard and never calls embed_profiles."""
     from unittest.mock import MagicMock
-    monkeypatch.setattr("services.matching.scoring.EMBEDDING_FIELDS", [])
+    monkeypatch.setattr("config.settings.EMBEDDING_FIELDS", [])
 
     mock_embed = MagicMock()
     monkeypatch.setattr("services.matching.scoring.embed_profiles", mock_embed)
@@ -200,7 +200,7 @@ def test_semantic_similarity_scores_higher_than_jaccard(monkeypatch):
     other = _user("u1", interests=["trail running"])
 
     # Baseline: Jaccard (EMBEDDING_FIELDS disabled)
-    monkeypatch.setattr("services.matching.scoring.EMBEDDING_FIELDS", [])
+    monkeypatch.setattr("config.settings.EMBEDDING_FIELDS", [])
     jaccard_score = get_top_matches(current, [other], top_n=1)[0]["similarity_score"]
 
     # Embedding: inject vectors where cosine_sim("me", "u1") ≈ 0.9
@@ -222,7 +222,7 @@ def test_semantic_similarity_scores_higher_than_jaccard(monkeypatch):
                 result[i] = v_current
         return result
 
-    monkeypatch.setattr("services.matching.scoring.EMBEDDING_FIELDS", ["interests", "bio"])
+    monkeypatch.setattr("config.settings.EMBEDDING_FIELDS", ["interests", "bio"])
     monkeypatch.setattr("services.matching.scoring.embed_profiles", _embed_with_vectors)
 
     embedding_score = get_top_matches(current, [other], top_n=1)[0]["similarity_score"]

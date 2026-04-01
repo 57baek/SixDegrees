@@ -7,7 +7,8 @@ Not thread-safe — safe under single-worker Uvicorn deployment.
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-from config.settings import EMBEDDING_FIELDS, EMBEDDING_MODEL
+import config.settings as _cfg
+EMBEDDING_MODEL = _cfg.EMBEDDING_MODEL  # module-level alias — loaded once at import
 from models.user import UserProfile
 
 _model: SentenceTransformer | None = None
@@ -38,7 +39,7 @@ def build_profile_text(profile: UserProfile) -> str:
       interests=[],         bio=None   → ""
     """
     parts: list[str] = []
-    for field in EMBEDDING_FIELDS:
+    for field in _cfg.EMBEDDING_FIELDS:
         value = getattr(profile, field, None)
         if value is None:
             continue
