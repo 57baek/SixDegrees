@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 class UserProfile(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -17,3 +17,8 @@ class UserProfile(BaseModel):
     languages: list[str] = []
     profile_tier: int = 6
     is_admin: bool = False
+
+    @field_validator("interests", "languages", mode="before")
+    @classmethod
+    def coerce_none_to_empty_list(cls, v):
+        return v if v is not None else []
