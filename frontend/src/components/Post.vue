@@ -4,7 +4,7 @@
       <div class="user-info">
         <div 
           class="avatar" 
-          @click="router.push(`/profile/${post.user_id}`)"
+          @click="router.push(`/profile/${post.nickname}`)"
           style="cursor:pointer"
         >
           <img v-if="post.avatar_url" :src="post.avatar_url" class="avatar-img" />
@@ -77,7 +77,7 @@
         <div class="comment-main-content">
           <strong 
             class="comment-author" 
-            @click="router.push(`/profile/${comment.user_id}`)"
+            @click="router.push(`/profile/${comment.nickname}`)"
           >
             {{ comment.nickname || 'Unknown' }}
           </strong>
@@ -203,7 +203,7 @@ onMounted(async () => {
   const { data: { user } } = await supabase.auth.getUser()
   if (user) { 
     currentUserId.value = user.id 
-    console.log("Current User ID:", currentUserId.value)
+    //console.log("Current User ID:", currentUserId.value)
   }
   
   await fetchUserLike()

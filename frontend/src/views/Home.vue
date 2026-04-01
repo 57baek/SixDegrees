@@ -32,7 +32,7 @@
         </div>
         
         <ul v-else class="requests-list">
-          <li v-for="user in incomingRequests" :key="user.id" class="request-item" @click="goToProfile(user.id)">
+          <li v-for="user in incomingRequests" :key="user.nickname" class="request-item" @click="goToProfile(user.nickname)">
           
           <div class="request-user">
             <div class="avatar-small">
@@ -75,7 +75,7 @@
 
       <div v-else class="feed">
         <Post
-          v-for="post in filteredPosts"
+          v-for="post in posts"
           :key="post.id"
           :post="post"
           @delete-post="handleDeletePost"
@@ -92,7 +92,7 @@ import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import CreatePost from '../components/CreatePost.vue'
 import Post from '../components/Post.vue'
-import { filterPostsByTier, tierFilterLabel } from '../utils.js'
+import { tierFilterLabel } from '../utils.js'
 
 const router = useRouter()
 
@@ -210,14 +210,18 @@ onMounted(async () => {
 
 /** Function to fetch posts from the database w/ user info, like count, comment count
  * posts ordered by recency (newst first)
+ * and filtered posts based on selected tier filter
 */
 
+const selectedTierFilter = ref(3)
 
 async function loadPosts() {
   loading.value = true
   
   try {
-    const { data, error } = await supabase.rpc('load_posts')
+    const { data, error } = await supabase.rpc('load_posts', {
+      max_tier: selectedTierFilter.value
+    })
     
     if (error) throw error
     
@@ -229,8 +233,8 @@ async function loadPosts() {
   }
 }
 
-const goToProfile = (userId) => {
-  router.push(`/profile/${userId}`)
+const goToProfile = (userNickname) => {
+  router.push(`/profile/${userNickname}`)
 }
 
   /**
@@ -242,10 +246,6 @@ const goToProfile = (userId) => {
     router.push('/login')
   }
 
-  // computing filtered posts based on selected tier filter
-  const selectedTierFilter = ref(3)
-
-  const filteredPosts = computed(() => filterPostsByTier(posts.value, selectedTierFilter.value))
   // Delete posts
   async function handleDeletePost(postId) {
     if (!confirm('Are you sure you want to delete this post?')) return

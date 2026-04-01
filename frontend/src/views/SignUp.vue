@@ -13,15 +13,15 @@ SIGNUP PAGE - form users see when creating a new account
                         type="text"
                         @focus="showValidation = true"
                         @blur="showValidation = ~uniqueUser"
-                        @input="checkNickname(); emptyUser = nickname.trimEnd().length == 0;"
+                        @input="checkNickname();"
                         placeholder="Create nickname"
                         required
                     />
-                  <div v-if="showValidation" class="pw-checklist" aria-live="polite">
+                  <div v-if="showValidation" class="checklist" aria-live="polite">
                     <ul>
-                      <li :class="{valid: uniqueUser && !emptyUser, invalid: !uniqueUser || emptyUser}">
-                        <span class="dot">{{ emptyUser ? '✕' : (uniqueUser ? '✓' : '✕') }}</span>
-                        {{ emptyUser ? 'Enter a valid nickname' : (uniqueUser ? 'Nickname is available' : 'Nickname is not available') }}
+                      <li :class="{valid: uniqueUser && validName, invalid: !uniqueUser || !validName}">
+                        <span class="dot">{{ !validName ? '✕' : (uniqueUser ? '✓' : '✕') }}</span>
+                        {{ !validName ? 'Enter a valid nickname' : (uniqueUser ? 'Nickname is available' : 'Nickname is not available') }}
                       </li>
                     </ul>
                   </div>
@@ -48,7 +48,7 @@ SIGNUP PAGE - form users see when creating a new account
                         placeholder="Enter Password"
                         required
                     />
-                  <div v-if="showChecklist" class="pw-checklist" aria-live="polite">
+                  <div v-if="showChecklist" class="checklist" aria-live="polite">
                     <ul>
                       <li :class="{valid: validations.length, invalid: !validations.length}">
                         <span class="dot">{{ validations.length ? '✓' : '✕' }}</span>
@@ -97,9 +97,13 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const uniqueUser = ref(false)
-const emptyUser = ref(true)
 const showValidation = ref(false)
 const showChecklist = ref(false)
+
+const validName = computed(() => {
+  const nick = nickname.value || ''
+  return /^[A-Za-z0-9_]{1,35}$/.test(nick)
+})
 
 async function checkNickname() {
   try {
@@ -272,15 +276,15 @@ input:focus {
   border: 1px solid #ff6b6b;
 }
 
-.pw-checklist {
+.checklist {
   margin-top: 0.5rem;
 }
-.pw-checklist ul {
+.checklist ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.pw-checklist li {
+.checklist li {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -288,16 +292,16 @@ input:focus {
   color: #cfcfcf;
   margin-bottom: 0.4rem;
 }
-.pw-checklist li .dot {
+.checklist li .dot {
   display: inline-block;
   width: 1.2rem;
   text-align: center;
   font-weight: 700;
 }
-.pw-checklist li.valid {
+.checklist li.valid {
   color: #8ef0a6;
 }
-.pw-checklist li.invalid {
+.checklist li.invalid {
   color: #fa7676;
   opacity: 0.75;
 }

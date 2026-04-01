@@ -32,14 +32,33 @@
               <template v-else-if="requestSent"><Clock :size="16" /> Pending</template>
               <template v-else><UserPlus :size="16" /> Add Friend</template>
             </button>
+            <button v-if="!isOwnProfile && requestSent"
+              type="button"
+              class="remove-friend-btn"
+              @click="rescindRequest()"
+              :disabled="requesting">
+              Cancel
+            </button>
           </div>
+        </div>
+
+        <div v-if="!isOwnProfile" class="block-status">
+          <button class="blockOrUnblock-btn"
+            type="button"
+            :class="isBlocked ? 'unblock-btn' : 'block-btn'"
+            @click="isBlocked ? unblockUser() : blockUser()"
+            :disabled="blocking">
+            <template v-if="blocking">Loading...</template>
+            <template v-else-if="isBlocked">Unblock</template>
+            <template v-else>Block</template>
+          </button>
         </div>
       </div>
 
       <div class="bio-container">
         <div v-if="!isEditing">
-          <h1 id="profile-name">{{ profile.nickname || 'Set your nickname' }}</h1>
-          <p id="bio">{{ profile.bio || 'Tell people about yourself...' }}</p>
+          <h1 id="profile-name">{{ profile.nickname || 'Unnamed User' }}</h1>
+          <p id="bio">{{ profile.bio || 'No bio added yet' }}</p>
           
           <div class="profile-details">
             <div class="detail-row" v-if="profile.age">
@@ -140,12 +159,14 @@ const router = useRouter()
 const route = useRoute()
 
 const profile = ref({})
-const currentUserID = ref(null)
+const currentUserId = ref(null)
 const isEditing = ref(false)
 const saving = ref(false)
 const error = ref('')
 const isFriend = ref(false)
-const hasPendingRequest = ref(false)
+
+const isBlocked = ref(false)
+const blocking = ref(false)
 
 const fileInput = ref(null)
 const uploading = ref(false)
@@ -166,9 +187,9 @@ const editForm = ref({
 const interestsInput = ref('')
 const languagesInput = ref('')
 
-// check if user is viewinf their own profile or someone else's
+// check if user is viewing their own profile or someone else's
 const isOwnProfile = computed(() => {
-  return !route.params.userId || route.params.userId === currentUserID.value
+  return !route.params.userId || route.params.userId === currentUserId.value
 })
 
 const userInitial = computed(() => {
@@ -198,25 +219,37 @@ async function loadProfile() {
       return
     }
 
-    currentUserID.value = user.id
+    currentUserId.value = user.id
 
     //if userid in route, load that profile, otherwise load current user's profile
-    const targetUserId = route.params.userId || user.id
+    const targetUser = route.params.userId || user.id
 
-    const { data, error: profileError } = await supabase
-      .rpc('get_user_profile', { target_user_id: targetUserId })
-      .single()
-    
+    const { data, error: profileError } = (targetUser.length == 36) ? 
+      await supabase
+        .rpc('get_user_profile', { target_user_id: targetUser })
+        .single()
+      :
+      await supabase
+        .rpc('get_user_profile', { target_nickname : targetUser })
+        .single()
+
     if (profileError) throw profileError
     profile.value = data || {}
 
-    if(targetUserId != user.id){
+    if(profile.value.id != user.id) {
       const { data: friends } = await supabase.rpc('extended_friends', { max_tier: 1 })
-      isFriend.value = (friends || []).some(f => f.id === targetUserId)
+      isFriend.value = (friends || []).some(f => f.id === profile.value.id)
 
-      const { data: pending } = await supabase.rpc('has_pending_request', { target_user_id: targetUserId })
+      const { data: pending } = await supabase.rpc('has_pending_request', { target_user_id: profile.value.id })
       requestSent.value = pending
+
+      const { data : blocked } = await supabase.rpc('is_blocked', {blocked_id: profile.value.id })
+      isBlocked.value = blocked
+
+      router.replace(`/profile/${profile.value.nickname}`)
     }
+    else
+      router.replace(`/profile`)
   } catch (err) {
     console.error('Error loading profile:', err)
     error.value = 'Failed to load profile'
@@ -323,6 +356,51 @@ async function removeFriend() {
     console.error('Error removing friend:', err)
   } finally {
     requesting.value = false
+  }
+}
+
+async function rescindRequest() {
+  requesting.value = true
+  try {
+    const { error } = await supabase.rpc('rescind_friend_request', {
+      friend_nickname: profile.value.nickname
+    })
+    if (error) throw error
+    requestSent.value = false
+  } catch (err) {
+    console.error('Error rescinding request:', err)
+  } finally {
+    requesting.value = false
+  }
+}
+
+async function blockUser() {
+  blocking.value = true
+  try {
+    const { error } = await supabase.rpc('block', {
+      blocked_nickname: profile.value.nickname
+    })
+    if (error) throw error
+    isBlocked.value = true
+  } catch (err) {
+    console.error('Error blocking user:', err)
+  } finally {
+    blocking.value = false
+  }
+}
+
+async function unblockUser() {
+  blocking.value = true
+  try {
+    const { error } = await supabase.rpc('unblock', {
+      blocked_nickname: profile.value.nickname
+    })
+    if (error) throw error
+    isBlocked.value = false
+  } catch (err) {
+    console.error('Error unblocking user:', err)
+  } finally {
+    blocking.value = false
   }
 }
 
@@ -672,6 +750,7 @@ li {
 }
 
 .friendship-status {
+  display: flex;
   width: 100%;
 }
 
@@ -695,17 +774,6 @@ li {
 .add-friend-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.friend-requested {
-  width: 100%;
-  padding: 0.75rem;
-  background: #1a3a2a;
-  color: #4caf7d;
-  border: 1px solid #4caf7d44;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  text-align: center;
 }
 
 .friend-badge {
@@ -742,7 +810,7 @@ li {
 }
 
 .pending-friend-btn {
-  width: 100%;
+  width: 250%;
   padding: 0.75rem;
   background: transparent;
   color: #f0a500;
@@ -758,5 +826,54 @@ li {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
+}
+
+.block-status {
+  width: 100%;
+}
+
+.unblock-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  color: #088F8F;
+  border: 1px solid #088F8F;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.unblock-btn:hover:not(:disabled) {
+  background: #088F8F;
+  color: white;
+}
+
+.unblock-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.block-btn {
+  width: 40%;
+  padding: 0.75rem;
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.block-btn:hover:not(:disabled) {
+  background: #ff6b6b;
+  color: white;
+}
+
+.block-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
