@@ -1,9 +1,3 @@
-<!-- 
-LOGIN PAGE - form users see when logging in 
-TODO: When they click submit, POST to http://localhost:8000/auth/login 
-TODO: If successful, save the token to localStorage and redirect them 
---> 
-
 <template>
     <div class="login-container">
         <div class="login-box">
@@ -52,11 +46,17 @@ const email = ref("");
 const password = ref("");
 const error = ref("");
 
-// redirect to signup page
+/*
+  Redirects to the signup page
+*/
 const handleSignup = async () => {
   router.push("/signup");
 };
 
+/*
+  Logs the user in with email/pw, saves the session token,
+  then redirects ti profile setup if not yet onboarded, otherwise to the home feed
+*/
 const handleLogin = async () => {
   error.value = "";
 

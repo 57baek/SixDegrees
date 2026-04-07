@@ -7,6 +7,7 @@
 
     <div id="main-profile-box">
       <div class="profile-picture-container">
+        <!-- Avatar click only triggers upload when on own profile in edit mode -->
         <div class="profile-pic-circle" :class="{ 'no-bg': profile.avatar_url }" @click="isOwnProfile && isEditing &&triggerUpload()">
         <img v-if="profile.avatar_url" :src="profile.avatar_url" class="avatar-img" />
         <span v-else>{{ userInitial }}</span>
@@ -192,10 +193,12 @@ const isOwnProfile = computed(() => {
   return !route.params.userId || route.params.userId === currentUserId.value
 })
 
+// First letter of the user's nickname, used as avatar fallback
 const userInitial = computed(() => {
   return profile.value.nickname?.charAt(0).toUpperCase() || 'U'
 })
 
+// Combines city and state into a single display string, handling partial values
 const locationDisplay = computed(() => {
   if (profile.value.city && profile.value.state) {
     return `${profile.value.city}, ${profile.value.state}`
@@ -211,6 +214,10 @@ const friendCount = computed(() => {
   return profile.value.friends?.length || 0
 })
 
+/*
+  Loads the target profile (either by user ID or nickname depending on route param format)
+  Also checks friendship, pending request, and block status if viewing someone else's profile
+*/
 async function loadProfile() {
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -256,6 +263,7 @@ async function loadProfile() {
   }
 }
 
+// Populates the edit form with the current profile data and switches to edit mode
 function startEditing() {
   editForm.value = {
     nickname: profile.value.nickname || '',
@@ -281,6 +289,10 @@ function cancelEdit() {
   error.value = ''
 }
 
+/*
+  Saves the edited profile, parses comma-separated interests and language inputs
+  into arrays before sending to db, then reloads the profile on success
+*/
 async function saveProfile() {
   saving.value = true
   error.value = ''
@@ -328,6 +340,7 @@ async function saveProfile() {
 const requestSent = ref(false)
 const requesting = ref(false)
 
+// Sends a friend request to the viewed profile and marks it as pending on success
 async function sendFriendRequest() {
   requesting.value = true
   try {
@@ -344,6 +357,7 @@ async function sendFriendRequest() {
   }
 }
 
+// Removes the current user from this profile's friends and updates local state
 async function removeFriend() {
   requesting.value = true
   try {
@@ -359,6 +373,7 @@ async function removeFriend() {
   }
 }
 
+// Cancels an outgoing friend request that hasn't been accepted yet
 async function rescindRequest() {
   requesting.value = true
   try {
@@ -374,6 +389,7 @@ async function rescindRequest() {
   }
 }
 
+// Blocks the viewed user
 async function blockUser() {
   blocking.value = true
   try {
@@ -389,6 +405,7 @@ async function blockUser() {
   }
 }
 
+// Unblocks the viewed user
 async function unblockUser() {
   blocking.value = true
   try {
@@ -404,10 +421,15 @@ async function unblockUser() {
   }
 }
 
+// Programatically triggers the hidden file input for avatar upload
 function triggerUpload() {
   fileInput.value.click()
 }
 
+/*
+  Validates, uploads the selected image to Supabase storage,
+  then updates the profiles avatar_url with the new public URL
+*/
 async function uploadAvatar(event) {
   const file = event.target.files[0]
   if (!file) return

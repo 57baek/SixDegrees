@@ -3,6 +3,7 @@
     <div class="container">
       <header class="friends-header">
         <button @click="router.back()" class="back-btn">← Back</button>
+        <!-- Title changes based on whether we're viewing our own or another user's friends list -->
         <h1>{{ route.params.userId ? "Their Friends" : "My Friends" }}</h1>
         <span class="friend-count">{{ friends.length }}</span>
       </header>
@@ -20,6 +21,8 @@
           class="friend-row"
           @click="router.push(`/profile/${friend.id}`)"
         >
+
+        <!-- Falls back to first letter of nickname if no avatar -->
           <div class="friend-avatar">
             <img v-if="friend.avatar_url" :src="friend.avatar_url" class="avatar-img" />
             <span v-else>{{ friend.nickname.charAt(0).toUpperCase() }}</span>
@@ -32,6 +35,10 @@
             </div>
           </div>
 
+          <!-- 
+            Button style/action depends on friendship status:
+            own list OR already friends -> Remove | request sent -> pending | otherwise -> add 
+          -->
           <button
             v-if="friend.id !== currentUserId"
             class="addOrRemoveFriend-btn"
@@ -63,9 +70,13 @@ const route = useRoute()
 const friends = ref([])
 const loading = ref(true)
 const currentUserId = ref(null)
-const friendStatuses = ref({}) // tracking isFriend/requestSent per user
-const requesting = ref(null) // tracks which user id is currently requesting
+const friendStatuses = ref({}) // tracks { is Friend, requestSent } per friend when viewing another user's list
+const requesting = ref(null) // ID of the friend currently being added/removed, disables their button
 
+/* 
+  Fetches the friends list for the current user or a specified user
+  Loads friendship statuses if viewing someone else's list 
+*/
 async function loadFriends() {
   loading.value = true
   try {
@@ -77,8 +88,9 @@ async function loadFriends() {
         target_user_id: route.params.userId || null
       })
     if (error) throw error
-    friends.value = (data || []).filter(f => f.tier === 1)
+    friends.value = (data || []).filter(f => f.tier === 1) // only show direct friends
     
+    // when viewing someone else's list, check our relaitonship with each of their friends
     if (route.params.userId) {
       const { data: myFriends } = await supabase.rpc('extended_friends', { max_tier: 1 })
       const myFriendIds = new Set((myFriends || []).map(f => f.id))
@@ -98,6 +110,9 @@ async function loadFriends() {
   }
 }
 
+/*
+  Sends a friend request to the given friend and updates their status to pending on sucess
+*/
 async function sendFriendRequest(friend) {
   requesting.value = friend.id
   try {
@@ -114,6 +129,9 @@ async function sendFriendRequest(friend) {
   }
 }
 
+/*
+  Removes a friend and immediately updates the UI without a full reload
+*/
 async function removeFriend(friend) {
   requesting.value = friend.id
   try {

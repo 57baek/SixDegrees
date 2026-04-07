@@ -43,6 +43,10 @@ const error = ref('')
 
 const emit = defineEmits(['post-created'])
 
+/*
+  Submits the post with the selected tier visibility
+  Clears the form and notifies the parent to refresh the feed
+*/
 async function handlePost() {
   if (!content.value.trim()) return
   

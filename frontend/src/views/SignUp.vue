@@ -100,11 +100,13 @@ const uniqueUser = ref(false)
 const showValidation = ref(false)
 const showChecklist = ref(false)
 
+// Validates nickname format: alphanumeric and underscores only, max 35 characters
 const validName = computed(() => {
   const nick = nickname.value || ''
   return /^[A-Za-z0-9_]{1,35}$/.test(nick)
 })
 
+// Checks if typed nickname is available in the db and updates the validation indicator
 async function checkNickname() {
   try {
     const { data, NicknameError } = await supabase.rpc('nickname_available', {
@@ -123,6 +125,7 @@ async function checkNickname() {
   }
 }
 
+// Checks pw against all requirements (length, upper, lower, number, special character)
 const validations = computed(() => {
   const pw = password.value || ''
   return {
@@ -134,6 +137,7 @@ const validations = computed(() => {
   }
 })
 
+// Validates the password, then signs the user up with Supabase and redirects to the profile setup
 async function handleSignUp() {
   if (!Object.values(validations.value).every(Boolean)) {
     error.value = 'Password does not meet the requirements.'
@@ -161,6 +165,7 @@ async function handleSignUp() {
   router.push("/profile-setup")
 }
 
+// Redirects back to the login page
 const handleBack2Login = async () => {
   router.push("/login");
 };

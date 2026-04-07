@@ -111,11 +111,12 @@ const emit = defineEmits(['delete-post'])
 const currentUserId = ref(null)
 
 
-
+// Checks if this post belongs to the current user (controls delete button visibility)
 const isOwnPost = computed(() => {
   return currentUserId.value && props.post.user_id === currentUserId.value
 })
 
+// Emits delete event to parent with the post ID
 function emitDelete() {
   emit('delete-post', props.post.id)
 }
@@ -145,7 +146,7 @@ const userInitial = computed(() => {
 })
 
 /**
- * returns icon component for a visibility tier
+ * Returns the icon component for a given visibility tier (Lock, Users, or Globe)
  * @param tier tier value from db (1, 2, 3)
  */
 function tierIcon(tier) {
@@ -203,7 +204,6 @@ onMounted(async () => {
   const { data: { user } } = await supabase.auth.getUser()
   if (user) { 
     currentUserId.value = user.id 
-    //console.log("Current User ID:", currentUserId.value)
   }
   
   await fetchUserLike()
@@ -267,6 +267,7 @@ async function handleComment() {
   }
 }
 
+// Prompts for confirmation, deletes the comment, and removes it from the local list
 async function handleDeleteComment(commentId) {
   if (!confirm('Are you sure you want to delete this comment?')) return
   
@@ -316,7 +317,7 @@ async function handleReport() {
   }
 }
 
-// Check if current user has reported the post
+// Checks if the current user has reported the post on mount
 async function fetchUserReport() {
   const { data, error } = await supabase.rpc('is_user_reported', {
     post_id: props.post.id
