@@ -41,3 +41,37 @@ def test_match_no_jwt_returns_401(client_no_auth):
     """GET /match with no JWT returns 401 (Phase 7 creates and secures this route)."""
     response = client_no_auth.get("/match")
     assert response.status_code == 401
+
+
+def test_get_profile_not_found(client, mock_sb):
+    """GET /profile returns 404 when RPC returns empty data."""
+    mock_sb.rpc.side_effect = None
+    mock_sb.rpc.return_value.execute.return_value.data = []
+    resp = client.get("/profile")
+    assert resp.status_code == 404
+    assert "Profile not found" in resp.json()["detail"]
+
+
+def test_put_profile_interest_normalization(client, mock_sb):
+    """PUT /profile deduplicates and lowercases interests."""
+    mock_sb.rpc.side_effect = None
+    mock_sb.rpc.return_value.execute.return_value.data = [{}]
+    resp = client.put("/profile", json={"interests": ["Hiking", "hiking", " HIKING ", "coding"]})
+    assert resp.status_code == 200
+    # Verify upsert_profile was called with normalized interests
+    call_args = mock_sb.rpc.call_args_list
+    upsert_call = next(c for c in call_args if c[0][0] == "upsert_profile")
+    interests = upsert_call[0][1]["p_data"]["interests"]
+    assert interests == ["hiking", "coding"]
+
+
+def test_put_profile_empty_interest_strings_skipped(client, mock_sb):
+    """PUT /profile skips empty and whitespace-only interest strings."""
+    mock_sb.rpc.side_effect = None
+    mock_sb.rpc.return_value.execute.return_value.data = [{}]
+    resp = client.put("/profile", json={"interests": ["  ", "", "coding"]})
+    assert resp.status_code == 200
+    call_args = mock_sb.rpc.call_args_list
+    upsert_call = next(c for c in call_args if c[0][0] == "upsert_profile")
+    interests = upsert_call[0][1]["p_data"]["interests"]
+    assert interests == ["coding"]
