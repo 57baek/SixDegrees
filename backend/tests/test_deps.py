@@ -21,9 +21,19 @@ def _client_with_real_auth(mock_sb):
 
 
 def test_invalid_token_returns_401():
-    """get_user returns None → 401."""
+    """get_user returns a response with user=None → 401."""
     mock_sb = MagicMock()
     mock_sb.auth.get_user.return_value = MagicMock(user=None)
+    with _client_with_real_auth(mock_sb) as tc:
+        resp = tc.get("/profile", headers={"Authorization": "Bearer bad-token"})
+    assert resp.status_code == 401
+    assert "Invalid or expired token" in resp.json()["detail"]
+
+
+def test_get_user_returns_none_response_401():
+    """get_user returns None directly (not a UserResponse object) → 401."""
+    mock_sb = MagicMock()
+    mock_sb.auth.get_user.return_value = None
     with _client_with_real_auth(mock_sb) as tc:
         resp = tc.get("/profile", headers={"Authorization": "Bearer bad-token"})
     assert resp.status_code == 401
