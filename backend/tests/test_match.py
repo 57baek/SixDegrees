@@ -8,7 +8,7 @@ from tests.conftest import TEST_USER_ID
 
 import numpy as np
 from models.user import UserProfile
-from services.matching.scoring import get_top_matches
+from services.matching.scoring import get_top_matches, build_similarity_matrix, apply_weights, similarity_to_distance
 
 
 @pytest.fixture(autouse=True)
@@ -230,3 +230,68 @@ def test_semantic_similarity_scores_higher_than_jaccard(monkeypatch):
     assert embedding_score > jaccard_score, (
         f"Expected embedding score ({embedding_score}) > jaccard score ({jaccard_score})"
     )
+
+
+# --- build_similarity_matrix, apply_weights, similarity_to_distance direct tests ---
+
+def _make_user(uid: str) -> UserProfile:
+    return UserProfile(
+        id=uid, nickname=uid,
+        interests=["coding"], languages=["English"],
+        city="SF", state="CA", age=25,
+        education="CS", industry="Tech",
+    )
+
+
+def test_build_similarity_matrix_shape(monkeypatch):
+    """build_similarity_matrix returns (N, N, F) shape."""
+    monkeypatch.setattr("config.settings.EMBEDDING_FIELDS", [])
+    users = [_make_user("u1"), _make_user("u2"), _make_user("u3")]
+    matrix = build_similarity_matrix(users)
+    assert matrix.shape == (3, 3, 6)
+
+
+def test_build_similarity_matrix_with_embeddings_none_and_fields_set(monkeypatch):
+    """build_similarity_matrix computes embeddings internally when embeddings=None and EMBEDDING_FIELDS non-empty."""
+    monkeypatch.setattr("config.settings.EMBEDDING_FIELDS", ["interests"])
+    def _zero_embed(profiles):
+        return np.zeros((len(profiles), 384), dtype=np.float32)
+    monkeypatch.setattr("services.matching.scoring.embed_profiles", _zero_embed)
+    users = [_make_user("u1"), _make_user("u2")]
+    matrix = build_similarity_matrix(users, embeddings=None)
+    assert matrix.shape == (2, 2, 6)
+
+
+def test_apply_weights_returns_NxN(monkeypatch):
+    """apply_weights collapses (N, N, F) to (N, N) via dot product."""
+    monkeypatch.setattr("config.settings.EMBEDDING_FIELDS", [])
+    users = [_make_user("u1"), _make_user("u2")]
+    matrix = build_similarity_matrix(users)
+    weighted = apply_weights(matrix)
+    assert weighted.shape == (2, 2)
+    assert np.all(weighted >= 0.0) and np.all(weighted <= 1.0)
+
+
+def test_similarity_to_distance_diagonal_zero(monkeypatch):
+    """similarity_to_distance diagonal is always 0."""
+    monkeypatch.setattr("config.settings.EMBEDDING_FIELDS", [])
+    users = [_make_user("u1"), _make_user("u2"), _make_user("u3")]
+    matrix = build_similarity_matrix(users)
+    weighted = apply_weights(matrix)
+    dist = similarity_to_distance(weighted)
+    assert dist.shape == (3, 3)
+    assert np.all(np.diag(dist) == 0.0)
+
+
+def test_tiered_categorical_same_category_returns_half():
+    """Two values in the same category but not identical → 0.5."""
+    from services.matching.similarity import tiered_categorical, FIELD_OF_STUDY_CATEGORIES
+    cat_map = FIELD_OF_STUDY_CATEGORIES
+    by_cat: dict[str, list[str]] = {}
+    for k, v in cat_map.items():
+        by_cat.setdefault(v, []).append(k)
+    same_cat_pair = next((vals for vals in by_cat.values() if len(vals) >= 2), None)
+    assert same_cat_pair is not None, "No same-category pair found in FIELD_OF_STUDY_CATEGORIES"
+    a, b = same_cat_pair[0], same_cat_pair[1]
+    score = tiered_categorical(a, b, cat_map)
+    assert score == 0.5
