@@ -65,7 +65,7 @@ Demo-4 requirements:
 2. `test_umap_regression` — build a fixed 20×20 synthetic distance matrix (seeded `np.random`), run `projector.project()`, compare to snapshot within `atol=1e-4`
 3. `test_full_pipeline_regression` — run `distance.build_combined_distance()` on fixed `PipelineInput`, then `projector.project()`, compare shape and that diagonal is zero
 
-**Snapshot regeneration:** Delete `tests/fixtures/umap_regression_snapshot.npy` and run `pytest tests/map/test_pipeline_regression.py::test_umap_regression --snapshot-update` (or a small helper script). Documented in a comment at the top of the test file.
+**Snapshot regeneration:** Delete `tests/fixtures/umap_regression_snapshot.npy` and run `python tests/fixtures/generate_snapshot.py`. This standalone script builds the same fixed 20×20 distance matrix and writes the snapshot directly — no pytest plugin required. Document the command in a comment at the top of the test file.
 
 **Version pinning note:** Snapshot reproducibility is guaranteed only within a fixed `umap-learn` version. The test file header and README must document the pinned version from `requirements.txt`. Regeneration is expected when upgrading `umap-learn` — this is not a bug.
 
@@ -82,7 +82,7 @@ Demo-4 requirements:
 | `/test-cors` debug endpoint | `app.py` | Delete |
 | `Optional`, `List` imports (pre-3.10 style) | `routes/profile.py` | Replace with `str \| None`, `list[str] \| None` |
 | Unused imports | All route/service files | Remove |
-| httpx `app` shortcut deprecation warnings | All test files using `TestClient` | Fix to `WSGITransport` style |
+| httpx `app` shortcut deprecation warnings | All test files using `TestClient` | Fix to `ASGITransport` style (FastAPI is ASGI, not WSGI) |
 
 ### 2B — Coverage gaps to fill
 
