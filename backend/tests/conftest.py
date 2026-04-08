@@ -44,64 +44,14 @@ def _build_mock_supabase() -> MagicMock:
     mock_sb = MagicMock()
 
     # rpc() calls are routed by function name via side_effect so that:
-    # - get_global_map_coordinates returns deterministic map rows for map contract tests.
-    # - get_ego_map_profiles returns allow-listed ego projection rows.
     # - get_all_interactions returns [] (no interaction rows — avoids KeyError on
     #   user_id_a/user_id_b when pipeline iterates interaction rows).
     # - All other rpc() calls (get_profile, get_all_profiles, upsert_profile,
-    #   get_distinct_timezones, etc.) return execute().data = [_MOCK_PROFILE_ROW].
+    #   increment_interaction, etc.) return execute().data = [_MOCK_PROFILE_ROW].
     # Tests that need to override the return data should set mock_sb.rpc.side_effect = None
     # and then assign mock_sb.rpc.return_value.execute.return_value.data directly.
     _empty_result = MagicMock()
     _empty_result.execute.return_value.data = []
-
-    _map_result = MagicMock()
-    _map_result.execute.return_value.data = [
-        {
-            "user_id": TEST_USER_ID,
-            "x": 10.0,
-            "y": 5.0,
-            "prev_x": None,
-            "prev_y": None,
-            "computed_at": "2026-02-26T00:00:00Z",
-            "version_date": "2026-02-26",
-        },
-        {
-            "user_id": MUTUAL_USER_ID,
-            "x": 14.0,
-            "y": 11.0,
-            "prev_x": None,
-            "prev_y": None,
-            "computed_at": "2026-02-26T00:00:00Z",
-            "version_date": "2026-02-26",
-        },
-        {
-            "user_id": ONE_WAY_USER_ID,
-            "x": 20.0,
-            "y": 8.0,
-            "prev_x": None,
-            "prev_y": None,
-            "computed_at": "2026-02-26T00:00:00Z",
-            "version_date": "2026-02-26",
-        },
-        {
-            "user_id": SUGGESTION_USER_ID,
-            "x": 11.0,
-            "y": 6.0,
-            "prev_x": None,
-            "prev_y": None,
-            "computed_at": "2026-02-26T00:00:00Z",
-            "version_date": "2026-02-26",
-        }
-    ]
-
-    _profile_projection_result = MagicMock()
-    _profile_projection_result.execute.return_value.data = [
-        {"id": TEST_USER_ID, "nickname": "Test User", "friends": [MUTUAL_USER_ID, ONE_WAY_USER_ID]},
-        {"id": MUTUAL_USER_ID, "nickname": "Mutual User", "friends": [TEST_USER_ID]},
-        {"id": ONE_WAY_USER_ID, "nickname": "One Way User", "friends": []},
-        {"id": SUGGESTION_USER_ID, "nickname": "Suggestion User", "friends": []},
-    ]
 
     _default_result = MagicMock()
     _default_result.execute.return_value.data = [_MOCK_PROFILE_ROW]
@@ -110,32 +60,73 @@ def _build_mock_supabase() -> MagicMock:
     mock_sb.rpc.return_value = _default_result
 
     def _rpc_side_effect(fn_name, *args, **kwargs):
-        if fn_name == "get_global_map_coordinates":
-            return _map_result
-        if fn_name == "get_ego_map_profiles":
-            return _profile_projection_result
         if fn_name == "get_all_interactions":
             return _empty_result
         return _default_result
 
     mock_sb.rpc.side_effect = _rpc_side_effect
 
-    # Mock sb.table("profiles").select("friends").eq("id", ...).execute()
-    # Used by _fetch_map_response to filter coordinates to friends only.
-    _friends_result = MagicMock()
-    _friends_result.execute.return_value.data = [
-        {"friends": [MUTUAL_USER_ID, ONE_WAY_USER_ID]}
+    # Mock sb.table("user_positions") — used by build_ego_map and trigger route.
+    _user_positions_result = MagicMock()
+    _user_positions_result.execute.return_value.data = [
+        {
+            "user_id": TEST_USER_ID,
+            "x": 10.0,
+            "y": 5.0,
+            "computed_at": "2026-02-26T00:00:00Z",
+        },
+        {
+            "user_id": MUTUAL_USER_ID,
+            "x": 14.0,
+            "y": 11.0,
+            "computed_at": "2026-02-26T00:00:00Z",
+        },
+        {
+            "user_id": ONE_WAY_USER_ID,
+            "x": 20.0,
+            "y": 8.0,
+            "computed_at": "2026-02-26T00:00:00Z",
+        },
     ]
-    mock_sb.table.return_value.select.return_value.eq.return_value = _friends_result
+
+    # Mock sb.table("profiles") for build_ego_map — id/nickname/avatar_url columns.
+    _profiles_result = MagicMock()
+    _profiles_result.execute.return_value.data = [
+        {"id": TEST_USER_ID, "nickname": "Test User", "avatar_url": None},
+        {"id": MUTUAL_USER_ID, "nickname": "Mutual User", "avatar_url": None},
+        {"id": ONE_WAY_USER_ID, "nickname": "One Way User", "avatar_url": None},
+    ]
+
+    # Route table() calls by table name.
+    def _table_side_effect(table_name):
+        tbl = MagicMock()
+        if table_name == "user_positions":
+            # Support both .select("*").execute() and .select("computed_at").limit(1).execute()
+            tbl.select.return_value.execute.return_value = _user_positions_result.execute.return_value
+            tbl.select.return_value.limit.return_value.execute.return_value = _user_positions_result.execute.return_value
+        elif table_name == "profiles":
+            tbl.select.return_value.execute.return_value = _profiles_result.execute.return_value
+            # Support chained .eq() for profile lookups
+            tbl.select.return_value.eq.return_value.execute.return_value = _profiles_result.execute.return_value
+        else:
+            # Generic table mock for upsert, update, insert, etc.
+            tbl.select.return_value.execute.return_value.data = [_MOCK_PROFILE_ROW]
+            tbl.select.return_value.eq.return_value.execute.return_value.data = [_MOCK_PROFILE_ROW]
+            tbl.upsert.return_value.execute.return_value.data = []
+            tbl.update.return_value.eq.return_value.execute.return_value.data = []
+            tbl.insert.return_value.execute.return_value.data = []
+        return tbl
+
+    mock_sb.table.side_effect = _table_side_effect
 
     return mock_sb
 
 
 @pytest.fixture
 def mock_sb():
-    """Yield a MagicMock Supabase client and patch it into config.supabase.supabase."""
+    """Yield a MagicMock Supabase client and patch it into config.settings._client."""
     _mock = _build_mock_supabase()
-    with patch("config.supabase.supabase", _mock):
+    with patch("config.settings._client", _mock):
         yield _mock
 
 
@@ -145,7 +136,7 @@ def client(mock_sb):
 
     Also patches setup_scheduler to prevent APScheduler from starting in tests.
     """
-    with patch("services.map_pipeline.scheduler.setup_scheduler", return_value=MagicMock()):
+    with patch("services.map.scheduler.setup_scheduler", return_value=MagicMock()):
         app.dependency_overrides[get_current_user] = lambda: TEST_USER_ID
         with TestClient(app, raise_server_exceptions=False) as tc:
             yield tc
@@ -161,8 +152,8 @@ def client_no_auth():
     Supabase is still mocked to prevent network calls during app startup/lifespan.
     """
     _mock = _build_mock_supabase()
-    with patch("config.supabase.supabase", _mock):
-        with patch("services.map_pipeline.scheduler.setup_scheduler", return_value=MagicMock()):
+    with patch("config.settings._client", _mock):
+        with patch("services.map.scheduler.setup_scheduler", return_value=MagicMock()):
             app.dependency_overrides.clear()
             with TestClient(app, raise_server_exceptions=False) as tc:
                 yield tc

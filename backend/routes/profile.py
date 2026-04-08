@@ -4,27 +4,25 @@ Requires a valid Supabase JWT. User can only update their own profile row.
 Creates the row if it does not exist (upsert on id PK).
 """
 
-from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from routes.deps import get_current_user
-from config.supabase import get_supabase_client
+from config.settings import get_supabase_client
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
 
 class ProfileBody(BaseModel):
-    nickname: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    education: Optional[str] = None
-    occupation: Optional[str] = None
-    timezone: Optional[str] = None
-    interests: Optional[List[str]] = None
-    languages: Optional[List[str]] = None
-    industry: Optional[str] = None
-    age: Optional[int] = None
-    is_onboarded: Optional[bool] = None
+    nickname: str | None = None
+    city: str | None = None
+    state: str | None = None
+    education: str | None = None
+    occupation: str | None = None
+    timezone: str | None = None
+    interests: list[str] | None = None
+    languages: list[str] | None = None
+    industry: str | None = None
+    age: int | None = None
 
 
 @router.get("")

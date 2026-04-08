@@ -8,7 +8,7 @@ by the interactions table CHECK constraint — do not pass args in the wrong ord
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from routes.deps import get_current_user
-from config.supabase import get_supabase_client
+from config.settings import get_supabase_client
 
 router = APIRouter(prefix="/interactions", tags=["interactions"])
 

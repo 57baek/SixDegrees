@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from supabase_auth.errors import AuthApiError
-from config.supabase import get_supabase_client
+from config.settings import get_supabase_client
 
 # auto_error=False: prevents FastAPI from returning 403 when the Authorization
 # header is absent. We handle that case explicitly below so we can return 401.

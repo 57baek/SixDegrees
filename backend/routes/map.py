@@ -1,95 +1,11 @@
-from typing import Any
-
+import dataclasses
 from fastapi import APIRouter, Depends, HTTPException
-from config.supabase import get_supabase_client
+from config.settings import get_supabase_client
 from routes.deps import get_current_user
-from services.map_pipeline import run_pipeline_for_user
-from services.map_pipeline.ego_map import build_ego_map
+from services.map.ego import build_ego_map
+from services.map.pipeline import run
 
 router = APIRouter(prefix="/map", tags=["map"])
-
-
-def _rows_from_rpc(data: object) -> list[dict[str, Any]]:
-    if not isinstance(data, list):
-        return []
-    return [row for row in data if isinstance(row, dict)]
-
-
-def _fetch_map_response(user_id: str) -> dict:
-    """Shared helper: fetch global rows and build requester-centered ego map."""
-    sb = get_supabase_client()
-    rows = _rows_from_rpc(
-        sb.rpc(
-            "get_global_map_coordinates",
-            {"p_user_ids": None, "p_version_date": None},
-        ).execute().data
-    )
-
-    required_fields = {"user_id", "x", "y", "computed_at", "version_date"}
-    all_valid_rows = [r for r in rows if required_fields.issubset(r)]
-
-    if not all_valid_rows:
-        raise HTTPException(status_code=404, detail="Map not yet computed for this user")
-
-    # Filter to requesting user + their friends only
-    friend_res = sb.table("profiles").select("friends").eq("id", user_id).execute()
-    raw_friends = (friend_res.data[0].get("friends") or []) if friend_res.data else []
-    allowed_ids = {user_id} | {str(f) for f in raw_friends}
-    valid_rows = [r for r in all_valid_rows if str(r["user_id"]) in allowed_ids]
-
-    if not valid_rows:
-        raise HTTPException(status_code=404, detail="Map not yet computed for this user")
-
-    profile_ids = [str(r["user_id"]) for r in valid_rows]
-    profiles = _rows_from_rpc(
-        sb.rpc("get_ego_map_profiles", {"p_user_ids": profile_ids}).execute().data
-    )
-    profile_id_set = {
-        str(row["id"])
-        for row in profiles
-        if "id" in row and row.get("id") is not None
-    }
-
-    missing_profile_ids = sorted(set(profile_ids) - profile_id_set)
-    if missing_profile_ids:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "Map profile projection is incomplete for current coordinate batch; "
-                f"missing profiles for {len(missing_profile_ids)} user(s)"
-            ),
-        )
-
-    try:
-        nodes = build_ego_map(
-            requesting_user_id=user_id,
-            coordinate_rows=valid_rows,
-            profile_rows=profiles,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-
-    requester_row = next((row for row in valid_rows if row["user_id"] == user_id), None)
-    if requester_row is None:
-        raise HTTPException(status_code=404, detail="Map not yet computed for this user")
-
-    return {
-        "user_id": user_id,
-        "version_date": requester_row["version_date"],
-        "computed_at": requester_row["computed_at"],
-        "coordinates": [
-            {
-                "user_id": node.user_id,
-                "x": node.x,
-                "y": node.y,
-                "tier": node.tier,
-                "nickname": node.nickname,
-                "display_name": node.nickname,
-                "is_suggestion": node.is_suggestion,
-            }
-            for node in nodes
-        ],
-    }
 
 
 @router.get("/{user_id}")
@@ -99,7 +15,8 @@ async def get_map(
 ):
     if acting_user_id != user_id:
         raise HTTPException(status_code=403, detail="You may only view your own map")
-    return _fetch_map_response(user_id)
+    response = build_ego_map(user_id)
+    return dataclasses.asdict(response)
 
 
 @router.post("/trigger/{user_id}")
@@ -110,7 +27,10 @@ async def trigger_map(
     if acting_user_id != user_id:
         raise HTTPException(status_code=403, detail="You may only trigger your own map")
     try:
-        run_pipeline_for_user(user_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-    return _fetch_map_response(user_id)
+        run()
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    sb = get_supabase_client()
+    rows = sb.table("user_positions").select("computed_at").limit(1).execute().data
+    computed_at = rows[0]["computed_at"] if rows else None
+    return {"status": "ok", "computed_at": computed_at}

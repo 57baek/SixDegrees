@@ -1,0 +1,5 @@
+data/*.png
+data/*.jpg
+*.png
+*.jpg
+!e2e_screenshots/*.png

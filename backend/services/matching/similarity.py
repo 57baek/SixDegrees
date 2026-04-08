@@ -120,6 +120,8 @@ def tiered_location(city1: str, state1: str, city2: str, state2: str) -> float:
     Same state → 0.5
     Different  → 0.0
     """
+    if city1 is None or state1 is None or city2 is None or state2 is None:
+        return 0.0
     if city1.lower() == city2.lower():
         return 1.0
     if state1.lower() == state2.lower():
@@ -136,6 +138,8 @@ def tiered_categorical(a: str, b: str, category_map: dict[str, str]) -> float:
 
     Used for: field_of_study, occupation/industry.
     """
+    if a is None or b is None:
+        return 0.0
     a_norm, b_norm = a.lower().strip(), b.lower().strip()
     if a_norm == b_norm:
         return 1.0
@@ -153,4 +157,6 @@ def inverse_distance_age(a: int, b: int) -> float:
     Same age → 1.0, 5 years apart → ~0.17.
     Min-max normalization in scoring.py brings this to a consistent range.
     """
+    if a is None or b is None:
+        return 0.0
     return 1.0 / (1.0 + abs(a - b))
