@@ -10,7 +10,11 @@
           <img v-if="post.avatar_url" :src="post.avatar_url" class="avatar-img" />
           <span v-else>{{ userInitial }}</span>
         </div>
-        <div class="nickname">{{ post.nickname || 'Unknown User' }}</div>
+        <div
+          class="nickname"
+          @click="router.push(`/profile/${post.nickname}`)"
+          style="cursor:pointer"
+        >{{ post.nickname || 'Unknown User' }}</div>
         <div class="post-meta">
           <span class="timestamp">{{ formatDate(post.created_at) }}</span>
           <span class="tier-badge" :class="`tier-${post.tier}`">

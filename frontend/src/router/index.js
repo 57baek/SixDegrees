@@ -4,6 +4,7 @@ import Login from '../views/Login.vue'
 import SignUp from '../views/SignUp.vue'
 import ProfileSetup from '../views/ProfileSetup.vue'
 import PeopleMap from '../views/PeopleMap.vue'
+import { supabase } from '../lib/supabase'
 
 const routes = [
   {
@@ -59,12 +60,11 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard - runs before every route change
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('supabase_token')
-  
-  // If route requires auth and user isn't logged in, redirect to login
-  if (to.meta.requiresAuth && !token) {
+// Navigation guard - checks Supabase session (handles token refresh automatically)
+router.beforeEach(async (to, from, next) => {
+  if (!to.meta.requiresAuth) return next()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
     next('/login')
   } else {
     next()

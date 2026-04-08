@@ -12,7 +12,7 @@
           <img :src="url" class="preview-img" />
           <button @click="removeImage(index)" class="remove-btn" type="button">✕</button>
         </div>
-        <div v-if="previewUrls.length < 5" class="add-more" @click="$refs.fileInput.click()">
+        <div v-if="previewUrls.length < 5" class="add-more" @click="fileInput.click()">
           <span>+</span>
         </div>
       </div>
@@ -25,10 +25,10 @@
             multiple 
             style="display: none"
           />
-          <button 
-            type="button" 
-            class="add-photo-btn" 
-            @click="$refs.fileInput.click()"
+          <button
+            type="button"
+            class="add-photo-btn"
+            @click="fileInput.click()"
             :disabled="previewUrls.length >= 5"
           >
             📷 Add Photo ({{ previewUrls.length }}/5)

@@ -100,17 +100,28 @@ const router = useRouter()
 
 // Auth redirect
 const session = ref(null)
+let authListener = null
 
 onMounted(async () => {
   const { data } = await supabase.auth.getSession()
   session.value = data.session
   if (!session.value) router.push('/login')
+
+  // Listen for sign-out only (ignore token refresh events)
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+    if (event === 'SIGNED_OUT') {
+      session.value = null
+      router.push('/login')
+    } else if (newSession) {
+      session.value = newSession
+      localStorage.setItem('supabase_token', newSession.access_token)
+    }
+  })
+  authListener = subscription
 })
 
-// Also redirect if user logs out mid-session
-supabase.auth.onAuthStateChange((_event, newSession) => {
-  session.value = newSession
-  if (!newSession) router.push('/login')
+onUnmounted(() => {
+  authListener?.unsubscribe()
 })
 
 /*
