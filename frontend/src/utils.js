@@ -29,10 +29,3 @@ export function tierLabel(tier) {
 export function tierFilterLabel(tier) {
   return { 1: 'Inner Circle', 2: '+ 2nd Degree', 3: 'All Friends' }[tier]
 }
-
-/**
- * Filters posts up to and including the selected tier
- */
-export function filterPostsByTier(posts, selectedTier) {
-  return posts.filter(p => p.tier <= selectedTier)
-}

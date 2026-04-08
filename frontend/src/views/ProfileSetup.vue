@@ -101,6 +101,12 @@ const form = ref({
   industry: ""
 });
 
+/*
+  Handles profile setup form submission:
+  - Parses comma-separated interests and languages
+  - Uploads avatar if provided
+  - Creates profile and redirects to the home feed
+*/
 const handleSubmit = async () => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -158,10 +164,12 @@ const handleSubmit = async () => {
   }
 };
 
+// Programatically triggers the hidden file input for avatar upload
 function triggerUpload() {
   fileInput.value.click()
 }
 
+// Validates the selected image, stores it locally, and shows a preview
 function handleAvatarChange(event) {
   const file = event.target.files[0]
   if (!file) return

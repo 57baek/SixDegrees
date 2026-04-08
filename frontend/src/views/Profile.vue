@@ -7,6 +7,7 @@
 
     <div id="main-profile-box">
       <div class="profile-picture-container">
+        <!-- Avatar click only triggers upload when on own profile in edit mode -->
         <div class="profile-pic-circle" :class="{ 'no-bg': profile.avatar_url }" @click="isOwnProfile && isEditing &&triggerUpload()">
         <img v-if="profile.avatar_url" :src="profile.avatar_url" class="avatar-img" />
         <span v-else>{{ userInitial }}</span>
@@ -21,21 +22,44 @@
         </button>
 
         <div v-if="!isOwnProfile" class="friendship-status">
-          <div v-if="isFriend" class="friend-badge">✓ Friends</div>
-          <template v-else>
-            <button v-if="!isOwnProfile && !requestSent" type="button"
-            class="add-friend-btn" @click="sendFriendRequest" :disabled="requesting">
-            {{ requesting ? 'Sending...' : '+ Add Friend' }}
+          <div v-if="!isOwnProfile" class="friendship-status">
+            <button class="addOrRemoveFriend-btn"
+              type="button"
+              :class="isFriend ? 'remove-friend-btn' : requestSent ? 'pending-friend-btn' : 'add-friend-btn'"
+              @click="isFriend ? removeFriend() : !requestSent && sendFriendRequest()"
+              :disabled="requesting || requestSent">
+              <template v-if="requesting">Loading...</template>
+              <template v-else-if="isFriend"><UserMinus :size="16" /> Remove Friend</template>
+              <template v-else-if="requestSent"><Clock :size="16" /> Pending</template>
+              <template v-else><UserPlus :size="16" /> Add Friend</template>
             </button>
-            <div v-else class="friend-requested">✓ Request Sent</div>
-          </template>
+            <button v-if="!isOwnProfile && requestSent"
+              type="button"
+              class="remove-friend-btn"
+              @click="rescindRequest()"
+              :disabled="requesting">
+              Cancel
+            </button>
+          </div>
+        </div>
+
+        <div v-if="!isOwnProfile" class="block-status">
+          <button class="blockOrUnblock-btn"
+            type="button"
+            :class="isBlocked ? 'unblock-btn' : 'block-btn'"
+            @click="isBlocked ? unblockUser() : blockUser()"
+            :disabled="blocking">
+            <template v-if="blocking">Loading...</template>
+            <template v-else-if="isBlocked">Unblock</template>
+            <template v-else>Block</template>
+          </button>
         </div>
       </div>
 
       <div class="bio-container">
         <div v-if="!isEditing">
-          <h1 id="profile-name">{{ profile.nickname || 'Set your nickname' }}</h1>
-          <p id="bio">{{ profile.bio || 'Tell people about yourself...' }}</p>
+          <h1 id="profile-name">{{ profile.nickname || 'Unnamed User' }}</h1>
+          <p id="bio">{{ profile.bio || 'No bio added yet' }}</p>
           
           <div class="profile-details">
             <div class="detail-row" v-if="profile.age">
@@ -130,17 +154,20 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '../lib/supabase'
+import { UserPlus, UserMinus, Clock } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
 
 const profile = ref({})
-const currentUserID = ref(null)
+const currentUserId = ref(null)
 const isEditing = ref(false)
 const saving = ref(false)
 const error = ref('')
 const isFriend = ref(false)
-const hasPendingRequest = ref(false)
+
+const isBlocked = ref(false)
+const blocking = ref(false)
 
 const fileInput = ref(null)
 const uploading = ref(false)
@@ -161,15 +188,17 @@ const editForm = ref({
 const interestsInput = ref('')
 const languagesInput = ref('')
 
-// check if user is viewinf their own profile or someone else's
+// check if user is viewing their own profile or someone else's
 const isOwnProfile = computed(() => {
-  return !route.params.userId || route.params.userId === currentUserID.value
+  return !route.params.userId || route.params.userId === currentUserId.value
 })
 
+// First letter of the user's nickname, used as avatar fallback
 const userInitial = computed(() => {
   return profile.value.nickname?.charAt(0).toUpperCase() || 'U'
 })
 
+// Combines city and state into a single display string, handling partial values
 const locationDisplay = computed(() => {
   if (profile.value.city && profile.value.state) {
     return `${profile.value.city}, ${profile.value.state}`
@@ -185,6 +214,10 @@ const friendCount = computed(() => {
   return profile.value.friends?.length || 0
 })
 
+/*
+  Loads the target profile (either by user ID or nickname depending on route param format)
+  Also checks friendship, pending request, and block status if viewing someone else's profile
+*/
 async function loadProfile() {
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -193,31 +226,44 @@ async function loadProfile() {
       return
     }
 
-    currentUserID.value = user.id
+    currentUserId.value = user.id
 
     //if userid in route, load that profile, otherwise load current user's profile
-    const targetUserId = route.params.userId || user.id
+    const targetUser = route.params.userId || user.id
 
-    const { data, error: profileError } = await supabase
-      .rpc('get_user_profile', { target_user_id: targetUserId })
-      .single()
-    
+    const { data, error: profileError } = (targetUser.length == 36) ? 
+      await supabase
+        .rpc('get_user_profile', { target_user_id: targetUser })
+        .single()
+      :
+      await supabase
+        .rpc('get_user_profile', { target_nickname : targetUser })
+        .single()
+
     if (profileError) throw profileError
     profile.value = data || {}
 
-    if(targetUserId != user.id){
+    if(profile.value.id != user.id) {
       const { data: friends } = await supabase.rpc('extended_friends', { max_tier: 1 })
-      isFriend.value = (friends || []).some(f => f.id === targetUserId)
+      isFriend.value = (friends || []).some(f => f.id === profile.value.id)
 
-      const { data: pending } = await supabase.rpc('has_pending_request', { target_user_id: targetUserId })
+      const { data: pending } = await supabase.rpc('has_pending_request', { target_user_id: profile.value.id })
       requestSent.value = pending
+
+      const { data : blocked } = await supabase.rpc('is_blocked', {blocked_id: profile.value.id })
+      isBlocked.value = blocked
+
+      router.replace(`/profile/${profile.value.nickname}`)
     }
+    else
+      router.replace(`/profile`)
   } catch (err) {
     console.error('Error loading profile:', err)
     error.value = 'Failed to load profile'
   }
 }
 
+// Populates the edit form with the current profile data and switches to edit mode
 function startEditing() {
   editForm.value = {
     nickname: profile.value.nickname || '',
@@ -243,6 +289,10 @@ function cancelEdit() {
   error.value = ''
 }
 
+/*
+  Saves the edited profile, parses comma-separated interests and language inputs
+  into arrays before sending to db, then reloads the profile on success
+*/
 async function saveProfile() {
   saving.value = true
   error.value = ''
@@ -290,6 +340,7 @@ async function saveProfile() {
 const requestSent = ref(false)
 const requesting = ref(false)
 
+// Sends a friend request to the viewed profile and marks it as pending on success
 async function sendFriendRequest() {
   requesting.value = true
   try {
@@ -304,13 +355,81 @@ async function sendFriendRequest() {
   } finally {
     requesting.value = false
   }
-
 }
 
+// Removes the current user from this profile's friends and updates local state
+async function removeFriend() {
+  requesting.value = true
+  try {
+    const { error } = await supabase.rpc('remove_friend', {
+      friend_nickname: profile.value.nickname
+    })
+    if (error) throw error
+    isFriend.value = false
+  } catch (err) {
+    console.error('Error removing friend:', err)
+  } finally {
+    requesting.value = false
+  }
+}
+
+// Cancels an outgoing friend request that hasn't been accepted yet
+async function rescindRequest() {
+  requesting.value = true
+  try {
+    const { error } = await supabase.rpc('rescind_friend_request', {
+      friend_nickname: profile.value.nickname
+    })
+    if (error) throw error
+    requestSent.value = false
+  } catch (err) {
+    console.error('Error rescinding request:', err)
+  } finally {
+    requesting.value = false
+  }
+}
+
+// Blocks the viewed user
+async function blockUser() {
+  blocking.value = true
+  try {
+    const { error } = await supabase.rpc('block', {
+      blocked_nickname: profile.value.nickname
+    })
+    if (error) throw error
+    isBlocked.value = true
+  } catch (err) {
+    console.error('Error blocking user:', err)
+  } finally {
+    blocking.value = false
+  }
+}
+
+// Unblocks the viewed user
+async function unblockUser() {
+  blocking.value = true
+  try {
+    const { error } = await supabase.rpc('unblock', {
+      blocked_nickname: profile.value.nickname
+    })
+    if (error) throw error
+    isBlocked.value = false
+  } catch (err) {
+    console.error('Error unblocking user:', err)
+  } finally {
+    blocking.value = false
+  }
+}
+
+// Programatically triggers the hidden file input for avatar upload
 function triggerUpload() {
   fileInput.value.click()
 }
 
+/*
+  Validates, uploads the selected image to Supabase storage,
+  then updates the profiles avatar_url with the new public URL
+*/
 async function uploadAvatar(event) {
   const file = event.target.files[0]
   if (!file) return
@@ -653,6 +772,7 @@ li {
 }
 
 .friendship-status {
+  display: flex;
   width: 100%;
 }
 
@@ -678,17 +798,6 @@ li {
   cursor: not-allowed;
 }
 
-.friend-requested {
-  width: 100%;
-  padding: 0.75rem;
-  background: #1a3a2a;
-  color: #4caf7d;
-  border: 1px solid #4caf7d44;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  text-align: center;
-}
-
 .friend-badge {
   width: 100%;
   padding: 0.75rem;
@@ -698,5 +807,95 @@ li {
   border-radius: 6px;
   font-size: 0.95rem;
   text-align: center;
+}
+
+.remove-friend-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.remove-friend-btn:hover:not(:disabled) {
+  background: #ff6b6b;
+  color: white;
+}
+
+.remove-friend-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pending-friend-btn {
+  width: 250%;
+  padding: 0.75rem;
+  background: transparent;
+  color: #f0a500;
+  border: 1px solid #f0a500;
+  border-radius: 6px;
+  cursor: not-allowed;
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.addOrRemoveFriend-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.block-status {
+  width: 100%;
+}
+
+.unblock-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  color: #088F8F;
+  border: 1px solid #088F8F;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.unblock-btn:hover:not(:disabled) {
+  background: #088F8F;
+  color: white;
+}
+
+.unblock-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.block-btn {
+  width: 40%;
+  padding: 0.75rem;
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.block-btn:hover:not(:disabled) {
+  background: #ff6b6b;
+  color: white;
+}
+
+.block-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

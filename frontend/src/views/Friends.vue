@@ -3,6 +3,7 @@
     <div class="container">
       <header class="friends-header">
         <button @click="router.back()" class="back-btn">← Back</button>
+        <!-- Title changes based on whether we're viewing our own or another user's friends list -->
         <h1>{{ route.params.userId ? "Their Friends" : "My Friends" }}</h1>
         <span class="friend-count">{{ friends.length }}</span>
       </header>
@@ -20,6 +21,8 @@
           class="friend-row"
           @click="router.push(`/profile/${friend.id}`)"
         >
+
+        <!-- Falls back to first letter of nickname if no avatar -->
           <div class="friend-avatar">
             <img v-if="friend.avatar_url" :src="friend.avatar_url" class="avatar-img" />
             <span v-else>{{ friend.nickname.charAt(0).toUpperCase() }}</span>
@@ -32,7 +35,24 @@
             </div>
           </div>
 
-          <span class="arrow">→</span>
+          <!-- 
+            Button style/action depends on friendship status:
+            own list OR already friends -> Remove | request sent -> pending | otherwise -> add 
+          -->
+          <button
+            v-if="friend.id !== currentUserId"
+            class="addOrRemoveFriend-btn"
+            :class="!route.params.userId || friendStatuses[friend.id]?.isFriend ? 'remove-friend-btn' : friendStatuses[friend.id]?.requestSent ? 'pending-friend-btn' : 'add-friend-btn'"
+            :disabled="requesting === friend.id || friendStatuses[friend.id]?.requestSent"
+            @click.stop="!route.params.userId || friendStatuses[friend.id]?.isFriend ? removeFriend(friend) : !friendStatuses[friend.id]?.requestSent && sendFriendRequest(friend)"
+          >
+            <template v-if="requesting === friend.id">Loading...</template>
+            <template v-else-if="!route.params.userId || friendStatuses[friend.id]?.isFriend"><UserMinus :size="16" /> Remove</template>
+            <template v-else-if="friendStatuses[friend.id]?.requestSent"><Clock :size="16" /> Pending</template>
+            <template v-else><UserPlus :size="16" /> Add</template>
+          </button>
+
+          <span v-else class="arrow">→</span>
         </div>
       </div>
     </div>
@@ -43,26 +63,94 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '../lib/supabase'
+import { UserPlus, UserMinus, Clock } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
 const friends = ref([])
 const loading = ref(true)
+const currentUserId = ref(null)
+const friendStatuses = ref({}) // tracks { is Friend, requestSent } per friend when viewing another user's list
+const requesting = ref(null) // ID of the friend currently being added/removed, disables their button
 
+/* 
+  Fetches the friends list for the current user or a specified user
+  Loads friendship statuses if viewing someone else's list 
+*/
 async function loadFriends() {
   loading.value = true
   try {
+    const { data: { user } } = await supabase.auth.getUser()
+    currentUserId.value = user.id
+    
     const { data, error } = await supabase.rpc('extended_friends', 
       { max_tier: 3,
         target_user_id: route.params.userId || null
       })
     if (error) throw error
-    friends.value = (data || []).filter(f => f.tier === 1)
-    console.log('Friend fields:', friends.value[0]) // add this
+    friends.value = (data || []).filter(f => f.tier === 1) // only show direct friends
+    
+    // when viewing someone else's list, check our relaitonship with each of their friends
+    if (route.params.userId) {
+      const { data: myFriends } = await supabase.rpc('extended_friends', { max_tier: 1 })
+      const myFriendIds = new Set((myFriends || []).map(f => f.id))
+
+      await Promise.all(friends.value.map(async (f) => {
+        const { data: pending } = await supabase.rpc('has_pending_request', { target_user_id: f.id })
+        friendStatuses.value[f.id] = {
+          isFriend: myFriendIds.has(f.id),
+          requestSent: !!pending
+        }
+      }))
+    }
   } catch (err) {
     console.error('Error loading friends:', err)
   } finally {
     loading.value = false
+  }
+}
+
+/*
+  Sends a friend request to the given friend and updates their status to pending on sucess
+*/
+async function sendFriendRequest(friend) {
+  requesting.value = friend.id
+  try {
+    const { data, error } = await supabase.rpc('request_friend', {
+      friend_nickname: friend.nickname
+    })
+    if (error) throw error
+    if (data) friendStatuses.value[friend.id].requestSent = true
+    else alert('Could not send request.')
+  } catch (err) {
+    console.error('Error sending friend request:', err)
+  } finally {
+    requesting.value = null
+  }
+}
+
+/*
+  Removes a friend and immediately updates the UI without a full reload
+*/
+async function removeFriend(friend) {
+  requesting.value = friend.id
+  try {
+    const { error } = await supabase.rpc('remove_friend', {
+      friend_nickname: friend.nickname
+    })
+    if (error) throw error
+
+    // remove from list instantly
+    friends.value = friends.value.filter(f => f.id !== friend.id)
+
+    // also update status in case we're on someone else's list
+    if (friendStatuses.value[friend.id]) {
+      friendStatuses.value[friend.id].isFriend = false
+    }
+  } catch (err) {
+    console.error('Error removing friend:', err)
+  } finally {
+    requesting.value = null
   }
 }
 
@@ -218,5 +306,44 @@ onMounted(() => {
 
 .friend-row:hover .arrow {
   color: #088F8F;
+}
+
+.addOrRemoveFriend-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid;
+  background: transparent;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.add-friend-btn {
+  color: #088F8F;
+  border-color: #088F8F;
+}
+.add-friend-btn:hover:not(:disabled) {
+  background: #088F8F;
+  color: white;
+}
+
+.remove-friend-btn {
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+}
+.remove-friend-btn:hover:not(:disabled) {
+  background: #ff6b6b;
+  color: white;
+}
+
+.pending-friend-btn {
+  color: #f0a500;
+  border-color: #f0a500;
+  cursor: not-allowed;
+  opacity: 0.8;
 }
 </style>

@@ -115,6 +115,7 @@ const cx = computed(() => props.svgW / 2)
 const cy = computed(() => props.svgH / 2)
 const maxRadius = computed(() => Math.min(props.svgW, props.svgH) / 2 - 52)
 
+// Star field generated once using deterministic math (so stable across renders)
 const stars = Array.from({ length: 130 }, (_, i) => ({
   id: i,
   x: Math.sin(i * 7.3) * 0.5 + 0.5,
@@ -123,6 +124,10 @@ const stars = Array.from({ length: 130 }, (_, i) => ({
   o: Math.cos(i * 2.1) * 0.2 + 0.25,
 }))
 
+/*
+  Converts raw t-SNE coordinates into screen positions, scaled to fit within maxRadius
+  Also assigns each node a color based on its cluster (computed with DBSCAN)
+*/
 const scaledNodes = computed(() => {
   const others = props.rawCoordinates.filter(c => !(c.x === 0 && c.y === 0))
   if (!others.length) return []
@@ -141,12 +146,20 @@ const hoveredNode = computed(() =>
   hoveredId.value ? scaledNodes.value.find(n => n.user_id === hoveredId.value) : null
 )
 
+// 12-color palette cycled through cluster indices
 const CLUSTER_PALETTE = [
   '#60d4f7', '#a78bfa', '#34d399', '#fbbf24',
   '#f87171', '#fb923c', '#e879f9', '#4ade80',
   '#38bdf8', '#c084fc', '#86efac', '#fde68a',
 ]
 
+/*
+  Runs DBSCAN clustering on the nodes to group visually close users together.
+  Epsilon (neighborhood radius) is set adaptively based on the median nearest-neighbor
+  distance, so it scales regardless of how spread out the t-SNE output is.
+  Noise points (too isolated to belong to a cluster) inherit the color of their
+  nearest cluster member instead of being left uncolored.
+*/
 function computeClusterColors(nodes) {
   if (!nodes.length) return {}
 
@@ -213,15 +226,20 @@ function initials(name) {
   return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2)
 }
 
+// Positions tooltip above the hovered node, adjusted for current zoom level
 function tooltipX(node) { return node.px }
 function tooltipY(node) { return node.py - 25 / zoom.value }
 
+/*
+  Prevents click from firing after a drag (wasDragging is set during mousemove
+  and cleared after a tick so this handler can read it before it resets)
+*/
 function goToProfile(userId) {
   if (wasDragging.value) return
   router.push(`/profile/${userId}`)
 }
 
-// Convert screen coords to SVG coordinate space
+// Converts screen pixel coordinates to SVG coordinate space, accounting for element scaling
 function screenToSvg(clientX, clientY) {
   const rect = svgEl.value.getBoundingClientRect()
   const scaleX = props.svgW / rect.width
@@ -232,6 +250,10 @@ function screenToSvg(clientX, clientY) {
   }
 }
 
+/*
+  Zooms toward the cursor position by adjusting pan so the point under
+  the cursor stays fixed as zoom changes
+*/
 function onWheel(e) {
   const factor = e.deltaY < 0 ? 1.2 : 1 / 1.2
   const newZoom = Math.max(0.3, Math.min(50, zoom.value * factor))
@@ -241,12 +263,14 @@ function onWheel(e) {
   zoom.value = newZoom
 }
 
+// Records drag start position
 function onMouseDown(e) {
   dragging.value = true
   wasDragging.value = false
   dragOrigin.value = { x: e.clientX, y: e.clientY, px: panX.value, py: panY.value }
 }
 
+// Translates mouse delta into pan offset
 function onMouseMove(e) {
   if (!dragging.value) return
   const dx = e.clientX - dragOrigin.value.x
@@ -259,6 +283,7 @@ function onMouseMove(e) {
   panY.value = dragOrigin.value.py + dy * scaleY
 }
 
+// Ends drag and resets wasDragging after a tick
 function stopDrag() {
   dragging.value = false
   // Reset wasDragging after a tick so click handler can read it first

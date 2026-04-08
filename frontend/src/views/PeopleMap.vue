@@ -80,6 +80,7 @@
             :fill="`rgba(255,255,255,${s.o})`"
           />
 
+          <!-- Dashed rings drawn at each tier's radius to show the concentric zones -->
           <circle
             v-for="t in visibleTiers" :key="'ring'+t"
             :cx="cx" :cy="cy" :r="ringRadiusForTier(t)"
@@ -87,6 +88,7 @@
             stroke-opacity="0.08" stroke-dasharray="4 6" stroke-width="1"
           />
 
+          <!-- Lines connecting each friend node back to the center (YOU) -->
           <line
             v-for="n in nodes" :key="'edge-'+n.user_id"
             :x1="cx" :y1="cy" :x2="n.px" :y2="n.py"
@@ -119,6 +121,7 @@
             >{{ n.display_name?.length > 4 ? n.display_name.slice(0, 4) + '…' : n.display_name }}</text>
           </g>
 
+          <!-- Tooltip shown on hover; pointer events disabled so it doesnt interfere with mouse -->
           <g
             v-if="hoveredNode"
             style="pointer-events: none"
@@ -170,6 +173,7 @@ import { supabase } from '../lib/supabase.js'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+// Color and label mapping for each tier level
 const TIER_COLORS = {
   0: '#60d4f7',
   1: '#a78bfa',
@@ -201,20 +205,30 @@ const svgW = ref(800)
 const svgH = ref(560)
 const isMobile = ref(false)
 
+// SVG center point and max radius for placing nodes in rings
 const cx = computed(() => svgW.value / 2)
 const cy = computed(() => svgH.value / 2)
 const maxRadius = computed(() => Math.min(svgW.value, svgH.value) / 2 - 52)
 
+// Unique sorted list of tiers present in the current map data
 // visibleTiers reads rawCoordinates — not nodes (no circular dep)
 const visibleTiers = computed(() =>
   [...new Set(rawCoordinates.value.map(c => Math.min(c.tier ?? 4, 4)))].sort()
 )
 
+/*
+  Returns the ring radius for a given tier, evenly spaced within the SVG
+*/
 function ringRadiusForTier(tier) {
   const n = visibleTiers.value.length || 1
   return maxRadius.value * ((Math.min(tier, 4) + 1) / (n + 1))
 }
 
+/*
+  Converts raw coordinates into positioned node objects
+  Groups users by tier, places them on the appropriate ring,
+  and uses x/y hints from data to angle them if available (otherwise evenly spaced)
+*/
 const nodes = computed(() => {
   if (!rawCoordinates.value.length) return []
 
@@ -252,10 +266,12 @@ const nodes = computed(() => {
   return result
 })
 
+// The node currently being hovered over, used to show the tooltip
 const hoveredNode = computed(() =>
   hoveredId.value ? nodes.value.find(n => n.user_id === hoveredId.value) : null
 )
 
+// Static star field generated once using deterministic math (no randomness, so it's stable)
 const stars = Array.from({ length: 130 }, (_, i) => ({
   id: i,
   x: (Math.sin(i * 7.3) * 0.5 + 0.5),
@@ -264,17 +280,20 @@ const stars = Array.from({ length: 130 }, (_, i) => ({
   o: (Math.cos(i * 2.1) * 0.2 + 0.25),
 }))
 
-function tierColor(tier) { return TIER_COLORS[Math.min(tier, 4)] ?? TIER_COLORS[4] }
-function tierLabel(tier) { return TIER_LABELS[Math.min(tier, 4)] ?? 'Tier 4+' }
-function nodeRadius(tier) { return tier === 0 ? 13 : tier === 1 ? 10 : 7 }
+function tierColor(tier) { return TIER_COLORS[Math.min(tier, 4)] ?? TIER_COLORS[4] } // Returns hex color for a given tier
+function tierLabel(tier) { return TIER_LABELS[Math.min(tier, 4)] ?? 'Tier 4+' } // Returns display label for a given tier
+function nodeRadius(tier) { return tier === 0 ? 13 : tier === 1 ? 10 : 7 } // Returns node circle size based on tier
 
 function initials(name) {
   if (!name) return '?'
   return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2)
 }
+
+// Clamps tooltip position to stay within the SVG bounds
 function tooltipX(node) { return Math.min(Math.max(node.px, 70), svgW.value - 70) }
 function tooltipY(node) { return node.py < 100 ? node.py + 60 : node.py - 60 }
 
+// Converts ISO timestamp to human-readable "X mins ago" format
 function timeAgo(iso) {
   if (!iso) return ''
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
@@ -286,6 +305,10 @@ function timeAgo(iso) {
 }
 function goToProfile(userId) { router.push(`/profile/${userId}`) }
 
+/*
+  Fetches the precomputed map from the backend
+  If no map exists yet (404), triggers computation automatically
+*/
 async function fetchMap() {
   loading.value = true
   error.value = null
@@ -311,6 +334,10 @@ async function fetchMap() {
   }
 }
 
+/*
+  Triggers a fresh map computation on the backend via POST,
+  then updates the displayed coordinates with the new result
+*/
 async function triggerAndReload() {
   triggering.value = true
   error.value = null
@@ -335,6 +362,7 @@ async function triggerAndReload() {
   }
 }
 
+// Updates SVG dimensions to match container size, and sets the mobile warning flag
 function onResize() {
   isMobile.value = window.innerWidth < 600
   if (canvasWrap.value) {

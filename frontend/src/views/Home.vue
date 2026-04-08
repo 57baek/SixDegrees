@@ -10,7 +10,7 @@
         </nav>
       </header>
 
-      <!-- Add Friend Test Box -->
+      <!-- Input box to send a friend request by nickname -->
       <div class="test-box add-friend-box">
         <h3 class="test-title">Add Friend</h3>
         <input 
@@ -23,7 +23,7 @@
         </button>
       </div>
       
-      <!-- Friend Requests Box -->
+      <!-- List of incoming friend requests with accept/reject actions -->
       <div class="test-box friend-requests-box">
         <h3 class="test-title">Pending Friend Requests</h3>
         
@@ -32,8 +32,9 @@
         </div>
         
         <ul v-else class="requests-list">
-          <li v-for="user in incomingRequests" :key="user.id" class="request-item" @click="goToProfile(user.id)">
+          <li v-for="user in incomingRequests" :key="user.nickname" class="request-item" @click="goToProfile(user.nickname)">
           
+          <!-- falls back to first letter of nickname if no avatar -->
           <div class="request-user">
             <div class="avatar-small">
               <img v-if="user.avatar_url" :src="user.avatar_url" class="avatar-img" />
@@ -58,6 +59,7 @@
         </button>
       </div>
 
+      <!-- Tier Filter: controls which posts are shown based on friend proximity -->
       <div class="tier-filter">
         <span class="filter-label">Showing:</span>
         <button v-for="tier in [1, 2, 3]" :key="tier" @click="selectedTierFilter= tier" :class="['filter-btn', { active: selectedTierFilter === tier }]">
@@ -75,7 +77,7 @@
 
       <div v-else class="feed">
         <Post
-          v-for="post in filteredPosts"
+          v-for="post in posts"
           :key="post.id"
           :post="post"
           @delete-post="handleDeletePost"
@@ -92,13 +94,11 @@ import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase'
 import CreatePost from '../components/CreatePost.vue'
 import Post from '../components/Post.vue'
-import { filterPostsByTier, tierFilterLabel } from '../utils.js'
+import { tierFilterLabel } from '../utils.js'
 
 const router = useRouter()
 
-// ------------------------
 // Auth redirect
-// ------------------------
 const session = ref(null)
 
 onMounted(async () => {
@@ -107,12 +107,15 @@ onMounted(async () => {
   if (!session.value) router.push('/login')
 })
 
+// Also redirect if user logs out mid-session
 supabase.auth.onAuthStateChange((_event, newSession) => {
   session.value = newSession
   if (!newSession) router.push('/login')
 })
 
-// ===== Add Friend Test Function =====
+/*
+  Sends a friend request by nickname and alerts the user on success or failure
+*/
 const testNickname = ref('')
 
 const testAddFriend = async () => {
@@ -143,6 +146,9 @@ const testAddFriend = async () => {
 // Request List
 const incomingRequests = ref([]) // store like { id, nickname }
 
+/*
+  Fetches the list of imcoming friend requests for the current user
+*/
 const fetchIncomingRequests = async () => {
   try {
     const { data : requestNicks, error: incomingRequestError } = await supabase.rpc('friend_requests')
@@ -152,7 +158,10 @@ const fetchIncomingRequests = async () => {
     console.error('Error fetching nicknames:', err.message)
   }
 }
-// Accept request
+
+/*
+  Accepts a friend request by nickname and refreshes the request list
+*/
 const handleAccept = async (friendNickname) => {
   try {
     const { data, error } = await supabase.rpc('accept_friend', {
@@ -168,7 +177,9 @@ const handleAccept = async (friendNickname) => {
   }
 }
 
-// Reject request
+/*
+  Rejects a friend request by nickname and refreshes the request list
+*/
 const handleReject = async (friendNickname) => {
   try {
     const { data, error } = await supabase.rpc('reject_friend', {
@@ -208,16 +219,18 @@ onMounted(async () => {
   pollInterval.value = setInterval(loadPosts, 30000)
 })
 
-/** Function to fetch posts from the database w/ user info, like count, comment count
- * posts ordered by recency (newst first)
+const selectedTierFilter = ref(3)
+
+/*
+  Fetches posts from the database filtered by the selected tier, ordered by recency
 */
-
-
 async function loadPosts() {
   loading.value = true
   
   try {
-    const { data, error } = await supabase.rpc('load_posts')
+    const { data, error } = await supabase.rpc('load_posts', {
+      max_tier: selectedTierFilter.value
+    })
     
     if (error) throw error
     
@@ -229,46 +242,47 @@ async function loadPosts() {
   }
 }
 
-const goToProfile = (userId) => {
-  router.push(`/profile/${userId}`)
+/*
+  Navigates to a user's profile page by their nickname
+*/
+const goToProfile = (userNickname) => {
+  router.push(`/profile/${userNickname}`)
 }
 
-  /**
-   * Logs current user out and redirects to login page. 
-   */
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    localStorage.removeItem('supabase_token')
-    router.push('/login')
-  }
+/*
+  Logs the current user out, clears local storage, and redirects to login
+*/
+async function handleLogout() {
+  await supabase.auth.signOut()
+  localStorage.removeItem('supabase_token')
+  router.push('/login')
+}
 
-  // computing filtered posts based on selected tier filter
-  const selectedTierFilter = ref(3)
+/*
+  Prompts for confirmation, then deleted a post and removes it from the feed
+*/
+async function handleDeletePost(postId) {
+  if (!confirm('Are you sure you want to delete this post?')) return
 
-  const filteredPosts = computed(() => filterPostsByTier(posts.value, selectedTierFilter.value))
-  // Delete posts
-  async function handleDeletePost(postId) {
-    if (!confirm('Are you sure you want to delete this post?')) return
+  try {
+    const { data, error } = await supabase.rpc('delete_post', { 
+      post_id: postId 
+    })
 
-    try {
-      const { data, error } = await supabase.rpc('delete_post', { 
-        post_id: postId 
-      })
+    if (error) throw error
 
-      if (error) throw error
-
-      if (data) {
-        posts.value = posts.value.filter(p => p.id !== postId)
-        alert('Post deleted successfully.')
-      } else {
-        alert('You do not have permission to delete this post.')
-      }
-
-    } catch (err) {
-      console.error('Error deleting post:', err)
-      alert('Failed to delete post: ' + err.message)
+    if (data) {
+      posts.value = posts.value.filter(p => p.id !== postId)
+      alert('Post deleted successfully.')
+    } else {
+      alert('You do not have permission to delete this post.')
     }
+
+  } catch (err) {
+    console.error('Error deleting post:', err)
+    alert('Failed to delete post: ' + err.message)
   }
+}
 </script>
 
 <style scoped>
@@ -359,10 +373,6 @@ const goToProfile = (userId) => {
   text-align: center;
   color: #b0b0b0;
   padding: 3rem 1rem;
-}
-
-.feed {
-  /* Posts will stack naturally */
 }
 
 /* Test/Debug Boxes */
