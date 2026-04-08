@@ -12,7 +12,7 @@ SIGNUP PAGE - form users see when creating a new account
                         v-model="nickname"
                         type="text"
                         @focus="showValidation = true"
-                        @blur="showValidation = ~uniqueUser"
+                        @blur="showValidation = !uniqueUser"
                         @input="checkNickname();"
                         placeholder="Create nickname"
                         required
@@ -121,7 +121,7 @@ async function checkNickname() {
     if (showValidation.value != uniqueUser.value)
       showValidation.value = true;
   } catch (err) {
-    console.err(error.message);
+    console.error(err);
   }
 }
 

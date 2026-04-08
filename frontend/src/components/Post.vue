@@ -25,6 +25,16 @@
     <div class="post-content">
       {{ post.content }}
     </div>
+
+    <div v-if="post.post_image_urls?.length" class="post-images">
+      <img
+        v-for="(url, i) in post.post_image_urls"
+        :key="i"
+        :src="url"
+        class="post-image"
+        loading="lazy"
+      />
+    </div>
     
     <div class="post-actions-wrapper">
       <div class="post-actions">
@@ -207,16 +217,7 @@ onMounted(async () => {
   }
   
   await fetchUserLike()
-  
   await fetchUserReport()
-  
-  const { data, error } = await supabase.rpc('like_count', { 
-    post_id: props.post.id 
-  })
-  
-  if (!error && data !== null) {
-    likeCount.value = data
-  }
 })
 
 /**
@@ -577,8 +578,24 @@ async function fetchUserReport() {
 }
 
 .delete-comment-btn:hover {
-  background: rgba(255, 68, 68, 0.1); 
-  color: #ff6b6b; 
-  transform: scale(1.1); 
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff6b6b;
+  transform: scale(1.1);
+}
+
+.post-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.post-image {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex: 1 1 calc(50% - 0.25rem);
+  border: 1px solid #444;
 }
 </style>

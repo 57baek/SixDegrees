@@ -219,6 +219,10 @@ onMounted(async () => {
   pollInterval.value = setInterval(loadPosts, 30000)
 })
 
+onUnmounted(() => {
+  clearInterval(pollInterval.value)
+})
+
 const selectedTierFilter = ref(3)
 
 /*

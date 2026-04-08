@@ -69,22 +69,38 @@ const previewUrls = ref([])
 const fileInput = ref(null)
 
 // Handles multi-file selection
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+
 function onFileSelected(event) {
   const files = Array.from(event.target.files)
-  
+
   if (selectedFiles.value.length + files.length > 5) {
     error.value = 'Maximum 5 images allowed'
     return
+  }
+
+  for (const file of files) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      error.value = `${file.name}: only JPEG, PNG, GIF, or WebP allowed`
+      return
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      error.value = `${file.name}: max file size is 5MB`
+      return
+    }
   }
 
   files.forEach(file => {
     selectedFiles.value.push(file)
     previewUrls.value.push(URL.createObjectURL(file))
   })
+  event.target.value = ''
 }
 
 // Removes a specific image from selection
 function removeImage(index) {
+  URL.revokeObjectURL(previewUrls.value[index])
   selectedFiles.value.splice(index, 1)
   previewUrls.value.splice(index, 1)
 }
@@ -134,10 +150,11 @@ async function handlePost() {
     if (postError) throw postError
     
     // Reset Form
+    previewUrls.value.forEach(url => URL.revokeObjectURL(url))
     content.value = ''
     selectedFiles.value = []
     previewUrls.value = []
-    selectedTier.value = 1
+    selectedTier.value = 'inner_circle'
     emit('post-created', data[0])
     
   } catch (err) {

@@ -243,7 +243,7 @@ async function loadProfile() {
     if (profileError) throw profileError
     profile.value = data || {}
 
-    if(profile.value.id != user.id) {
+    if (profile.value.id !== user.id) {
       const { data: friends } = await supabase.rpc('extended_friends', { max_tier: 1 })
       isFriend.value = (friends || []).some(f => f.id === profile.value.id)
 
@@ -423,7 +423,7 @@ async function unblockUser() {
 
 // Programatically triggers the hidden file input for avatar upload
 function triggerUpload() {
-  fileInput.value.click()
+  if (fileInput.value) fileInput.value.click()
 }
 
 /*
@@ -433,8 +433,9 @@ function triggerUpload() {
 async function uploadAvatar(event) {
   const file = event.target.files[0]
   if (!file) return
-  if (file.size > 2 * 1024 * 1024) return alert('Max file size is 2MB')
-  if (!file.type.startsWith('image/')) return alert('Please upload an image')
+  const ALLOWED = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!ALLOWED.includes(file.type)) { error.value = 'Only JPEG, PNG, GIF, or WebP allowed'; return }
+  if (file.size > 2 * 1024 * 1024) { error.value = 'Max file size is 2MB'; return }
 
   uploading.value = true
   try {

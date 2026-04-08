@@ -173,8 +173,10 @@ function triggerUpload() {
 function handleAvatarChange(event) {
   const file = event.target.files[0]
   if (!file) return
-  if (file.size > 2 * 1024 * 1024) return alert('Max file size is 2MB')
-  if (!file.type.startsWith('image/')) return alert('Please upload an image')
+  const ALLOWED = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!ALLOWED.includes(file.type)) { error.value = 'Only JPEG, PNG, GIF, or WebP allowed'; return }
+  if (file.size > 2 * 1024 * 1024) { error.value = 'Max file size is 2MB'; return }
+  if (avatarPreview.value) URL.revokeObjectURL(avatarPreview.value)
   avatarFile.value = file
   avatarPreview.value = URL.createObjectURL(file)
 }
