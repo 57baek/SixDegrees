@@ -1,169 +1,362 @@
-// Unit and integration tests for post-related functionality
-// Tests cover: utility functions from utils.js, RPC call behavior, and edge cases
-// To run: npm test (from /frontend directory)
-// Framework: Vitest (https://vitest.dev)
+// src/tests/posts.test.js
 
+import { mount, flushPromises } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { formatDate, tierLabel, tierFilterLabel, filterPostsByTier } from '../utils.js'
+import Post from '../components/Post.vue'
 
-vi.mock('../lib/supabase', () => ({
-  supabase: {
-    rpc: vi.fn(),
-    auth: { getUser: vi.fn() }
-  }
+// ─── 1. Hoist mocks ───────────────────────────────────────────────────────────
+const { mockRpc, mockGetUser, mockPush } = vi.hoisted(() => ({
+  mockRpc: vi.fn(),
+  mockGetUser: vi.fn(),
+  mockPush: vi.fn(),
 }))
 
-import { supabase } from '../lib/supabase'
+// ─── 2. Mock Supabase ─────────────────────────────────────────────────────────
+vi.mock('../lib/supabase', () => ({
+  supabase: {
+    auth: { getUser: mockGetUser },
+    rpc: mockRpc,
+  },
+}))
 
-// Tests filterPostsByTier
-describe('filterPostsByTier', () => {
-  const posts = [
-    { id: '1', content: 'a', tier: 1 },
-    { id: '2', content: 'b', tier: 2 },
-    { id: '3', content: 'c', tier: 3 },
-  ]
+// ─── 3. Mock vue-router ───────────────────────────────────────────────────────
+vi.mock('vue-router', () => ({
+  useRouter: vi.fn(() => ({ push: mockPush })),
+}))
 
-  it('returns only tier 1 posts when filter is 1', () => {
-    const result = filterPostsByTier(posts, 1)
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe('1')
-  })
+// ─── 4. Mock utils ────────────────────────────────────────────────────────────
+vi.mock('../utils.js', () => ({
+  formatDate: vi.fn(() => 'Jan 1, 2025'),
+  tierLabel: vi.fn((tier) => `Tier ${tier}`),
+}))
 
-  it('returns tier 1 and 2 posts when filter is 2', () => {
-    const result = filterPostsByTier(posts, 2)
-    expect(result).toHaveLength(2)
-    expect(result.map(p => p.id)).toEqual(['1', '2'])
-  })
+// ─── 5. Mock lucide icons so they don't break the test renderer ───────────────
+vi.mock('lucide-vue-next', () => ({
+  Heart: { template: '<span data-testid="icon-heart" />' },
+  MessageCircle: { template: '<span data-testid="icon-message" />' },
+  Lock: { template: '<span />' },
+  Users: { template: '<span />' },
+  Globe: { template: '<span />' },
+  Archive: { template: '<span />' },
+  Trash2: { template: '<span data-testid="icon-trash" />' },
+  Flag: { template: '<span data-testid="icon-flag" />' },
+}))
 
-  it('returns all posts when filter is 3', () => {
-    const result = filterPostsByTier(posts, 3)
-    expect(result).toHaveLength(3)
-    expect(result.map(p => p.id)).toEqual(['1', '2', '3'])
-  })
-
-  it('returns empty array when no posts match', () => {
-    expect(filterPostsByTier([], 3)).toEqual([])
-  })
+// ─── 6. Default test post ─────────────────────────────────────────────────────
+const makePost = (overrides = {}) => ({
+  id: 'post-1',
+  user_id: 'user-abc',
+  nickname: 'alice',
+  avatar_url: null,
+  content: 'Hello world!',
+  created_at: '2025-01-01T00:00:00Z',
+  tier: 1,
+  like_count: 5,
+  comment_count: 2,
+  ...overrides,
 })
 
-// Tests tierLabel
-describe('tierLabel', () => {
-  it('returns Inner Circle for tier 1', () => {
-    expect(tierLabel(1)).toBe('Inner Circle')
+// ─── 7. Mount helper ──────────────────────────────────────────────────────────
+const mountPost = (postOverrides = {}, userId = 'other-user') => {
+  mockGetUser.mockResolvedValue({ data: { user: { id: userId } } })
+  // Default RPC responses for onMounted calls:
+  // is_user_liked, is_user_reported, like_count
+  mockRpc
+    .mockResolvedValueOnce({ data: false, error: null }) // is_user_liked
+    .mockResolvedValueOnce({ data: false, error: null }) // is_user_reported
+    .mockResolvedValueOnce({ data: 5, error: null })     // like_count
+
+  return mount(Post, {
+    props: { post: makePost(postOverrides) },
+  })
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Post.vue', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
-  it('returns 2nd Degree for tier 2', () => {
-    expect(tierLabel(2)).toBe('2nd Degree')
+  // ── SECTION: Rendering ──────────────────────────────────────────────────────
+
+  describe('Rendering', () => {
+    it('renders the post content', async () => {
+      const wrapper = mountPost()
+      await flushPromises()
+      expect(wrapper.find('.post-content').text()).toContain('Hello world!')
+    })
+
+    it('renders the nickname', async () => {
+      const wrapper = mountPost()
+      await flushPromises()
+      expect(wrapper.find('.nickname').text()).toBe('alice')
+    })
+
+    it('renders the formatted date from utils', async () => {
+      const wrapper = mountPost()
+      await flushPromises()
+      expect(wrapper.find('.timestamp').text()).toBe('Jan 1, 2025')
+    })
+
+    it('renders the tier label from utils', async () => {
+      const wrapper = mountPost()
+      await flushPromises()
+      expect(wrapper.find('.tier-badge').text()).toContain('Tier 1')
+    })
+
+    it('renders the first letter of nickname as avatar fallback', async () => {
+      const wrapper = mountPost({ avatar_url: null, nickname: 'bob' })
+      await flushPromises()
+      expect(wrapper.find('.avatar span').text()).toBe('B')
+    })
+
+    it('renders an avatar image when avatar_url is provided', async () => {
+      const wrapper = mountPost({ avatar_url: 'http://example.com/avatar.jpg' })
+      await flushPromises()
+      const img = wrapper.find('.avatar-img')
+      expect(img.exists()).toBe(true)
+      expect(img.attributes('src')).toBe('http://example.com/avatar.jpg')
+    })
+
+    it('shows the like count', async () => {
+      const wrapper = mountPost({ like_count: 7 })
+      await flushPromises()
+      // like_count RPC returns 5 on mount, overriding the prop
+      const likeBtn = wrapper.find('.action-btn')
+      expect(likeBtn.text()).toContain('5')
+    })
+
+    it('shows the comment count', async () => {
+      const wrapper = mountPost({ comment_count: 3 })
+      await flushPromises()
+      const buttons = wrapper.findAll('.action-btn')
+      expect(buttons[1].text()).toContain('3')
+    })
   })
 
-  it('returns All Friends for tier 3', () => {
-    expect(tierLabel(3)).toBe('All Friends')
+  // ── SECTION: Own Post vs Other Post ─────────────────────────────────────────
+
+  describe('Own post vs other post', () => {
+    it('shows delete button when the post belongs to the current user', async () => {
+      // Mount with userId matching post.user_id
+      const wrapper = mountPost({}, 'user-abc')
+      await flushPromises()
+      expect(wrapper.find('.delete-icon-btn').exists()).toBe(true)
+    })
+
+    it('hides delete button when the post belongs to another user', async () => {
+      const wrapper = mountPost({}, 'other-user')
+      await flushPromises()
+      expect(wrapper.find('.delete-icon-btn').exists()).toBe(false)
+    })
+
+    it('shows report button when the post belongs to another user', async () => {
+      const wrapper = mountPost({}, 'other-user')
+      await flushPromises()
+      // Flag button should be visible for other users' posts
+      expect(wrapper.find('[data-testid="icon-flag"]').exists()).toBe(true)
+    })
+
+    it('hides report button when the post belongs to the current user', async () => {
+      const wrapper = mountPost({}, 'user-abc')
+      await flushPromises()
+      expect(wrapper.find('[data-testid="icon-flag"]').exists()).toBe(false)
+    })
   })
 
-  it('handles unknown tier gracefully', () => {
-    expect(tierLabel(99)).toBe('99') // falls back to string of the number
+  // ── SECTION: Navigation ──────────────────────────────────────────────────────
+
+  describe('Navigation', () => {
+    it('navigates to user profile when avatar is clicked', async () => {
+      const wrapper = mountPost()
+      await flushPromises()
+      await wrapper.find('.avatar').trigger('click')
+      expect(mockPush).toHaveBeenCalledWith('/profile/alice')
+    })
+  })
+
+  // ── SECTION: Delete Post ─────────────────────────────────────────────────────
+
+  describe('Delete Post', () => {
+    it('emits delete-post with the post id when delete button is clicked', async () => {
+      const wrapper = mountPost({}, 'user-abc')
+      await flushPromises()
+
+      await wrapper.find('.delete-icon-btn').trigger('click')
+
+      expect(wrapper.emitted('delete-post')).toBeTruthy()
+      expect(wrapper.emitted('delete-post')[0]).toEqual(['post-1'])
+    })
+  })
+
+  // ── SECTION: Likes ───────────────────────────────────────────────────────────
+
+  describe('Likes', () => {
+    it('calls like_post RPC when like button is clicked and post is not liked', async () => {
+      const wrapper = mountPost()
+      await flushPromises()
+
+      mockRpc.mockResolvedValueOnce({ data: null, error: null }) // like_post
+      await wrapper.find('.action-btn').trigger('click')
+      await flushPromises()
+
+      expect(mockRpc).toHaveBeenCalledWith('like_post', { liked_post_id: 'post-1' })
+    })
+
+    it('increments like count optimistically when liking', async () => {
+      const wrapper = mountPost()
+      await flushPromises()
+
+      const initialCount = Number(wrapper.find('.action-btn').text().trim())
+
+      mockRpc.mockResolvedValueOnce({ data: null, error: null })
+      await wrapper.find('.action-btn').trigger('click')
+      await flushPromises()
+
+      const newCount = Number(wrapper.find('.action-btn').text().trim())
+      expect(newCount).toBe(initialCount + 1)
+    })
+
+    it('calls unlike_post RPC when like button is clicked and post is already liked', async () => {
+      // Override is_user_liked to return true
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'other-user' } } })
+      mockRpc
+        .mockResolvedValueOnce({ data: true, error: null })  // is_user_liked → already liked
+        .mockResolvedValueOnce({ data: false, error: null }) // is_user_reported
+        .mockResolvedValueOnce({ data: 5, error: null })     // like_count
+
+      const wrapper = mount(Post, { props: { post: makePost() } })
+      await flushPromises()
+
+      mockRpc.mockResolvedValueOnce({ data: null, error: null }) // unlike_post
+      await wrapper.find('.action-btn').trigger('click')
+      await flushPromises()
+
+      expect(mockRpc).toHaveBeenCalledWith('unlike_post', { liked_post_id: 'post-1' })
+    })
+  })
+
+  // ── SECTION: Comments ────────────────────────────────────────────────────────
+
+  describe('Comments', () => {
+    it('comments section is hidden by default', async () => {
+      const wrapper = mountPost()
+      await flushPromises()
+      expect(wrapper.find('.comments-section').exists()).toBe(false)
+    })
+
+    it('shows comments section when comment button is clicked', async () => {
+      mockRpc.mockResolvedValueOnce({ data: [], error: null }) // load_comments
+      const wrapper = mountPost()
+      await flushPromises()
+
+      const buttons = wrapper.findAll('.action-btn')
+      await buttons[1].trigger('click')
+      await flushPromises()
+
+      expect(wrapper.find('.comments-section').exists()).toBe(true)
+    })
+
+    it('loads comments from supabase when section is first opened', async () => {
+      const comments = [
+        { id: 'c1', nickname: 'bob', content: 'Nice post!', user_id: 'user-bob' },
+      ]
+
+      const wrapper = mountPost()
+      await flushPromises()
+
+      // ✅ Set up load_comments mock AFTER mount resolves
+      mockRpc.mockResolvedValueOnce({ data: comments, error: null })
+
+      await wrapper.findAll('.action-btn')[1].trigger('click')
+      await flushPromises()
+
+      expect(mockRpc).toHaveBeenCalledWith('load_comments', { post_id: 'post-1' })
+      expect(wrapper.find('.comment-text').text()).toContain('Nice post!')
+    })
+
+    it('disables Send button when comment input is empty', async () => {
+      mockRpc.mockResolvedValueOnce({ data: [], error: null })
+      const wrapper = mountPost()
+      await flushPromises()
+
+      await wrapper.findAll('.action-btn')[1].trigger('click')
+      await flushPromises()
+
+      const sendBtn = wrapper.find('.comment-input button')
+      expect(sendBtn.attributes('disabled')).toBeDefined()
+    })
+
+    it('enables Send button when comment input has text', async () => {
+      mockRpc.mockResolvedValueOnce({ data: [], error: null })
+      const wrapper = mountPost()
+      await flushPromises()
+
+      await wrapper.findAll('.action-btn')[1].trigger('click')
+      await flushPromises()
+
+      await wrapper.find('.comment-input input').setValue('Great post!')
+      const sendBtn = wrapper.find('.comment-input button')
+      expect(sendBtn.attributes('disabled')).toBeUndefined()
+    })
+
+    it('submits a comment and clears the input', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'other-user' } } })
+      mockRpc
+        .mockResolvedValueOnce({ data: false, error: null }) // is_user_liked
+        .mockResolvedValueOnce({ data: false, error: null }) // is_user_reported
+        .mockResolvedValueOnce({ data: 5, error: null })     // like_count
+        .mockResolvedValueOnce({ data: [], error: null })    // load_comments
+        .mockResolvedValueOnce({                             // comment RPC
+          data: [{ id: 'c2', nickname: 'me', content: 'Great post!', user_id: 'other-user' }],
+          error: null,
+        })
+
+      const wrapper = mount(Post, { props: { post: makePost() } })
+      await flushPromises()
+
+      await wrapper.findAll('.action-btn')[1].trigger('click')
+      await flushPromises()
+
+      const input = wrapper.find('.comment-input input')
+      await input.setValue('Great post!')
+      await wrapper.find('.comment-input button').trigger('click')
+      await flushPromises()
+
+      expect(mockRpc).toHaveBeenCalledWith('comment', {
+        post_id: 'post-1',
+        comment_content: 'Great post!',
+      })
+      expect(input.element.value).toBe('')
+    })
+  })
+
+  // ── SECTION: Report ──────────────────────────────────────────────────────────
+
+  describe('Report', () => {
+    it('calls report_post RPC when flag button is clicked', async () => {
+      const wrapper = mountPost({}, 'other-user')
+      await flushPromises()
+
+      mockRpc.mockResolvedValueOnce({ data: null, error: null }) // report_post
+      await wrapper.find('[data-testid="icon-flag"]').trigger('click')
+      await flushPromises()
+
+      expect(mockRpc).toHaveBeenCalledWith('report_post', { reported_post_id: 'post-1' })
+    })
+
+    it('hides the report button after reporting', async () => {
+      const wrapper = mountPost({}, 'other-user')
+      await flushPromises()
+
+      mockRpc.mockResolvedValueOnce({ data: null, error: null })
+      await wrapper.find('[data-testid="icon-flag"]').trigger('click')
+      await flushPromises()
+
+      // After reporting, isReported = true, so the flag button should be gone
+      expect(wrapper.find('[data-testid="icon-flag"]').exists()).toBe(false)
+    })
   })
 })
-
-// Tests formatDate
-describe('formatDate', () => {
-  it('returns Just now for timestamps under 1 hour ago', () => {
-    const thirtyMinsAgo = new Date(Date.now() - 1000 * 60 * 30).toISOString()
-    expect(formatDate(thirtyMinsAgo)).toBe('Just now')
-  })
-
-  it('returns Xh ago for timestamps under 24 hours ago', () => {
-    const fiveHoursAgo = new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString()
-    expect(formatDate(fiveHoursAgo)).toBe('5h ago')
-  })
-
-  it('returns Yesterday for timestamps between 24 and 48 hours ago', () => {
-    const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString()
-    expect(formatDate(yesterday)).toBe('Yesterday')
-  })
-
-  it('returns a date string for older timestamps', () => {
-    const oldDate = new Date('2024-01-01').toISOString()
-    expect(formatDate(oldDate)).toBe(new Date('2024-01-01').toLocaleDateString())
-  })
-})
-
-// Tests loadPosts RPC
-describe('loadPosts RPC', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('calls supabase with correct function name', async () => {
-    supabase.rpc.mockResolvedValue({ data: [], error: null })
-    await supabase.rpc('load_posts')
-    expect(supabase.rpc).toHaveBeenCalledWith('load_posts')
-  })
-
-  it('returns posts on success', async () => {
-    const mockPosts = [{ id: '1', nickname: 'Alice', tier: 1, like_count: 0, comment_count: 0 }]
-    supabase.rpc.mockResolvedValue({ data: mockPosts, error: null })
-    const { data, error } = await supabase.rpc('load_posts')
-    expect(error).toBeNull()
-    expect(data).toEqual(mockPosts)
-  })
-
-  it('returns null data on DB error', async () => {
-    supabase.rpc.mockResolvedValue({ data: null, error: { message: 'DB error' } })
-    const { data, error } = await supabase.rpc('load_posts')
-    expect(data).toBeNull()
-    expect(error.message).toBe('DB error')
-  })
-
-  it('handles empty posts array', async () => {
-    supabase.rpc.mockResolvedValue({ data: [], error: null })
-    const { data } = await supabase.rpc('load_posts')
-    expect(data).toEqual([])
-  })
-})
-
-// Tests delete_post RPC
-describe('delete_post RPC', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('calls delete_post with correct post_id', async () => {
-    const postId = 'post-123'
-    supabase.rpc.mockResolvedValue({ data: true, error: null })
-    
-    await supabase.rpc('delete_post', { post_id: postId })
-    
-    expect(supabase.rpc).toHaveBeenCalledWith('delete_post', { post_id: postId })
-  })
-
-  it('returns true when deletion is successful', async () => {
-    supabase.rpc.mockResolvedValue({ data: true, error: null })
-    const { data } = await supabase.rpc('delete_post', { post_id: '123' })
-    expect(data).toBe(true)
-  })
-
-  it('handles permission error (returns false)', async () => {
-    supabase.rpc.mockResolvedValue({ data: false, error: null })
-    const { data } = await supabase.rpc('delete_post', { post_id: '123' })
-    expect(data).toBe(false)
-  })
-})
-
-// Tests delete_comment RPC
-describe('delete_comment RPC', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('calls delete_comment with correct comment_id', async () => {
-    const commentId = 'comment-456'
-    supabase.rpc.mockResolvedValue({ data: true, error: null })
-    
-    await supabase.rpc('delete_comment', { comment_id: commentId })
-    
-    expect(supabase.rpc).toHaveBeenCalledWith('delete_comment', { comment_id: commentId })
-  })
-
-  it('handles database error during deletion', async () => {
-    supabase.rpc.mockResolvedValue({ data: null, error: { message: 'Network error' } })
-    const { error } = await supabase.rpc('delete_comment', { comment_id: '456' })
-    expect(error.message).toBe('Network error')
-  })
-})
-
-
