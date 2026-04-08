@@ -38,7 +38,7 @@
           <select v-model="selectedTier">
             <option value="inner_circle">Inner Circle Only</option>
             <option value="second_degree">Inner Circle + 2nd Degree</option>
-            <option value="third_degree">+3rd Degree</option>
+            <option value="third_degree">All Friends</option>
           </select>
         </div>
         
