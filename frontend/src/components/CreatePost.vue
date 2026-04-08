@@ -70,7 +70,7 @@ const fileInput = ref(null)
 
 // Handles multi-file selection
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
 
 function onFileSelected(event) {
   const files = Array.from(event.target.files)
@@ -138,7 +138,7 @@ async function handlePost() {
     })
 
     const allPublicUrls = await Promise.all(uploadPromises)
-
+    console.log('Sending post_tier:', selectedTier.value, 'Type:', typeof selectedTier.value);
     // Call RPC to save post data (Make sure your SQL function accepts post_image_urls text[])
     const { data, error: postError } = await supabase.rpc('post', {
       post_content: content.value.trim(),
