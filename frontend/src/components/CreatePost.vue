@@ -108,14 +108,18 @@ function removeImage(index) {
 const emit = defineEmits(['post-created'])
 
 /*
-  Submits the post with the selected tier visibility
-  Clears the form and notifies the parent to refresh the feed
+  Gets user's chosen default for post tier from database
+  Applies this default to their post creation form for convenience
 */
 onMounted(async () => {
   const { data : default_post_tier } = await supabase.rpc('get_default_post_tier')
   selectedTier.value = default_post_tier || 'inner_circle'
 })
 
+/*
+  Submits the post with the selected tier visibility
+  Clears the form and notifies the parent to refresh the feed
+*/
 async function handlePost() {
   if (!content.value.trim() && selectedFiles.value.length === 0) return
   

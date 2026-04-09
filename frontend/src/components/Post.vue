@@ -17,7 +17,7 @@
         >{{ post.nickname || 'Unknown User' }}</div>
         <div class="post-meta">
           <span class="timestamp">{{ formatDate(post.created_at) }}</span>
-          <span v-if="!isOwnPost" class="tier-badge" :class="`tier-${post.tier}`">
+          <span class="tier-badge" :class="`tier-${post.tier}`">
             <component :is="tierIcon(post.tier)" :size="12" />
             {{ tierLabel(post.tier) }}
           </span>
@@ -202,6 +202,10 @@ async function fetchUserLike() {
   }
 }
 
+/*
+  * Loads in relevant post data:
+  *  If the user has liked or reported the post, and total like and comment counts for the post
+*/
 onMounted(async () => {
   const { data: { user } } = await supabase.auth.getUser()
   if (user) { 

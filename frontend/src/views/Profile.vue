@@ -26,8 +26,8 @@
           Friends
         </button>
 
-        <!-- Friend Count and Button to Friend List -->
         <div v-if="!isOwnProfile" class="friendship-status">
+        <!-- Friend Count and Button to Friend List -->
           <div v-if="!isOwnProfile" class="friendship-status">
             <button class="addOrRemoveFriend-btn"
               type="button"
@@ -49,8 +49,9 @@
           </div>
         </div>
 
-        <!-- Block Button on Other User Profiles -->
+
         <div v-if="!isOwnProfile" class="block-status">
+        <!-- View Block Button on Other User Profiles-->
           <button class="blockOrUnblock-btn"
             type="button"
             :class="isBlocked ? 'unblock-btn' : 'block-btn'"
@@ -61,17 +62,17 @@
             <template v-else>Block</template>
           </button>
         </div>
-        <!-- View Profile Tier On Own Profile -->
         <div v-else-if="!isEditing" class="tier-badge">
+        <!-- View Profile Tier On Own Profile -->
           <span class="label">Visible To:</span>
           <span :class="`tier-${profile.tier}`">
-            <component :is="tierIcon(profile.tier)" :size="12" /> {{ tierLabel(profile.tier) }}
+            <p title="Note: Nickname and profile picture are always visible to all friends tiers"><component :is="tierIcon(profile.tier)" :size="12" /> {{ tierLabel(profile.tier) }}</p>
           </span>
         </div>
-        <!-- Change Profile Tier Visibility in Edit Form -->
         <div v-else class="tier-badge">
-          <select v-model.number="editForm.profile_tier">
-            <option v-for="tier in [1,2,3]" :key="tier" :value="tier">
+        <!-- Change Profile Tier Visibility in Edit Form -->
+          <select v-model.number="editForm.profile_tier" class="input-field" :class="`tier-${editForm.profile_tier}`">
+            <option v-for="tier in [1,2,3]" :key="tier" :value="tier" :class="`tier-${tier}`">
               {{ tierLabel(tier) }}
             </option>
           </select>
