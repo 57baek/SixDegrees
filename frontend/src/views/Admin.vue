@@ -2,82 +2,16 @@
 <div class="home">
     <div class="container">
       <header class="page-header">
-        <h1>Your Feed</h1>
+        <h1>Reported Post</h1>
         <nav class="nav-buttons">
-          <button @click="router.push('/map')" class="nav-btn map-btn"> People Map</button>
-          <button @click="router.push('/profile')" class="nav-btn">Profile</button>
           <button @click="handleLogout" class="logout-btn">Logout</button>
         </nav>
       </header>
 
-      <!-- Input box to send a friend request by nickname -->
-      <div class="test-box add-friend-box">
-        <h3 class="test-title">Add Friend</h3>
-        <input 
-          v-model="requestNickname" 
-          placeholder="Enter an existing nickname" 
-          class="test-input"
-        />
-        <button @click="requestFriend" class="test-btn">
-          Send Friend Request
-        </button>
-      </div>
-      
-      <!-- List of incoming friend requests with accept/reject actions -->
-      <div class="test-box friend-requests-box">
-        <h3 class="test-title">Pending Friend Requests</h3>
-        
-        <div v-if="incomingRequests.length === 0" class="no-requests">
-          No pending requests.
-        </div>
-        
-        <ul v-else class="requests-list">
-          <li v-for="user in incomingRequests" :key="user.nickname" class="request-item" @click="goToProfile(user.nickname)">
-          
-          <!-- falls back to first letter of nickname if no avatar -->
-          <div class="request-user">
-            <div class="avatar-small">
-              <img v-if="user.avatar_url" :src="user.avatar_url" class="avatar-img" />
-              <span v-else>{{ user.nickname.charAt(0).toUpperCase() }}</span>
-            </div>
-            <span class="request-text"><strong>{{ user.nickname }}</strong> wants to be friends!</span>
-          </div>
-          
-          <div class="request-buttons">
-            <button @click.stop="handleAccept(user.nickname)" class="accept-btn">
-              Accept
-            </button>
-
-            <button @click.stop="handleReject(user.nickname)" class="reject-btn">
-              Reject
-            </button>
-          </div>
-          </li>
-        </ul>
-        <button @click="fetchIncomingRequests" class="refresh-btn">
-          Refresh
-        </button>
-      </div>
-
-      <!-- Tier Filter: controls which posts are shown based on friend proximity -->
-      <div class="tier-filter">
-        <span class="filter-label">Showing:</span>
-        <button 
-          v-for="tier in [1, 2, 3]" 
-          :key="tier" 
-          @click="selectedTierFilter = tier; loadPosts()" 
-          :class="['filter-btn', { active: selectedTierFilter === tier }]"
-        >
-          {{ tierFilterLabel(tier) }}
-        </button>
-      </div>
-
-      <CreatePost @post-created="loadPosts" />
-
       <div v-if="loading" class="loading">Loading posts...</div>
 
       <div v-else-if="posts.length === 0" class="no-posts">
-        <p>No posts yet. Be the first to share something!</p>
+        <p>No reported posts! All is well!</p>
       </div>
 
       <div v-else class="feed">
@@ -94,12 +28,10 @@
 
 <script setup>
 
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase } from '../lib/supabase'
-import CreatePost from '../components/CreatePost.vue'
+import { supabase } from '../lib/supabase.js'
 import Post from '../components/Post.vue'
-import { tierFilterLabel } from '../utils.js'
 
 const router = useRouter()
 
@@ -108,14 +40,14 @@ const session = ref(null)
 let authListener = null
 
 onMounted(async () => {
-  // if no active user session, redirect to login page
+  // if no active session, redirect to login page
   const { data } = await supabase.auth.getSession()
   session.value = data.session
   if (!session.value) router.push('/login')
 
-  // if user is admin, redirect to admin page
+  // if somehow not admin, redirect to home page
   const { data: adminStatus, error : adminError } = await supabase.rpc('is_admin')
-  if (!adminError && adminStatus !== null && adminStatus) router.push('/admin')
+  if (adminError || adminStatus == null || !adminStatus) router.push('/')
 
   // Listen for sign-out only (ignore token refresh events)
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
@@ -134,88 +66,7 @@ onUnmounted(() => {
   authListener?.unsubscribe()
 })
 
-/*
-  Sends a friend request by nickname and alerts the user on success or failure
-*/
-const requestNickname = ref('')
-
-const requestFriend = async () => {
-  if (!requestNickname.value) {
-    alert('Please enter a nickname')
-    return
-  }
-  
-  try {
-    const { data, error } = await supabase.rpc('request_friend', {
-      friend_nickname: requestNickname.value
-    })
-    
-    if (error) throw error
-    
-     if (data)
-      alert('Success! Your friend request has been sent!')
-    else
-      alert('Oops! Something went wrong! (Are you sure this person exists?)')
-    requestNickname.value = '' // Clear the input field
-    
-  } catch (err) {
-    alert('Error: ' + err.message)
-  }
-}
-
-// Request List
-const incomingRequests = ref([]) // store like { id, nickname }
-
-/*
-  Fetches the list of imcoming friend requests for the current user
-*/
-const fetchIncomingRequests = async () => {
-  try {
-    const { data : requestingNicks, error: incomingRequestError } = await supabase.rpc('friend_requests')
-    if (incomingRequestError) throw incomingRequestError
-    incomingRequests.value = requestingNicks
-  } catch (err) {
-  }
-}
-
-/*
-  Accepts a friend request by nickname and refreshes the request list
-*/
-const handleAccept = async (friendNickname) => {
-  try {
-    const { data, error } = await supabase.rpc('accept_friend', {
-      friend_nickname: friendNickname
-    })
-
-    if (error) throw error
-    
-    alert(`You are now friends with ${friendNickname}!`)
-    fetchIncomingRequests() // Refresh the list
-  } catch (err) {
-    alert('Error accepting friend: ' + err.message)
-  }
-}
-
-/*
-  Rejects a friend request by nickname and refreshes the request list
-*/
-const handleReject = async (friendNickname) => {
-  try {
-    const { data, error } = await supabase.rpc('reject_friend', {
-      friend_nickname: friendNickname
-    })
-
-    if (error) throw error
-    
-    alert(`You have rejected the friend request from ${friendNickname}.`)
-    fetchIncomingRequests() // Refresh the list to remove them
-  } catch (err) {
-    alert('Error rejecting friend: ' + err.message)
-  }
-}
-
-// All fetched posts (max_tier=3); filtered client-side for instant tier switching
-const allPosts = ref([])
+const posts = ref([])
 const loading = ref(false)
 const pollInterval = ref(null)
 
@@ -231,48 +82,34 @@ onMounted(async () => {
   currentUserId.value = data.session?.user?.id ?? null
 
   // Fetch initial data
-  fetchIncomingRequests()
-  loadPosts()
+  loadPost()
   prefetchProfile(data.session)
   
   // Poll posts every 30s
-  pollInterval.value = setInterval(loadPosts, 30000)
+  pollInterval.value = setInterval(loadPost, 30000)
 })
 
 onUnmounted(() => {
   clearInterval(pollInterval.value)
 })
 
-const selectedTierFilter = ref(3)
 const currentUserId = ref(null)
-
-// Client-side filter — instant, no network round-trip
-// Posts are still reloaded from network in the background when filter changes
-const posts = computed(() =>
-  allPosts.value.filter(p => p.tier <= selectedTierFilter.value)
-)
 
 /*
   Always fetches all posts (max_tier=3); tier filtering is done client-side.
 */
-async function loadPosts() {
-  if (allPosts.value.length === 0) loading.value = true
+async function loadPost() {
+  if (posts.value.length === 0) loading.value = true
 
   try {
-    const { data, error } = await supabase.rpc('load_posts')
+    const { data, error } = await supabase.rpc('load_reported_post')
     if (error) throw error
-    allPosts.value = data || []
+    posts.value = data || []
   } catch (err) {
+    console.error('Error loading post:', err)
   } finally {
     loading.value = false
   }
-}
-
-/*
-  Navigates to a user's profile page by their nickname
-*/
-const goToProfile = (userNickname) => {
-  router.push(`/profile/${userNickname}`)
 }
 
 /*
@@ -309,13 +146,14 @@ async function handleDeletePost(postId) {
     if (error) throw error
 
     if (data) {
-      allPosts.value = allPosts.value.filter(p => p.id !== postId)
       alert('Post deleted successfully.')
+      loadPost()
     } else {
       alert('You do not have permission to delete this post.')
     }
 
   } catch (err) {
+    console.error('Error deleting post:', err)
     alert('Failed to delete post: ' + err.message)
   }
 }

@@ -4,6 +4,7 @@ import Login from '../views/Login.vue'
 import SignUp from '../views/SignUp.vue'
 import ProfileSetup from '../views/ProfileSetup.vue'
 import PeopleMap from '../views/PeopleMap.vue'
+import Admin from '../views/Admin.vue'
 import { supabase } from '../lib/supabase'
 
 const routes = [
@@ -52,6 +53,12 @@ const routes = [
     name: 'Match',
     component: () => import('../views/Match.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: Admin,
+    meta: { requiresAuth: true, requiresAdmin: true }
   }
 ]
 
@@ -66,8 +73,15 @@ router.beforeEach(async (to, from, next) => {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
     next('/login')
-  } else {
+  } else if (!to.meta.requiresAdmin) {
     next()
+  } else {
+    const { data: admin_status } = await supabase.rpc('is_admin')
+    if(!admin_status) {
+      next('/')
+    } else {
+      next()
+    }
   }
 })
 
