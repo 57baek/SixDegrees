@@ -59,7 +59,7 @@
       </div>
 
       <button 
-        v-if="isOwnPost" 
+        v-if="isOwnPost || isAdmin" 
         class="delete-icon-btn" 
         @click="emitDelete"
         title="Delete Post"
@@ -68,11 +68,13 @@
       </button>
     
       <button 
-        v-else-if="!isReported"
+        v-if="!isOwnPost"
         @click="handleReport" 
         class="action-btn"
+        title="Report/Unreport Post"
       >
-        <Flag :size="18"/>
+        <Flag :size="18" :fill="isReported ? 'currentColor' : 'none'" v-if="!isAdmin"/>
+        <CheckCircle :size="18" :fill="isReported ? 'currentColor' : 'none'" v-else/>
       </button>
     </div>
     
@@ -116,13 +118,13 @@
 <script setup>
 import { ref, computed, onMounted} from 'vue'
 import { supabase } from '../lib/supabase'
-import { Heart, MessageCircle, Archive, Trash2, Flag } from 'lucide-vue-next'
+import { Heart, MessageCircle, Archive, Trash2, Flag, CheckCircle } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { formatDate, tierIcon, tierLabel } from '../utils.js'
 
 
 const router = useRouter()
-const emit = defineEmits(['delete-post'])
+const emit = defineEmits(['delete-post','check-report'])
 const currentUserId = ref(null)
 
 
@@ -304,6 +306,7 @@ async function handleReport() {
       
       isReported.value = true
     }
+    emit('check-report',props.post.id)
   } catch (err) {
   }
 }

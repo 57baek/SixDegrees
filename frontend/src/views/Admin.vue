@@ -20,6 +20,7 @@
           :key="post.id"
           :post="post"
           @delete-post="handleDeletePost"
+          @check-report="loadPost"
         />
       </div>
     </div>
