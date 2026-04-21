@@ -171,7 +171,8 @@ import { useRouter } from 'vue-router'
 import ClosenessMap from '../components/ClosenessMap.vue'
 import { supabase } from '../lib/supabase.js'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_URL
+if (!API_BASE) throw new Error('VITE_API_URL is not set. Add it to your .env file.')
 
 // Color and label mapping for each tier level
 const TIER_COLORS = {

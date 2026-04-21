@@ -57,7 +57,8 @@ onMounted(async () => {
   }
 
   try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    const apiUrl = import.meta.env.VITE_API_URL
+    if (!apiUrl) throw new Error('VITE_API_URL is not set. Add it to your .env file.')
     const res = await fetch(`${apiUrl}/match`, {
       headers: { Authorization: `Bearer ${session.access_token}` }
     })
