@@ -1,7 +1,6 @@
 import numpy as np
 from models.user import UserProfile
-from config.settings import PROFILE_WEIGHTS
-import config.settings as _cfg
+from config.settings import PROFILE_WEIGHTS, EMBEDDING_FIELDS
 from services.matching.embedder import embed_profiles, cosine_sim, _FALLBACK_DIM
 from services.matching.similarity import (
     jaccard,
@@ -23,7 +22,7 @@ def _build_embeddings(profiles: list[UserProfile]) -> dict[str, np.ndarray]:
 
 def _text_score(u1: UserProfile, u2: UserProfile, embeddings: dict[str, np.ndarray]) -> float:
     """Cosine sim (embedding) or Jaccard fallback depending on EMBEDDING_FIELDS."""
-    if _cfg.EMBEDDING_FIELDS:
+    if EMBEDDING_FIELDS:
         return cosine_sim(embeddings[u1.id], embeddings[u2.id])
     return jaccard(u1.interests, u2.interests, stem=True)
 
@@ -74,7 +73,7 @@ def get_top_matches(
     When EMBEDDING_FIELDS is empty, embed_profiles is never called.
     """
     all_profiles = all_users + [current_user]
-    if _cfg.EMBEDDING_FIELDS:
+    if EMBEDDING_FIELDS:
         embeddings = _build_embeddings(all_profiles)
     else:
         embeddings = {p.id: np.zeros(_FALLBACK_DIM, dtype=np.float32) for p in all_profiles}
@@ -96,7 +95,7 @@ def build_similarity_matrix(
     Returns shape (N, N, F). If embeddings is None, computes internally.
     """
     if embeddings is None:
-        if _cfg.EMBEDDING_FIELDS:
+        if EMBEDDING_FIELDS:
             embeddings = _build_embeddings(users)
         else:
             embeddings = {p.id: np.zeros(_FALLBACK_DIM, dtype=np.float32) for p in users}

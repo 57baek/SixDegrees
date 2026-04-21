@@ -133,10 +133,13 @@ def test_get_match_happy_path(client, mock_sb):
 
     rows = [_ACTING_USER_ROW, _OTHER_USER_ROW]
 
-    # Override the profiles table mock to return both rows for .select("*").execute()
+    # Override the profiles table mock to return both rows for .select("*").limit(...).execute()
     profiles_tbl = MagicMock()
-    profiles_tbl.select.return_value.execute.return_value.data = rows
-    profiles_tbl.select.return_value.eq.return_value.execute.return_value.data = rows
+    select_result = MagicMock()
+    select_result.limit.return_value.execute.return_value.data = rows
+    select_result.execute.return_value.data = rows
+    select_result.eq.return_value.execute.return_value.data = rows
+    profiles_tbl.select.return_value = select_result
 
     original_side_effect = mock_sb.table.side_effect
 

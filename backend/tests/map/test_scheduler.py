@@ -13,8 +13,7 @@ def test_run_job_skipped_when_disabled_calls_record_run():
     mock_sb = MagicMock()
     with (
         patch("config.settings._client", mock_sb),
-        patch("config.settings.GLOBAL_COMPUTE_ENABLED", False),
-        patch("services.map.scheduler._settings.GLOBAL_COMPUTE_ENABLED", False),
+        patch("services.map.scheduler.GLOBAL_COMPUTE_ENABLED", False),
     ):
         asyncio.run(_run_job())
 
@@ -32,7 +31,7 @@ def test_run_job_skipped_does_not_call_pipeline_run():
     mock_sb = MagicMock()
     with (
         patch("config.settings._client", mock_sb),
-        patch("services.map.scheduler._settings.GLOBAL_COMPUTE_ENABLED", False),
+        patch("services.map.scheduler.GLOBAL_COMPUTE_ENABLED", False),
         patch("services.map.scheduler.pipeline.run") as mock_pipeline_run,
     ):
         asyncio.run(_run_job())

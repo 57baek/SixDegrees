@@ -86,7 +86,7 @@ def test_cosine_sim_zero_vector_is_zero(v):
 def test_build_profile_text_always_returns_str(interests, bio):
     """build_profile_text never raises and always returns a str."""
     p = _profile(interests=interests, bio=bio)
-    with patch("config.settings.EMBEDDING_FIELDS", ["interests", "bio"]):
+    with patch("services.matching.embedder.EMBEDDING_FIELDS", ["interests", "bio"]):
         result = build_profile_text(p)
     assert isinstance(result, str)
 
@@ -151,13 +151,13 @@ def test_embed_profiles_empty_text_is_zero_vector(n):
         min_size=1, max_size=6,
     )
 )
-@settings(max_examples=50)
+@settings(max_examples=50, deadline=None)
 def test_get_top_matches_scores_always_in_range(other_dicts):
     """get_top_matches similarity_score always in [0.0, 1.0]."""
     current = _profile(uid="current", interests=["coding"])
     others = [_profile(uid=d["uid"], interests=d["interests"]) for d in other_dicts]
     # Use zero embeddings for speed
-    with patch("config.settings.EMBEDDING_FIELDS", []):
+    with patch("services.matching.scoring.EMBEDDING_FIELDS", []):
         results = get_top_matches(current, others, top_n=len(others))
     for r in results:
         score = r["similarity_score"]

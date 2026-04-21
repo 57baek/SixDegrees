@@ -7,7 +7,7 @@ Not thread-safe — safe under single-worker Uvicorn deployment.
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-import config.settings as _cfg
+from config.settings import EMBEDDING_FIELDS, EMBEDDING_MODEL
 from models.user import UserProfile
 
 _model: SentenceTransformer | None = None
@@ -21,7 +21,7 @@ def _get_model() -> SentenceTransformer:
     """Return the shared model instance, loading it on first call."""
     global _model
     if _model is None:
-        _model = SentenceTransformer(_cfg.EMBEDDING_MODEL)
+        _model = SentenceTransformer(EMBEDDING_MODEL)
     return _model
 
 
@@ -42,7 +42,7 @@ def build_profile_text(profile: UserProfile) -> str:
       interests=[],         bio=None   → ""
     """
     parts: list[str] = []
-    for field in _cfg.EMBEDDING_FIELDS:
+    for field in EMBEDDING_FIELDS:
         value = getattr(profile, field, None)
         if value is None:
             continue

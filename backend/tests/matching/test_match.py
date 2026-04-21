@@ -179,7 +179,7 @@ def _user(uid: str, interests: list[str], bio: str | None = None) -> UserProfile
 def test_embedding_fields_config_fallback_to_jaccard(monkeypatch):
     """When EMBEDDING_FIELDS=[], get_top_matches uses Jaccard and never calls embed_profiles."""
     from unittest.mock import MagicMock
-    monkeypatch.setattr("config.settings.EMBEDDING_FIELDS", [])
+    monkeypatch.setattr("services.matching.scoring.EMBEDDING_FIELDS", [])
 
     mock_embed = MagicMock()
     monkeypatch.setattr("services.matching.scoring.embed_profiles", mock_embed)

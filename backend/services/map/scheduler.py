@@ -9,7 +9,7 @@ import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-import config.settings as _settings
+from config.settings import GLOBAL_COMPUTE_ENABLED
 from services.map import diagnostics
 from services.map import pipeline
 from services.map.lock import acquire_lock, release_lock
@@ -22,7 +22,7 @@ _UTC_MINUTE = 0
 
 
 async def _run_job() -> None:
-    if not _settings.GLOBAL_COMPUTE_ENABLED:
+    if not GLOBAL_COMPUTE_ENABLED:
         logger.info("Global compute skipped (GLOBAL_COMPUTE_ENABLED=False)")
         diagnostics.record_run(
             status="skipped",
