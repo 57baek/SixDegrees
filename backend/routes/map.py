@@ -29,7 +29,8 @@ async def trigger_map(
     try:
         run()
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        print(f"Pipeline error: {e}")
+        raise HTTPException(status_code=503, detail="Map computation failed. Check server logs.")
     sb = get_supabase_client()
     rows = sb.table("user_positions").select("computed_at").limit(1).execute().data
     computed_at = rows[0]["computed_at"] if rows else None

@@ -112,7 +112,7 @@ def test_post_map_trigger_503_on_pipeline_failure(client):
     with patch("routes.map.run", side_effect=RuntimeError("pipeline exploded")):
         response = client.post("/map/trigger/test-user-uuid")
     assert response.status_code == 503
-    assert "pipeline exploded" in response.json()["detail"]
+    assert "Map computation failed" in response.json()["detail"]
 
 
 def test_post_map_trigger_401_no_jwt(client_no_auth):
