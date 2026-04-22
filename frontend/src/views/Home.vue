@@ -11,21 +11,21 @@
       </header>
 
       <!-- Input box to send a friend request by nickname -->
-      <div class="test-box add-friend-box">
-        <h3 class="test-title">Add Friend</h3>
+      <div class="friend-menu-box add-friend-box">
+        <h3 class="box-title">Add Friend</h3>
         <input 
           v-model="requestNickname" 
           placeholder="Enter an existing nickname" 
-          class="test-input"
+          class="box-input"
         />
-        <button @click="requestFriend" class="test-btn">
+        <button @click="requestFriend" class="box-btn">
           Send Friend Request
         </button>
       </div>
       
       <!-- List of incoming friend requests with accept/reject actions -->
-      <div class="test-box friend-requests-box">
-        <h3 class="test-title">Pending Friend Requests</h3>
+      <div class="friend-menu-box friend-requests-box">
+        <h3 class="box-title">Pending Friend Requests</h3>
         
         <div v-if="incomingRequests.length === 0" class="no-requests">
           No pending requests.
@@ -249,7 +249,7 @@ const currentUserId = ref(null)
 // Client-side filter — instant, no network round-trip
 // Posts are still reloaded from network in the background when filter changes
 const posts = computed(() =>
-  allPosts.value.filter(p => p.tier <= selectedTierFilter.value)
+  allPosts.value.filter(p => p.friend_tier <= selectedTierFilter.value)
 )
 
 /*
@@ -413,8 +413,8 @@ async function handleDeletePost(postId) {
   padding: 3rem 1rem;
 }
 
-/* Test/Debug Boxes */
-.test-box {
+/* Boxes for Friend Management */
+.friend-menu-box {
   padding: 20px;
   margin-bottom: 20px;
   background: #2a2a2a;
@@ -429,18 +429,18 @@ async function handleDeletePost(postId) {
   border: 3px dashed #44ff44;
 }
 
-.test-title {
+.box-title {
   color: white;
   margin-top: 0;
 }
 
-.test-input {
+.box-input {
   padding: 8px;
   margin-right: 10px;
   width: 200px;
 }
 
-.test-btn {
+.box-btn {
   padding: 8px 16px;
   cursor: pointer;
   font-weight: bold;

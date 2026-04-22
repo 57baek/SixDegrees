@@ -76,7 +76,7 @@ const PostStub = {
 // mockResolvedValue (not Once) ensures both calls get a valid session.
 const mountHome = (session = { user: { id: 'user-1' } }) => {
   mockGetSession.mockResolvedValue({ data: { session } })
-  // Default: empty responses for friend_requests and load_posts
+  // Default: empty responses for is_admin, friend_requests, load_posts, and get_user_profile
   mockRpc.mockResolvedValue({ data: [], error: null })
 
   return mount(Home, {
@@ -123,7 +123,7 @@ describe('Home.vue', () => {
       const wrapper = mountHome()
       await flushPromises()
       expect(wrapper.find('input').exists()).toBe(true)
-      expect(wrapper.find('button.test-btn').text()).toBe('Send Friend Request')
+      expect(wrapper.find('button.box-btn').text()).toBe('Send Friend Request')
     })
 
     it('renders tier filter buttons for tiers 1, 2, and 3', async () => {
@@ -169,9 +169,10 @@ describe('Home.vue', () => {
     })
 
     it('renders Post stubs when posts are loaded', async () => {
-      const posts = [{ id: 1, content: 'Hello', tier: 1, user_id: 'other' }, { id: 2, content: 'World', tier: 1, user_id: 'other' }]
+      const posts = [{ id: 1, content: 'Hello', friend_tier: 1, user_id: 'other' }, { id: 2, content: 'World', friend_tier: 1, user_id: 'other' }]
       mockGetSession.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } } })
       mockRpc
+        .mockResolvedValueOnce({ data: [], error: null })    // is_admin
         .mockResolvedValueOnce({ data: [], error: null })    // friend_requests
         .mockResolvedValueOnce({ data: posts, error: null }) // load_posts
 
@@ -198,14 +199,25 @@ describe('Home.vue', () => {
 
       expect(mockPush).toHaveBeenCalledWith('/login')
     })
+    
+    it('redirects to /admin if user is admin', async () => {
+      mockGetSession.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } } })
+      mockRpc.mockResolvedValue({ data: true, error: null })
 
-    it('does NOT call load_posts or fetchIncomingRequests when session is valid', async () => {
+      mount(Home, {
+        global: { stubs: { CreatePost: CreatePostStub, Post: PostStub } },
+      })
+      await flushPromises()
+
+      expect(mockPush).toHaveBeenCalledWith('/admin')
+    })
+
+    it('does NOT redirect when session is valid but not admin', async () => {
       const wrapper = mountHome()
       await flushPromises()
-      // With a valid session, it should reach loadPosts and fetchIncomingRequests
-      // meaning mockRpc WAS called (not redirected away)
+      // With a valid session but no valid is_admin rpc, it should not push any redirects
       expect(mockRpc).toHaveBeenCalled()
-      expect(mockPush).not.toHaveBeenCalledWith('/login')
+      expect(mockPush).not.toHaveBeenCalled
     })
 
     it('redirects to /login when auth state changes to null mid-session', async () => {
@@ -270,7 +282,7 @@ describe('Home.vue', () => {
       const wrapper = mountHome()
       await flushPromises()
 
-      await wrapper.find('button.test-btn').trigger('click')
+      await wrapper.find('button.box-btn').trigger('click')
 
       expect(alertSpy).toHaveBeenCalledWith('Please enter a nickname')
       expect(mockRpc).not.toHaveBeenCalledWith('request_friend', expect.anything())
@@ -285,7 +297,7 @@ describe('Home.vue', () => {
       mockRpc.mockResolvedValueOnce({ data: true, error: null })
 
       await wrapper.find('input').setValue('alice')
-      await wrapper.find('button.test-btn').trigger('click')
+      await wrapper.find('button.box-btn').trigger('click')
       await flushPromises()
 
       expect(mockRpc).toHaveBeenCalledWith('request_friend', { friend_nickname: 'alice' })
@@ -299,7 +311,7 @@ describe('Home.vue', () => {
       mockRpc.mockResolvedValueOnce({ data: true, error: null })
 
       await wrapper.find('input').setValue('alice')
-      await wrapper.find('button.test-btn').trigger('click')
+      await wrapper.find('button.box-btn').trigger('click')
       await flushPromises()
 
       expect(alertSpy).toHaveBeenCalledWith('Success! Your friend request has been sent!')
@@ -313,7 +325,7 @@ describe('Home.vue', () => {
       mockRpc.mockResolvedValueOnce({ data: false, error: null })
 
       await wrapper.find('input').setValue('nonexistent')
-      await wrapper.find('button.test-btn').trigger('click')
+      await wrapper.find('button.box-btn').trigger('click')
       await flushPromises()
 
       expect(alertSpy).toHaveBeenCalledWith(
@@ -330,7 +342,7 @@ describe('Home.vue', () => {
 
       const input = wrapper.find('input')
       await input.setValue('alice')
-      await wrapper.find('button.test-btn').trigger('click')
+      await wrapper.find('button.box-btn').trigger('click')
       await flushPromises()
 
       expect(input.element.value).toBe('')
@@ -344,7 +356,7 @@ describe('Home.vue', () => {
       mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'Network error' } })
 
       await wrapper.find('input').setValue('alice')
-      await wrapper.find('button.test-btn').trigger('click')
+      await wrapper.find('button.box-btn').trigger('click')
       await flushPromises()
 
       expect(alertSpy).toHaveBeenCalledWith('Error: Network error')
@@ -364,8 +376,9 @@ describe('Home.vue', () => {
     const mountWithRequests = async (requests) => {
       mockGetSession.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } } })
       mockRpc
+        .mockResolvedValueOnce({ data: false, error:null })     // is_admin
         .mockResolvedValueOnce({ data: requests, error: null }) // friend_requests
-        .mockResolvedValueOnce({ data: [], error: null })        // load_posts
+        .mockResolvedValueOnce({ data: [], error: null })       // load_posts
 
       const wrapper = mount(Home, {
         global: { stubs: { CreatePost: CreatePostStub, Post: PostStub } },
@@ -557,9 +570,10 @@ describe('Home.vue', () => {
 
   describe('Delete Post', () => {
     const setupWithPosts = async () => {
-      const posts = [{ id: 1, content: 'Post One', tier: 1, user_id: 'other' }, { id: 2, content: 'Post Two', tier: 1, user_id: 'other' }]
+      const posts = [{ id: 1, content: 'Post One', friend_tier: 1, user_id: 'other' }, { id: 2, content: 'Post Two', friend_tier: 1, user_id: 'other' }]
       mockGetSession.mockResolvedValue({ data: { session: { user: { id: 'user-1' } } } })
       mockRpc
+        .mockResolvedValueOnce({ data: false, error: null }) // is_admin
         .mockResolvedValueOnce({ data: [], error: null })    // friend_requests
         .mockResolvedValueOnce({ data: posts, error: null }) // load_posts
 

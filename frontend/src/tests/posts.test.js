@@ -39,6 +39,7 @@ vi.mock('lucide-vue-next', () => ({
   Archive: { template: '<span />' },
   Trash2: { template: '<span data-testid="icon-trash" />' },
   Flag: { template: '<span data-testid="icon-flag" />' },
+  CheckCircle: { template: '<span data-testid="icon-check" />' },
 }))
 
 // ─── 6. Default test post ─────────────────────────────────────────────────────
@@ -198,7 +199,7 @@ describe('Post.vue', () => {
       const wrapper = mountPost()
       await flushPromises()
       await wrapper.find('.avatar').trigger('click')
-      expect(mockPush).toHaveBeenCalledWith('/profile/user-abc')
+      expect(mockPush).toHaveBeenCalledWith('/profile/alice')
     })
   })
 
@@ -387,6 +388,14 @@ describe('Post.vue', () => {
   // ── SECTION: Report ──────────────────────────────────────────────────────────
 
   describe('Report', () => {
+    it('shows the report button without fill before reporting', async () => {
+      const wrapper = mountPost({}, 'other-user')
+      await flushPromises()
+
+      mockRpc.mockResolvedValueOnce({ data: null, error: null })
+      expect(wrapper.find('[data-testid="icon-flag"]').attributes('fill')).toBe('none')
+    })
+
     it('calls report_post RPC when flag button is clicked', async () => {
       const wrapper = mountPost({}, 'other-user')
       await flushPromises()
@@ -398,7 +407,19 @@ describe('Post.vue', () => {
       expect(mockRpc).toHaveBeenCalledWith('report_post', { reported_post_id: 'post-1' })
     })
 
-    it('hides the report button after reporting', async () => {
+    it('emits check-report with the post id when report button is clicked', async () => {
+      const wrapper = mountPost({}, 'other-user')
+      await flushPromises()
+
+      mockRpc.mockResolvedValueOnce({ data: null, error: null }) // report_post
+      await wrapper.find('[data-testid="icon-flag"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.emitted('check-report')).toBeTruthy()
+      expect(wrapper.emitted('check-report')[0]).toEqual(['post-1'])
+    })
+    
+    it('fills the report button after reporting', async () => {
       const wrapper = mountPost({}, 'other-user')
       await flushPromises()
 
@@ -406,8 +427,8 @@ describe('Post.vue', () => {
       await wrapper.find('[data-testid="icon-flag"]').trigger('click')
       await flushPromises()
 
-      // After reporting, isReported = true, so the flag button should be gone
-      expect(wrapper.find('[data-testid="icon-flag"]').exists()).toBe(false)
+      // After reporting, isReported = true, so the flag button should be filled
+      expect(wrapper.find('[data-testid="icon-flag"]').attributes('fill')).not.toBe('none')
     })
   })
 })
