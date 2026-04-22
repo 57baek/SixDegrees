@@ -1,71 +1,96 @@
 # SixDegrees
 
-A social networking platform centered on a live, interactive People Map that places users in 2D space based on profile similarity and interaction history.
+A social networking app built around a 2D People Map. Users are plotted in space based on profile similarity and interaction history — the closer two people are on the map, the more similar they are. Matching uses UMAP dimensionality reduction over a combined profile distance + interaction distance matrix.
 
----
-
-## Architecture Overview
-
-### Stack
-
-| Layer | Technology |
-|---|---|
-| Backend | FastAPI + APScheduler |
-| Database | Supabase (PostgreSQL) |
-| Frontend | Vue 3 + Vite |
-| Auth | Supabase JWT (validated server-side) |
-| Map engine | UMAP (umap-learn 0.5.11) |
-| Matching | sentence-transformers (all-MiniLM-L6-v2) |
-
-### Two-path data flow
-
-1. **Social features** (posts, likes, comments, friend requests, profile CRUD): the frontend calls Supabase RPCs directly — FastAPI is bypassed entirely for these.
-2. **Map + matching** (coordinates, similarity scores): the frontend calls FastAPI REST endpoints (`GET /map/{userId}`, `POST /map/trigger/{userId}`, `GET /match`), which query Supabase internally and return computed results.
-
-### UMAP pipeline
-
-The People Map is built by a scheduled background pipeline:
+## Architecture
 
 ```
-fetcher → distance → projector → validation → writer → diagnostics
+Frontend (Vue 3)
+    ├── Social features (posts, likes, comments, friends)
+    │       └── Supabase RPCs directly (FastAPI bypassed)
+    └── Map + matching (coordinates, similarity scores)
+            └── FastAPI REST API → Supabase internally
 ```
 
-- **fetcher**: pulls all profiles and interaction rows from Supabase
-- **distance**: builds an N×N combined distance matrix
-  - Profile distance: `build_similarity_matrix` (per-field scores) → `apply_weights` → `similarity_to_distance`
-  - Interaction distance: normalized likes + comments + DMs, inverted
-  - Combined: `ALPHA × profile_dist + BETA × interaction_dist`
-- **projector**: runs UMAP with `metric="precomputed"` and `random_state=42`
-- **validation**: checks output for NaN / Inf / shape errors
-- **writer**: clips coordinate delta for position stability, upserts `user_positions`
-- **diagnostics**: records run status and metrics to `pipeline_runs`
+Two data paths:
+- **Social features** — frontend calls Supabase PostgreSQL functions (RPCs) directly. FastAPI is not involved.
+- **Map + matching** — frontend calls FastAPI endpoints, which read/write Supabase internally using a service-role key.
 
-### Embedding-based matching
+## Prerequisites
 
-`GET /match` ranks all other users by a weighted similarity score:
+- Python 3.11+
+- Node 18+
+- A [Supabase](https://supabase.com) project (free tier works)
 
-- **Interests** (40% weight): encoded with `all-MiniLM-L6-v2` into 384-dim vectors; cosine similarity replaces Jaccard when `EMBEDDING_FIELDS` is non-empty
-- **Location** (20%), **Languages** (15%), **Education** (10%), **Industry** (10%), **Age** (5%): computed with tiered categorical and inverse-distance functions
+## Supabase Setup
 
-Fallback: when `EMBEDDING_FIELDS=[]`, Jaccard similarity is used for interests instead of embeddings.
+1. Create a new Supabase project.
 
-### Key constraints
+2. Enable the `private` schema. In the Supabase SQL editor:
+   ```sql
+   ALTER ROLE authenticator SET search_path TO public, private;
+   ```
 
-- **Single-worker only**: APScheduler fires N times with N Uvicorn workers — always run with `uvicorn app:app --reload` (no `--workers N`)
-- **Profile table**: `public.profiles` is a writable view over `private.profiles`; backend always uses `sb.table("profiles")`
-- **Embedder singleton**: `_model` is lazy-loaded on first call; not thread-safe (safe under single-worker deployment)
+3. Create the `private.profiles` table (and related tables: `posts`, `likes`, `comments`, `friend_requests`, `reports`) in your Supabase project.
 
----
+4. Run `backend/sql/02_schema.sql` in the SQL editor. This creates:
+   - `public.profiles` — writable view over `private.profiles`
+   - `public.interactions` — interaction counters
+   - `public.user_positions` — UMAP map coordinates
+   - `public.pipeline_runs` — pipeline diagnostics log
 
-## Running the Backend
+5. Create a Storage bucket named **`post-images`** with public read access:
+   Dashboard → Storage → New bucket → Name: `post-images` → Public: on
+
+6. Note your project's **URL**, **anon/public key**, and **service-role key** from:
+   Dashboard → Settings → API
+
+## Backend Setup
 
 ```bash
 cd backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # set SUPABASE_URL and SUPABASE_KEY (service-role key)
+cp .env.example .env
+```
+
+Edit `backend/.env`:
+
+| Variable | Description |
+|----------|-------------|
+| `SUPABASE_URL` | Your Supabase project URL |
+| `SUPABASE_KEY` | Service-role key (full DB access — keep secret) |
+| `ALLOWED_ORIGINS` | Comma-separated frontend URLs for CORS. Defaults to `http://localhost:5173`. |
+| `GLOBAL_COMPUTE_ENABLED` | Set to `true` to enable the scheduled UMAP pipeline. Default: `false`. |
+
+Start the server:
+
+```bash
+# IMPORTANT: single worker only — APScheduler fires N times with N workers
 uvicorn app:app --reload
+```
+
+## Frontend Setup
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+```
+
+Edit `frontend/.env`:
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Anon/public key (safe to expose in frontend) |
+| `VITE_API_URL` | FastAPI backend URL (e.g., `http://localhost:8000`) |
+
+Start the dev server:
+
+```bash
+npm run dev   # http://localhost:5173
 ```
 
 ## Running Tests
@@ -74,32 +99,39 @@ uvicorn app:app --reload
 cd backend
 source venv/bin/activate
 python -m pytest -q                          # all tests
+python -m pytest -q tests/map/              # map pipeline only
 python -m pytest --cov=. --cov-report=term-missing  # with coverage
 ```
 
----
+## Key Constraints
 
-## How AI Assisted Development
+**Single-worker only:** Never run `uvicorn --workers N`. APScheduler fires once per worker, causing duplicate pipeline runs. Always use `--reload`.
 
-This project was developed with [Claude Code](https://claude.ai/code) (claude-sonnet-4-6) used throughout via the Claude Code CLI. Three specific ways AI assistance made a measurable difference:
+**Private schema architecture:** User-facing tables (`profiles`, `posts`, etc.) live in the `private` Supabase schema. The backend reads/writes profiles through a public view (`public.profiles`) with an INSTEAD OF trigger that routes writes back to `private.profiles`. Always use `sb.table("profiles")` — never bypass the view.
 
-### 1. Codebase onboarding and understanding
+**Two data-flow paths:** Social features bypass FastAPI entirely. Map and matching go through FastAPI. Do not add social feature logic to the FastAPI backend.
 
-Claude Code reads and reasons across entire codebases. When working with unfamiliar code, you can ask Claude to read a module and explain how it fits into the broader system — which files it depends on, what data it receives, what it returns. This replaces manual execution tracing and is particularly effective when joining a project mid-development or reading a teammate's code.
+## Project Structure
 
-In this project, Claude read the full UMAP pipeline (`fetcher → distance → projector → validation → writer`) and explained the data contracts between each stage before any changes were made. This replaced what would normally be 30–60 minutes of tracing source files.
+```
+backend/
+  app.py              # FastAPI app, CORS, lifespan (APScheduler)
+  config/settings.py  # All config: Supabase client, weights, UMAP params
+  routes/             # HTTP layer only — no business logic
+  models/user.py      # UserProfile Pydantic model
+  services/map/       # UMAP pipeline: fetcher → distance → projector → writer
+  services/matching/  # Scoring, similarity, embedding (all-MiniLM-L6-v2)
+  scripts/seed.py     # Seed 100 deterministic fake profiles
+  sql/02_schema.sql   # Contributor DB setup script
+  tests/              # 141 tests, all mocked (no live DB calls)
 
-### 2. Writing repetitive tests
+frontend/
+  src/views/          # Page components (Home, Profile, PeopleMap, Match, etc.)
+  src/components/     # Shared components (Post, CreatePost)
+  src/router/         # Vue Router with auth guards
+  src/lib/supabase.js # Supabase client init
 
-Tests should not contain logic — they should be simple, direct, binary checks: given this input, assert this output. This makes test writing repetitive by design. That repetition is exactly what AI does well.
-
-Claude wrote the majority of the test suite in this project:
-- 22 map pipeline tests (fetcher, distance, projector, validation, writer, ego, pipeline, scheduler, diagnostics)
-- Route endpoint tests for profile, match, map, interactions
-- Similarity function edge case tests
-- Contract tests for all API request/response shapes
-
-This freed up development time for decisions that actually required judgment: what invariants to assert, what edge cases matter, and what coverage gaps to fill.
-
-All generated code was reviewed before commit. Test assertions were manually verified against expected math. Architectural decisions (UMAP pipeline structure, embedding fallback, interaction pair canonical ordering) were made by the developers and implemented with AI assistance.
-
+demo/
+  sixdegrees_demo.ipynb            # Eleanor/Brita two-case algorithm demo
+  embedding_similarity_demo.ipynb  # Live embedding similarity demo
+```
