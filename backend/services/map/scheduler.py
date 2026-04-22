@@ -17,7 +17,7 @@ from services.map.lock import acquire_lock, release_lock
 logger = logging.getLogger(__name__)
 
 _GLOBAL_COMPUTE_JOB_ID = "global_compute_daily_utc"
-_UTC_HOUR = 2
+_UTC_HOUR = 0
 _UTC_MINUTE = 0
 
 

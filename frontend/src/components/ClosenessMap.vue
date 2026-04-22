@@ -266,7 +266,7 @@ function screenToSvg(clientX, clientY) {
   the cursor stays fixed as zoom changes
 */
 function onWheel(e) {
-  const factor = e.deltaY < 0 ? 1.2 : 1 / 1.2
+  const factor = e.deltaY < 0 ? 1.05 : 1 / 1.05
   const newZoom = Math.max(0.3, Math.min(50, zoom.value * factor))
   const { x, y } = screenToSvg(e.clientX, e.clientY)
   panX.value = x - (x - panX.value) * (newZoom / zoom.value)

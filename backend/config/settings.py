@@ -42,8 +42,6 @@ UMAP_MIN_DIST: float   = 0.1
 UMAP_RANDOM_STATE: int = 42
 
 # --- Stability ---
-MAX_POSITION_DELTA: float = 0.35
-
 # --- Ego map tier thresholds ---
 TIER1_K: int = 5
 TIER2_K: int = 15
