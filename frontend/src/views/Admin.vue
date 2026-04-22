@@ -37,21 +37,32 @@ import Post from '../components/Post.vue'
 
 const router = useRouter()
 
-// Auth redirect
 const session = ref(null)
+const posts = ref([])
+const loading = ref(false)
+const pollInterval = ref(null)
 let authListener = null
 
 onMounted(async () => {
-  // if no active session, redirect to login page
   const { data } = await supabase.auth.getSession()
   session.value = data.session
-  if (!session.value) router.push('/login')
+  if (!session.value) {
+    router.push('/login')
+    return
+  }
 
   // if somehow not admin, redirect to home page
-  const { data: adminStatus, error : adminError } = await supabase.rpc('is_admin')
-  if (adminError || adminStatus == null || !adminStatus) router.push('/')
+  const { data: adminStatus, error: adminError } = await supabase.rpc('is_admin')
+  if (adminError || adminStatus == null || !adminStatus) {
+    router.push('/')
+    return
+  }
 
-  // Listen for sign-out only (ignore token refresh events)
+  currentUserId.value = data.session?.user?.id ?? null
+
+  loadPost()
+  pollInterval.value = setInterval(loadPost, 30000)
+
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
     if (event === 'SIGNED_OUT') {
       session.value = null
@@ -65,33 +76,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  authListener?.unsubscribe()
-})
-
-const posts = ref([])
-const loading = ref(false)
-const pollInterval = ref(null)
-
-onMounted(async () => {
-  // Get session
-  const { data } = await supabase.auth.getSession()
-  session.value = data.session
-  if (!session.value) {
-    router.push('/login')
-    return
-  }
-
-  currentUserId.value = data.session?.user?.id ?? null
-
-  // Fetch initial data
-  loadPost()
-  
-  // Poll post every 30s
-  pollInterval.value = setInterval(loadPost, 30000)
-})
-
-onUnmounted(() => {
   clearInterval(pollInterval.value)
+  authListener?.unsubscribe()
 })
 
 const currentUserId = ref(null)
@@ -107,7 +93,6 @@ async function loadPost() {
     if (error) throw error
     posts.value = data || []
   } catch (err) {
-    console.error('Error loading post:', err)
   } finally {
     loading.value = false
   }

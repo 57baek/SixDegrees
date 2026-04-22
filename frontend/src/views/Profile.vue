@@ -213,7 +213,7 @@ const languagesInput = ref('')
 
 // check if user is viewing their own profile or someone else's
 const isOwnProfile = computed(() => {
-  return !route.params.userId || route.params.userId === currentUserId.value
+  return !route.params.nickname
 })
 
 // First letter of the user's nickname, used as avatar fallback
@@ -252,7 +252,7 @@ async function loadProfile() {
     currentUserId.value = user.id
 
     // Show cached own profile immediately while the real fetch runs
-    if (!route.params.userId) {
+    if (!route.params.nickname) {
       try {
         const cached = localStorage.getItem(OWN_PROFILE_CACHE_KEY)
         if (cached) { profile.value = JSON.parse(cached); loaded.value = true }
@@ -260,7 +260,7 @@ async function loadProfile() {
     }
 
     //if userid in route, load that profile, otherwise load current user's profile
-    const targetUser = route.params.userId || user.id
+    const targetUser = route.params.nickname || user.id
 
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     const { data, error: profileError } = UUID_RE.test(targetUser) ?
@@ -513,7 +513,7 @@ onMounted(() => {
   loadProfile()
 })
 
-watch(() => route.params.userId, () => {
+watch(() => route.params.nickname, () => {
   loaded.value = false
   error.value = ''
   profile.value = {}

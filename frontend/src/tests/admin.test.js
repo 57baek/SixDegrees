@@ -180,7 +180,7 @@ describe('Admin.vue', () => {
       await flushPromises()
       // With a valid session but valid is_admin rpc, it should not push any redirects
       expect(mockRpc).toHaveBeenCalled()
-      expect(mockPush).not.toHaveBeenCalled
+      expect(mockPush).not.toHaveBeenCalled()
     })
 
     it('redirects to /login when auth state changes to null mid-session', async () => {
