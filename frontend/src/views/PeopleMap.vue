@@ -21,7 +21,7 @@
             @click="activeView = 'closeness'"
           >Closeness</button>
         </div>
-        <button v-if="activeView === 'connections'" class="refresh-btn" @click="triggerAndReload" :disabled="loading || triggering">
+        <button class="refresh-btn" @click="triggerAndReload" :disabled="loading || triggering">
           <span v-if="triggering" class="spinner" />
           <span v-else>↻</span>
           {{ triggering ? 'Computing…' : 'Refresh Map' }}
@@ -56,7 +56,19 @@
 
     <template v-else>
       <div v-if="activeView === 'connections'" class="canvas-wrap" ref="canvasWrap">
-        <svg class="map-svg" :viewBox="`0 0 ${svgW} ${svgH}`" :width="svgW" :height="svgH">
+        <svg
+          class="map-svg"
+          ref="connSvgEl"
+          :viewBox="`0 0 ${svgW} ${svgH}`"
+          :width="svgW"
+          :height="svgH"
+          :style="{ cursor: connDragging ? 'grabbing' : 'grab' }"
+          @wheel.prevent="onConnWheel"
+          @mousedown="onConnMouseDown"
+          @mousemove="onConnMouseMove"
+          @mouseup="stopConnDrag"
+          @mouseleave="stopConnDrag"
+        >
           <defs>
             <filter v-for="t in [0,1,2,3,4]" :key="'f'+t" :id="'glow-'+t" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur :stdDeviation="t === 0 ? 6 : 3" result="blur" />
@@ -72,81 +84,85 @@
             </radialGradient>
           </defs>
 
+          <!-- Fixed background — not affected by zoom/pan -->
           <rect width="100%" height="100%" fill="url(#bg-grad)" rx="16" />
-
           <circle
             v-for="s in stars" :key="s.id"
             :cx="s.x * svgW" :cy="s.y * svgH" :r="s.r"
             :fill="`rgba(255,255,255,${s.o})`"
           />
 
-          <!-- Dashed rings drawn at each tier's radius to show the concentric zones -->
-          <circle
-            v-for="t in visibleTiers" :key="'ring'+t"
-            :cx="cx" :cy="cy" :r="ringRadiusForTier(t)"
-            fill="none" :stroke="tierColor(t)"
-            stroke-opacity="0.08" stroke-dasharray="4 6" stroke-width="1"
-          />
+          <!-- Zoomable / pannable layer -->
+          <g :transform="`translate(${connPanX}, ${connPanY}) scale(${connZoom})`">
+            <!-- Dashed rings drawn at each tier's radius to show the concentric zones -->
+            <circle
+              v-for="t in visibleTiers" :key="'ring'+t"
+              :cx="cx" :cy="cy" :r="ringRadiusForTier(t)"
+              fill="none" :stroke="tierColor(t)"
+              stroke-opacity="0.08" stroke-dasharray="4 6" :stroke-width="1 / connZoom"
+            />
 
-          <!-- Lines connecting each friend node back to the center (YOU) -->
-          <line
-            v-for="n in nodes" :key="'edge-'+n.user_id"
-            :x1="cx" :y1="cy" :x2="n.px" :y2="n.py"
-            :stroke="tierColor(n.tier)"
-            :stroke-opacity="hoveredId && hoveredId !== n.user_id ? 0.05 : 0.28"
-            :stroke-width="hoveredId === n.user_id ? 1.8 : 0.8"
-            stroke-linecap="round"
-          />
-          <g
+            <!-- Lines connecting each friend node back to the center (YOU) -->
+            <line
+              v-for="n in nodes" :key="'edge-'+n.user_id"
+              :x1="cx" :y1="cy" :x2="n.px" :y2="n.py"
+              :stroke="tierColor(n.tier)"
+              :stroke-opacity="hoveredId && hoveredId !== n.user_id ? 0.05 : 0.28"
+              :stroke-width="(hoveredId === n.user_id ? 1.8 : 0.8) / connZoom"
+              stroke-linecap="round"
+            />
+
+            <g
               v-for="n in nodes" :key="'node-'+n.user_id"
-              :transform="`translate(${n.px}, ${n.py}) scale(${hoveredId === n.user_id ? 1.3 : 1})`"
+              :transform="`translate(${n.px}, ${n.py}) scale(${(hoveredId === n.user_id ? 1.3 : 1) / connZoom})`"
               class="node-group"
               @mouseenter="hoveredId = n.user_id"
               @mouseleave="hoveredId = null"
-              @click="goToProfile(n.user_id)"
+              @click.stop="connGoToProfile(n.user_id)"
               style="cursor:pointer"
-          >
-            <circle v-if="n.tier === 0" r="20" :fill="tierColor(0)" fill-opacity="0.12" filter="url(#glow-0)" class="pulse-node" />
-            <circle
-              :r="nodeRadius(n.tier)"
-              :fill="tierColor(n.tier)"
-              :fill-opacity="hoveredId === n.user_id ? 1 : 0.85"
-              :filter="`url(#glow-${Math.min(n.tier,4)})`"
-            />
-            <text
-              text-anchor="middle" dominant-baseline="central"
-              :font-size="n.tier === 0 ? 7 : 6"
-              fill="white" font-weight="700" font-family="monospace"
-              style="pointer-events:none;user-select:none"
-            >{{ n.display_name?.length > 4 ? n.display_name.slice(0, 4) + '…' : n.display_name }}</text>
-          </g>
+            >
+              <circle v-if="n.tier === 0" r="20" :fill="tierColor(0)" fill-opacity="0.12" filter="url(#glow-0)" class="pulse-node" />
+              <circle
+                :r="nodeRadius(n.tier)"
+                :fill="tierColor(n.tier)"
+                :fill-opacity="hoveredId === n.user_id ? 1 : 0.85"
+                :filter="`url(#glow-${Math.min(n.tier,4)})`"
+              />
+              <text
+                text-anchor="middle" dominant-baseline="central"
+                :font-size="n.tier === 0 ? 7 : 6"
+                fill="white" font-weight="700" font-family="monospace"
+                style="pointer-events:none;user-select:none"
+              >{{ n.display_name?.length > 4 ? n.display_name.slice(0, 4) + '…' : n.display_name }}</text>
+            </g>
 
-          <!-- Tooltip shown on hover; pointer events disabled so it doesnt interfere with mouse -->
-          <g
-            v-if="hoveredNode"
-            style="pointer-events: none"
-            :transform="`translate(${tooltipX(hoveredNode)}, ${tooltipY(hoveredNode)})`"
-          >
-            <rect :x="-70" y="-40" width="140" height="36" rx="8" fill="#1e2540" stroke="#ffffff20" stroke-width="1" />
-            <text text-anchor="middle" y="-26" font-size="11" fill="white" font-family="monospace" font-weight="600">
-              {{ hoveredNode.display_name || 'Unknown' }}
-            </text>
-            <text text-anchor="middle" y="-12" font-size="9" :fill="tierColor(hoveredNode.tier)" font-family="monospace">
-              {{ tierLabel(hoveredNode.tier) }}
-            </text>
-          </g>
+            <!-- YOU node — position follows zoom/pan but size stays constant -->
+            <g :transform="`translate(${cx}, ${cy}) scale(${1 / connZoom})`">
+              <circle r="34" fill="#ffffff" fill-opacity="0.03" filter="url(#glow-center)" class="pulse-node" />
+              <circle r="22" fill="#e8f4ff" filter="url(#glow-center)" />
+              <circle r="17" fill="#c5e4ff" />
+              <text text-anchor="middle" dominant-baseline="central" font-size="8" fill="#0a1628" font-weight="800" font-family="monospace" style="pointer-events:none">YOU</text>
+            </g>
 
-          <g :transform="`translate(${cx}, ${cy})`">
-            <circle r="34" fill="#ffffff" fill-opacity="0.03" filter="url(#glow-center)" class="pulse-node" />
-            <circle r="22" fill="#e8f4ff" filter="url(#glow-center)" />
-            <circle r="17" fill="#c5e4ff" />
-            <text text-anchor="middle" dominant-baseline="central" font-size="8" fill="#0a1628" font-weight="800" font-family="monospace" style="pointer-events:none">YOU</text>
+            <!-- Tooltip shown on hover; rendered last so it's on top -->
+            <g
+              v-if="hoveredNode"
+              style="pointer-events: none"
+              :transform="`translate(${tooltipX(hoveredNode)}, ${tooltipY(hoveredNode)}) scale(${1 / connZoom})`"
+            >
+              <rect :x="-70" y="-40" width="140" height="36" rx="8" fill="#1e2540" stroke="#ffffff20" stroke-width="1" />
+              <text text-anchor="middle" y="-26" font-size="11" fill="white" font-family="monospace" font-weight="600">
+                {{ hoveredNode.display_name || 'Unknown' }}
+              </text>
+              <text text-anchor="middle" y="-12" font-size="9" :fill="tierColor(hoveredNode.tier)" font-family="monospace">
+                {{ tierLabel(hoveredNode.tier) }}
+              </text>
+            </g>
           </g>
         </svg>
 
         <div class="map-footer">
           <span>{{ nodes.length }} connection{{ nodes.length !== 1 ? 's' : '' }}</span>
-          <span v-if="computedAt"> · Updated {{ timeAgo(computedAt) }}</span>
         </div>
       </div>
       <div v-else class="canvas-wrap">
@@ -158,7 +174,6 @@
         />
         <div class="map-footer">
           <span>{{ closenessCoordinates.length > 0 ? closenessCoordinates.length - 1 : 0 }} connection{{ (closenessCoordinates.length > 0 ? closenessCoordinates.length - 1 : 0) !== 1 ? 's' : '' }}</span>
-          <span v-if="closenessComputedAt"> · Updated {{ timeAgo(closenessComputedAt) }}</span>
         </div>
       </div>
     </template>
@@ -192,6 +207,7 @@ const TIER_LABELS = {
 
 const router = useRouter()
 const canvasWrap = ref(null)
+const connSvgEl = ref(null)
 const rawCoordinates = ref([])
 const computedAt = ref(null)
 const closenessCoordinates = ref([])
@@ -205,6 +221,14 @@ const activeView = ref('connections')
 const svgW = ref(800)
 const svgH = ref(560)
 const isMobile = ref(false)
+
+// Connections map zoom / pan state
+const connZoom = ref(1)
+const connPanX = ref(0)
+const connPanY = ref(0)
+const connDragging = ref(false)
+const connWasDragging = ref(false)
+const connDragOrigin = ref({ x: 0, y: 0, px: 0, py: 0 })
 
 // SVG center point and max radius for placing nodes in rings
 const cx = computed(() => svgW.value / 2)
@@ -292,7 +316,7 @@ function initials(name) {
 
 // Clamps tooltip position to stay within the SVG bounds
 function tooltipX(node) { return Math.min(Math.max(node.px, 70), svgW.value - 70) }
-function tooltipY(node) { return node.py < 100 ? node.py + 60 : node.py - 60 }
+function tooltipY(node) { return node.py - (57) / connZoom.value }
 
 // Converts ISO timestamp to human-readable "X mins ago" format
 function timeAgo(iso) {
@@ -305,6 +329,48 @@ function timeAgo(iso) {
   return `${Math.floor(hrs / 24)}d ago`
 }
 function goToProfile(userId) { router.push(`/profile/${userId}`) }
+function connGoToProfile(userId) {
+  if (connWasDragging.value) return
+  router.push(`/profile/${userId}`)
+}
+
+function connScreenToSvg(clientX, clientY) {
+  const rect = connSvgEl.value.getBoundingClientRect()
+  return {
+    x: (clientX - rect.left) * (svgW.value / rect.width),
+    y: (clientY - rect.top) * (svgH.value / rect.height),
+  }
+}
+
+function onConnWheel(e) {
+  const factor = e.deltaY < 0 ? 1.05 : 1 / 1.05
+  const newZoom = Math.max(0.3, Math.min(50, connZoom.value * factor))
+  const { x, y } = connScreenToSvg(e.clientX, e.clientY)
+  connPanX.value = x - (x - connPanX.value) * (newZoom / connZoom.value)
+  connPanY.value = y - (y - connPanY.value) * (newZoom / connZoom.value)
+  connZoom.value = newZoom
+}
+
+function onConnMouseDown(e) {
+  connDragging.value = true
+  connWasDragging.value = false
+  connDragOrigin.value = { x: e.clientX, y: e.clientY, px: connPanX.value, py: connPanY.value }
+}
+
+function onConnMouseMove(e) {
+  if (!connDragging.value) return
+  const dx = e.clientX - connDragOrigin.value.x
+  const dy = e.clientY - connDragOrigin.value.y
+  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) connWasDragging.value = true
+  const rect = connSvgEl.value.getBoundingClientRect()
+  connPanX.value = connDragOrigin.value.px + dx * (svgW.value / rect.width)
+  connPanY.value = connDragOrigin.value.py + dy * (svgH.value / rect.height)
+}
+
+function stopConnDrag() {
+  connDragging.value = false
+  setTimeout(() => { connWasDragging.value = false }, 0)
+}
 
 const MAP_CACHE_KEY = 'sixdeg_map_cache'
 
@@ -559,6 +625,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', onResize))
     0 0 80px rgba(96, 212, 247, 0.04),
     0 8px 60px rgba(0, 0, 0, 0.7);
   display: block;
+  user-select: none;
 }
 
 .node-group {

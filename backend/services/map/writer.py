@@ -1,25 +1,20 @@
-import math
 from datetime import datetime, timezone
 import numpy as np
-from config.settings import get_supabase_client, MAX_POSITION_DELTA
+from config.settings import get_supabase_client
 
 
 def write(user_ids: list[str], new_coords: np.ndarray) -> None:
+    # Normalize to [0, 1] so coordinates are in a consistent space across runs.
+    # UMAP's raw output is unanchored — scale, translation, and orientation can
+    # differ between runs even with the same random seed.
+    mn = new_coords.min(axis=0)
+    mx = new_coords.max(axis=0)
+    rng = np.where(mx - mn == 0, 1.0, mx - mn)
+    new_coords = (new_coords - mn) / rng
+
     sb = get_supabase_client()
-    prev = {
-        r["user_id"]: (r["x"], r["y"])
-        for r in sb.table("user_positions").select("user_id,x,y").execute().data
-    }
     rows = []
     now = datetime.now(timezone.utc).isoformat()
     for uid, (nx, ny) in zip(user_ids, new_coords):
-        nx, ny = float(nx), float(ny)
-        if uid in prev:
-            ox, oy = prev[uid]
-            delta = math.sqrt((nx - ox) ** 2 + (ny - oy) ** 2)
-            if delta > MAX_POSITION_DELTA:
-                scale = MAX_POSITION_DELTA / delta
-                nx = ox + (nx - ox) * scale
-                ny = oy + (ny - oy) * scale
-        rows.append({"user_id": uid, "x": nx, "y": ny, "computed_at": now})
+        rows.append({"user_id": uid, "x": float(nx), "y": float(ny), "computed_at": now})
     sb.table("user_positions").upsert(rows).execute()

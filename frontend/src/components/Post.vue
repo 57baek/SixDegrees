@@ -17,7 +17,8 @@
         >{{ post.nickname || 'Unknown User' }}</div>
         <div class="post-meta">
           <span class="timestamp">{{ formatDate(post.created_at) }}</span>
-          <span class="tier-badge" :class="`tier-${post.tier}`">
+          <span v-if="isOwnPost" class="tier-badge tier-me"><UserRound :size="12" />Me</span>
+          <span v-else class="tier-badge" :class="`tier-${post.tier}`">
             <component :is="tierIcon(post.tier)" :size="12" />
             {{ tierLabel(post.tier) }}
           </span>
@@ -107,7 +108,7 @@
           @click="handleDeleteComment(comment.id)"
           title="Archive Comment"
         >
-          <Archive :size="16" />
+          <Trash2 :size="16" />
         </button>
       </div>
     </div>
@@ -118,7 +119,7 @@
 <script setup>
 import { ref, computed, onMounted} from 'vue'
 import { supabase } from '../lib/supabase'
-import { Heart, MessageCircle, Archive, Trash2, Flag, CheckCircle } from 'lucide-vue-next'
+import { Heart, MessageCircle, Trash2, Flag, CheckCircle, UserRound } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { formatDate, tierIcon, tierLabel } from '../utils.js'
 
@@ -293,21 +294,19 @@ async function handleDeleteComment(commentId) {
  */
 async function handleReport() {
   if (!currentUserId.value) return
-  
+
   try {
     if (isReported.value) {
-      // Unreport
+      if (!confirm('Remove your report on this post?')) return
       await supabase.rpc('unreport_post', {
         reported_post_id: props.post.id
       })
-      
       isReported.value = false
     } else {
-      // Report
+      if (!confirm('Are you sure you want to report this post?')) return
       await supabase.rpc('report_post', {
         reported_post_id: props.post.id
       })
-      
       isReported.value = true
     }
     emit('check-report',props.post.id)
@@ -413,6 +412,12 @@ async function handleReport() {
   color: #b6ff6b;
 }
 
+.tier-me {
+  background: #5f1e1e;
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
 .post-content {
   color: #e0e0e0;
   line-height: 1.6;
@@ -437,7 +442,7 @@ async function handleReport() {
 .delete-icon-btn {
   background: transparent;
   border: none;
-  color: #888;
+  color: #cc4444;
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 4px;
@@ -448,7 +453,7 @@ async function handleReport() {
 }
 
 .delete-icon-btn:hover {
-  background: rgba(255, 68, 68, 0.1);
+  background: rgba(255, 68, 68, 0.15);
   color: #ff4444;
 }
 
@@ -536,32 +541,19 @@ async function handleReport() {
   gap: 0.25rem;  /* Add this */
 }
 
-.delete-comment-btn {
-  background: transparent;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  padding: 4px;
-  transition: color 0.2s;
-}
-
-.delete-comment-btn:hover {
-  color: #ff4444;
-}
-
 
 .delete-comment-btn {
   background: transparent;
   border: none;
-  color: #555; 
+  color: #cc4444;
   cursor: pointer;
-  padding: 6px; 
-  border-radius: 50%; 
+  padding: 6px;
+  border-radius: 50%;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0; 
+  flex-shrink: 0;
   margin-top: -5px;
 }
 
