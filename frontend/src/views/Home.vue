@@ -276,9 +276,8 @@ const goToProfile = (userNickname) => {
 }
 
 /*
-  Logs the current user out, clears local storage, and redirects to login
+  Warms the profile cache in the background so /profile loads instantly
 */
-// Warms the profile cache in the background so /profile loads instantly
 async function prefetchProfile(session) {
   if (!session) return
   try {
@@ -289,6 +288,9 @@ async function prefetchProfile(session) {
   } catch {}
 }
 
+/*
+  Logs the current user out, clears local storage, and redirects to login
+*/
 async function handleLogout() {
   await supabase.auth.signOut()
   localStorage.removeItem('supabase_token')
@@ -366,7 +368,7 @@ async function handleDeletePost(postId) {
   transition: all 0.2s;
 }
 
-.nav-button:hover {
+.nav-btn:hover {
   background: #0CC6C6;
   transform: translateY(-1px);
 }

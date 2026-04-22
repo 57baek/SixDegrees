@@ -42,7 +42,7 @@
     </div>
     
     <div class="post-actions-wrapper">
-      <div class="post-actions">
+      <div v-if="!props.admin" class="post-actions">
         <button 
           @click="handleLike" 
           :class="{ liked: isLiked }"
@@ -59,7 +59,7 @@
       </div>
 
       <button 
-        v-if="isOwnPost || isAdmin" 
+        v-if="isOwnPost || props.admin" 
         class="delete-icon-btn" 
         @click="emitDelete"
         title="Delete Post"
@@ -73,7 +73,7 @@
         class="action-btn"
         title="Report/Unreport Post"
       >
-        <Flag :size="18" :fill="isReported ? 'currentColor' : 'none'" v-if="!isAdmin"/>
+        <Flag :size="18" :fill="isReported ? 'currentColor' : 'none'" v-if="!props.admin"/>
         <CheckCircle :size="18" :fill="isReported ? 'currentColor' : 'none'" v-else/>
       </button>
     </div>
@@ -143,6 +143,10 @@ const props = defineProps({
   post: {
     type: Object,
     required: true
+  },
+  admin: {
+    type: Boolean,
+    required: false
   }
 })
 

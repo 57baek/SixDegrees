@@ -89,7 +89,10 @@ const handleLogin = async () => {
     if (!onboarded) {
       router.push("/profile-setup");
     } else {
-      router.push("/");
+      // if user is admin, redirect to admin page
+      const { data: adminStatus, error : adminError } = await supabase.rpc('is_admin')
+      if (!adminError && adminStatus !== null && adminStatus) router.push('/admin')
+      else router.push("/");
     }
 
   } catch (err) {
