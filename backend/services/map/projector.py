@@ -1,9 +1,9 @@
 import numpy as np
-import umap
 from config.settings import UMAP_N_NEIGHBORS, UMAP_MIN_DIST, UMAP_RANDOM_STATE
 
 
 def project(distance_matrix: np.ndarray) -> np.ndarray:
+    import umap  # lazy import — keeps umap out of startup memory
     n = len(distance_matrix)
     if n < 2:
         raise ValueError(f"Cannot project fewer than 2 users (got {n})")

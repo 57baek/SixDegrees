@@ -5,20 +5,20 @@ Not thread-safe — safe under single-worker Uvicorn deployment.
 """
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
 from config.settings import EMBEDDING_FIELDS, EMBEDDING_MODEL
 from models.user import UserProfile
 
-_model: SentenceTransformer | None = None
+_model = None  # lazy-loaded on first embed_profiles() call
 
 # Fallback embedding dimension when the model isn't loaded yet.
 # Must match the output dim of EMBEDDING_MODEL (all-MiniLM-L6-v2 → 384).
 _FALLBACK_DIM = 384
 
 
-def _get_model() -> SentenceTransformer:
+def _get_model():
     """Return the shared model instance, loading it on first call."""
+    from sentence_transformers import SentenceTransformer  # lazy import
     global _model
     if _model is None:
         _model = SentenceTransformer(EMBEDDING_MODEL)
